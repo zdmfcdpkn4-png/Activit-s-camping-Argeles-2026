@@ -1,617 +1,616 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#16425b">
-<meta name="description" content="Roadbook partagé Montaigu → Argelès-Gazost : carte, étapes, consignes et check-list bagages synchronisées entre tous les téléphones.">
-<title>Roadbook · Montaigu → Argelès-Gazost</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏔️</text></svg>">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le QG des vacances · Argelès-Gazost 2026</title>
 <style>
-  :root{
-    --bg:#eef2f5; --card:#ffffff; --ink:#1c2b33; --muted:#5c6f7a; --line:#e2e9ee;
-    --accent:#2a6f97; --ok:#2a9d8f; --danger:#c94f4f;
-    --head1:#16425b; --head2:#2a6f97; --gold:#ffd166;
-  }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --bg:#0f181e; --card:#18252e; --ink:#e8eef2; --muted:#93a7b3; --line:#253540;
-      --head1:#0c2735; --head2:#1d5375;
-    }
-  }
-  *{ box-sizing:border-box; }
-  html,body{ margin:0; }
-  body{
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
-    background:var(--bg); color:var(--ink); line-height:1.45;
-    padding-bottom:calc(66px + env(safe-area-inset-bottom));
-  }
-  button{ font:inherit; color:inherit; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+:root{
+  --papier:#FBF3E2;   /* crème solaire */
+  --encre:#23324A;    /* bleu nuit pyrénéen */
+  --soleil:#FFB800;   /* jaune Yelloh */
+  --gave:#1E7F86;     /* turquoise torrent */
+  --sapin:#2E7D4F;
+  --braise:#E4572E;
+  --craie:#FFFFFF;
+  --scotch:rgba(222,196,138,.75);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--papier);color:var(--encre);line-height:1.45;padding-bottom:84px}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+:focus-visible{outline:3px solid var(--braise);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-  /* ---------- En-tête ---------- */
-  header{
-    position:sticky; top:0; z-index:1100;
-    background:linear-gradient(135deg,var(--head1),var(--head2));
-    color:#fff; padding:12px 16px 12px calc(16px + env(safe-area-inset-left));
-    box-shadow:0 2px 12px rgba(0,0,0,.28);
-  }
-  .head-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; max-width:760px; margin:0 auto; }
-  .head-row h1{ margin:0; font-size:1.25rem; letter-spacing:.2px; }
-  .head-sub{ margin:2px auto 0; max-width:760px; font-size:.82rem; opacity:.92; }
-  .head-progress{ max-width:760px; margin:10px auto 0; height:6px; border-radius:99px; background:rgba(255,255,255,.25); overflow:hidden; }
-  #headBar{ height:100%; width:0; background:var(--gold); border-radius:99px; transition:width .35s ease; }
-  .pill{
-    flex:0 0 auto; border:0; border-radius:99px; padding:6px 12px;
-    font-size:.78rem; font-weight:650; background:rgba(255,255,255,.16); color:#fff; cursor:pointer;
-    white-space:nowrap;
-  }
-  .pill-ok{ background:rgba(42,157,143,.35); }
-  .pill-off{ background:rgba(0,0,0,.30); color:#ffc9c9; }
+/* ---- entête fanion ---- */
+header{position:sticky;top:0;z-index:50;background:var(--encre);color:var(--craie);padding:10px 14px;box-shadow:0 2px 10px rgba(35,50,74,.35)}
+.h-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px;justify-content:space-between}
+.h-t{font-weight:800;font-size:18px;letter-spacing:.3px}
+.h-s{font-size:12px;opacity:.85}
+.badge-sync{font-size:11px;font-family:var(--mono);padding:4px 8px;border-radius:999px;background:#39506F;white-space:nowrap}
+.badge-sync.ok{background:var(--sapin)}
+.badge-sync.off{background:var(--braise)}
+.score{max-width:760px;margin:6px auto 0;display:flex;align-items:center;gap:8px;font-size:12px}
+.score .bar{flex:1;height:8px;background:#39506F;border-radius:999px;overflow:hidden}
+.score .fill{height:100%;background:var(--soleil);border-radius:999px;transition:width .4s}
 
-  /* ---------- Sections ---------- */
-  main{ max-width:760px; margin:0 auto; padding:16px; }
-  .section-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:4px 0 8px; }
-  .section-head h2{ margin:0; font-size:1.12rem; }
-  .hint{ margin:0 0 14px; color:var(--muted); font-size:.85rem; }
-  .badge{
-    background:rgba(42,111,151,.14); color:var(--accent);
-    padding:3px 10px; border-radius:99px; font-weight:700; font-size:.8rem; white-space:nowrap;
-  }
-  .badge.ok{ background:rgba(42,157,143,.16); color:var(--ok); }
+/* ---- fiches façon panneau d'affichage ---- */
+main{max-width:760px;margin:0 auto;padding:14px}
+.fiche{position:relative;background:var(--craie);border:2px solid var(--encre);border-radius:14px;
+  box-shadow:5px 5px 0 rgba(35,50,74,.14);padding:14px;margin:18px 0}
+.fiche>h2{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+.fiche::before{content:"";position:absolute;top:-10px;left:24px;width:74px;height:18px;background:var(--scotch);
+  transform:rotate(-2deg);border-radius:2px}
+.note{font-size:13px;background:#FFF4D6;border:1px dashed var(--soleil);border-radius:10px;padding:8px 10px;margin:8px 0}
 
-  /* ---------- Carte ---------- */
-  #map{ height:min(62vh,520px); border-radius:14px; border:1px solid var(--line); background:var(--card); }
-  .map-note{ color:var(--muted); font-size:.8rem; margin:10px 2px 0; }
-  .map-fallback{ display:flex; align-items:center; justify-content:center; height:100%; color:var(--muted); padding:20px; text-align:center; }
-  .mk{
-    width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff;
-    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.8rem;
-    border:2px solid #fff; box-shadow:0 1px 5px rgba(0,0,0,.45);
-  }
-  .mk-done{ background:var(--ok); }
+/* ---- pastilles jours ---- */
+.jours{display:flex;gap:8px;overflow-x:auto;padding:12px 2px;-webkit-overflow-scrolling:touch}
+.jour{min-width:64px;min-height:56px;border:2px solid var(--encre);border-radius:12px;background:var(--craie);
+  font-weight:700;font-size:13px;padding:6px 4px;text-align:center;flex-direction:column;display:flex;gap:2px;align-items:center;justify-content:center}
+.jour small{font-weight:600;font-size:10px;opacity:.7}
+.jour.actif{background:var(--soleil);box-shadow:3px 3px 0 rgba(35,50,74,.25)}
+.jour .pt{font-size:10px;line-height:1}
 
-  /* ---------- Feuille de route ---------- */
-  .timeline{ list-style:none; margin:0; padding:0; position:relative; }
-  .timeline::before{
-    content:""; position:absolute; left:29px; top:10px; bottom:10px; width:3px;
-    background:var(--line); border-radius:2px;
-  }
-  .step{ position:relative; margin:0 0 10px; }
-  .step-card{
-    display:flex; gap:12px; width:100%; text-align:left; cursor:pointer;
-    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px;
-  }
-  .step-bullet{
-    position:relative; z-index:1; flex:0 0 34px; height:34px; border-radius:50%;
-    background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center;
-    font-weight:700; align-self:flex-start;
-  }
-  .step.done .step-bullet{ background:var(--ok); }
-  .step.done .step-card{ opacity:.72; }
-  .step.done .step-title{ text-decoration:line-through; }
-  .step-body{ min-width:0; }
-  .step-title{ display:block; font-weight:650; }
-  .step-meta{
-    display:inline-block; font-size:.78rem; color:var(--muted);
-    background:var(--bg); padding:1px 9px; border-radius:99px; margin:5px 0 3px;
-  }
-  .step-note{ display:block; font-size:.87rem; color:var(--muted); }
+/* ---- chips horaires ---- */
+.ligne{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px dotted #D8DCE5;font-size:14px}
+.ligne:last-child{border-bottom:none}
+.chip{font-family:var(--mono);font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;min-width:52px;text-align:center;transform:rotate(-1deg)}
+.m-matin{background:var(--soleil);color:var(--encre)}
+.m-aprem{background:var(--gave);color:var(--craie);transform:rotate(1deg)}
+.m-soir{background:var(--encre);color:var(--craie)}
+.pub{display:flex;align-items:center;gap:8px;width:100%;padding:10px 4px;font-weight:800;font-size:14px;min-height:44px}
+.pub .n{margin-left:auto;font-size:12px;font-weight:600;opacity:.6}
+.extra{display:inline-block;background:var(--braise);color:var(--craie);font-size:10px;font-weight:800;
+  letter-spacing:.5px;padding:3px 8px;border-radius:999px;transform:rotate(-2deg)}
 
-  /* ---------- Cases à cocher ---------- */
-  .checkbox{
-    flex:0 0 26px; width:26px; height:26px; border-radius:8px;
-    border:2px solid var(--line); align-self:center; position:relative; transition:background .15s,border-color .15s;
-  }
-  .step-card .checkbox{ margin-left:auto; }
-  .checkbox.on{ background:var(--ok); border-color:var(--ok); }
-  .checkbox.on::after{
-    content:"✓"; color:#fff; position:absolute; inset:0;
-    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.9rem;
-  }
+/* ---- météo ---- */
+.meteo{display:flex;gap:8px;flex-wrap:wrap}
+.meteo button{flex:1;min-width:72px;min-height:48px;border:2px solid var(--encre);border-radius:12px;background:var(--craie);font-size:12px;font-weight:700;padding:6px}
+.meteo button.actif{background:var(--gave);color:var(--craie)}
 
-  /* ---------- Consignes ---------- */
-  .note-card{
-    background:var(--card); border:1px solid var(--line); border-left:5px solid var(--accent);
-    border-radius:12px; padding:12px 14px; margin-bottom:10px;
-  }
-  .note-card h3{ margin:0 0 4px; font-size:.95rem; }
-  .note-card p{ margin:0; font-size:.88rem; color:var(--muted); }
+/* ---- sorties ---- */
+.cat-t{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#5A6A85;margin:18px 4px 6px}
+.sortie{background:var(--craie);border:2px solid var(--encre);border-radius:14px;box-shadow:4px 4px 0 rgba(35,50,74,.12);padding:12px;margin:10px 0}
+.sortie.fait{opacity:.62;background:#F2F6F1}
+.s-top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.s-nom{font-weight:800;font-size:15px}
+.s-meta{font-size:12px;font-family:var(--mono);color:#4E5D77}
+.s-pre{font-size:13px;margin:6px 0}
+.s-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.s-act a,.s-act button{min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0 14px;border-radius:12px;font-weight:700;font-size:13px;text-decoration:none}
+.b-resa{background:var(--encre);color:var(--craie)}
+.b-fait{border:2px solid var(--sapin);color:var(--sapin)}
+.b-fait.on{background:var(--sapin);color:var(--craie)}
+.b-want{border:2px solid var(--soleil);color:#8a6a00}
+.b-want.on{background:var(--soleil);color:var(--encre)}
+.s-open{display:block;width:100%;text-align:left;min-height:44px}
+.s-hint{margin-left:auto;font-size:12px;font-weight:700;color:#5A6A85;white-space:nowrap}
+.s-det{margin-top:10px;border-top:2px dashed #D8DCE5;padding-top:10px}
+.s-photo{width:100%;height:150px;object-fit:cover;border:2px solid var(--encre);border-radius:10px;display:block;background:#DDE7EE}
+.s-banner{height:110px;border:2px solid var(--encre);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:52px}
+.bn-G{background:linear-gradient(160deg,#BFE3F0 55%,#8FBF9F 55%)}
+.bn-E{background:linear-gradient(160deg,#FFE9B3 55%,#CDE7C5 55%)}
+.bn-S{background:linear-gradient(160deg,#CDEDE8 55%,#F6D9A8 55%)}
+.bn-O{background:linear-gradient(160deg,#BFE0EE 55%,#DFF2F5 55%)}
+.bn-V{background:linear-gradient(160deg,#F3E3C8 55%,#E4D2EE 55%)}
+.s-bloc{font-size:13px;margin:8px 0}
+.s-bloc b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:#5A6A85;margin-bottom:2px}
+.pf{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.pf span{background:#FFF4D6;border:1px solid var(--soleil);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
+.b-iti{border:2px solid var(--gave);color:var(--gave)}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+.pop{animation:pop .35s ease}
+.confetti{position:fixed;font-size:26px;pointer-events:none;animation:vole 1s ease-out forwards;z-index:200}
+@keyframes vole{to{transform:translateY(-90px) rotate(35deg);opacity:0}}
 
-  /* ---------- Bagages ---------- */
-  .cat{ background:var(--card); border:1px solid var(--line); border-radius:14px; margin-bottom:12px; overflow:hidden; }
-  .cat-head{
-    display:flex; justify-content:space-between; align-items:center; gap:10px;
-    padding:11px 14px; border-bottom:1px solid var(--line); font-weight:700;
-  }
-  .item{
-    display:flex; align-items:center; gap:11px; width:100%; padding:11px 14px;
-    background:none; border:0; border-bottom:1px solid var(--line); text-align:left; cursor:pointer;
-  }
-  .item:last-child{ border-bottom:0; }
-  .item-label{ min-width:0; }
-  .item.done .item-label{ text-decoration:line-through; color:var(--muted); }
+/* ---- missions ---- */
+.mi{display:flex;gap:10px;align-items:center;min-height:48px;border-bottom:1px dotted #D8DCE5;font-size:14px}
+.mi:last-child{border-bottom:none}
+.mi button.cb{width:30px;height:30px;border:2px solid var(--encre);border-radius:9px;flex-shrink:0;font-size:16px;font-weight:800}
+.mi.done{opacity:.55;text-decoration:line-through}
+.mi.done button.cb{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
+.aj{display:flex;gap:8px;margin-top:10px}
+.aj input{flex:1;min-height:46px;border:2px solid var(--encre);border-radius:12px;padding:0 12px;font-size:14px;font-family:inherit;background:var(--craie)}
+.aj button{min-height:46px;padding:0 16px;border-radius:12px;background:var(--soleil);font-weight:800}
 
-  /* ---------- Remise à zéro ---------- */
-  .resetzone{ margin:28px 0 8px; text-align:center; }
-  #resetBtn{
-    background:none; border:1.5px dashed var(--line); color:var(--muted);
-    border-radius:12px; padding:10px 16px; cursor:pointer;
-  }
-  #resetBtn.armed{ border-color:var(--danger); color:var(--danger); background:rgba(201,79,79,.08); }
-  .reset-sub{ display:block; font-size:.72rem; opacity:.85; }
+/* ---- infos ---- */
+.lien{display:flex;min-height:46px;align-items:center;font-size:14px;border-bottom:1px dotted #D8DCE5;color:var(--encre);text-decoration:none;font-weight:600;gap:8px}
+.lien:last-child{border-bottom:none}
+.danger{margin-top:12px;width:100%;min-height:48px;border:2px solid var(--braise);color:var(--braise);border-radius:12px;font-weight:800}
 
-  /* ---------- Onglets ---------- */
-  #tabs{
-    position:fixed; left:0; right:0; bottom:0; z-index:1100; display:flex;
-    background:var(--card); border-top:1px solid var(--line);
-    padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -2px 12px rgba(0,0,0,.07);
-  }
-  #tabs button{
-    flex:1; background:none; border:0; padding:8px 0 6px; cursor:pointer;
-    display:flex; flex-direction:column; align-items:center; gap:2px;
-    font-size:1.15rem; color:var(--muted);
-  }
-  #tabs button span{ font-size:.67rem; font-weight:650; }
-  #tabs button.active{ color:var(--accent); }
+/* ---- barre d'onglets ---- */
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--craie);border-top:2px solid var(--encre);z-index:60}
+.n-in{max-width:760px;margin:0 auto;display:flex}
+nav button{flex:1;min-height:64px;font-size:11px;font-weight:700;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;color:#5A6A85}
+nav button .ic{font-size:20px}
+nav button.actif{color:var(--encre)}
+nav button.actif .ic{transform:translateY(-2px)}
+nav button.actif::after{content:"";width:26px;height:4px;border-radius:4px;background:var(--soleil)}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="head-row">
-    <h1>🏔️ Roadbook</h1>
-    <button id="syncPill" class="pill" type="button" title="Appuyer pour synchroniser maintenant">⏳ connexion…</button>
+  <div class="h-in">
+    <div>
+      <div class="h-t">🏕️ Le QG des vacances</div>
+      <div class="h-s">Argelès-Gazost · 25 juil → 8 août 2026</div>
+    </div>
+    <span class="badge-sync" id="sync">sync…</span>
   </div>
-  <p class="head-sub">Montaigu → Argelès-Gazost · <b>≈ 565 km</b> · ≈ 5 h 35 hors pauses</p>
-  <div class="head-progress"><div id="headBar"></div></div>
+  <div class="score">
+    <span id="niveau">🐹 Marmotte</span>
+    <div class="bar"><div class="fill" id="scorefill" style="width:0%"></div></div>
+    <span id="scoretxt" style="font-family:var(--mono)">0 pt</span>
+  </div>
 </header>
 
-<main>
-  <noscript><p class="hint">Cette page a besoin de JavaScript pour fonctionner.</p></noscript>
+<main id="app"></main>
 
-  <section id="tab-route" class="tab">
-    <div class="section-head"><h2>Feuille de route</h2><span class="badge" id="routeCount"></span></div>
-    <p class="hint">Cocher chaque étape une fois passée — la progression apparaît sur tous les téléphones.</p>
-    <ol id="steps" class="timeline"></ol>
-  </section>
+<nav><div class="n-in">
+  <button data-vue="jour" class="actif"><span class="ic">📅</span>Semaine</button>
+  <button data-vue="sorties"><span class="ic">🏔️</span>Sorties</button>
+  <button data-vue="missions"><span class="ic">✅</span>Missions</button>
+  <button data-vue="infos"><span class="ic">ℹ️</span>Infos</button>
+</div></nav>
 
-  <section id="tab-carte" class="tab" hidden>
-    <div class="section-head"><h2>Carte du trajet</h2></div>
-    <div id="map"></div>
-    <p class="map-note">Tracé indicatif reliant les étapes (pas le tracé routier exact). Appuyer sur un repère pour voir la consigne de l’étape.</p>
-  </section>
-
-  <section id="tab-consignes" class="tab" hidden>
-    <div class="section-head"><h2>Consignes</h2></div>
-    <div id="consignes"></div>
-  </section>
-
-  <section id="tab-bagages" class="tab" hidden>
-    <div class="section-head"><h2>Check-list bagages</h2><span class="badge" id="bagCount"></span></div>
-    <p class="hint">Chaque coche est partagée : on voit en direct ce que les autres ont déjà chargé.</p>
-    <div id="bags"></div>
-  </section>
-
-  <div class="resetzone">
-    <button id="resetBtn" type="button">🗑️ Tout remettre à zéro <span class="reset-sub">(appuyer 2 fois — efface pour tout le monde)</span></button>
-  </div>
-</main>
-
-<nav id="tabs">
-  <button data-tab="route" class="active" type="button">🧭<span>Roadbook</span></button>
-  <button data-tab="carte" type="button">🗺️<span>Carte</span></button>
-  <button data-tab="consignes" type="button">📋<span>Consignes</span></button>
-  <button data-tab="bagages" type="button">🎒<span>Bagages</span></button>
-</nav>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-'use strict';
+"use strict";
+/* ================= CONFIG SYNC (modèle roadbook) ================= */
+const TRIP = "sejour-0ec605493225600cc47dd828ee8281fc";   // même convention que le roadbook : mettez une chaîne aléatoire longue
+const API  = "/api/sync";
 
-/* ============================================================
-   Identifiant du voyage — la seule « clé d'accès » au suivi.
-   Avant mise en ligne, remplacer par une chaîne longue et
-   aléatoire (ex. "argeles-k3v9tqx27m") — cf. README, étape 5.
-   ============================================================ */
-const TRIP = "argeles-2026";
+/* ================= DONNÉES ================= */
+/* Planning camping — relevé sur le panneau (photos des 26/07). e=enfants 5-12, a=ados, x=adultes.
+   Drapeaux : * = temps fort, F = en famille, I = sur inscription */
+const CAMP = {
+"2026-07-26":{e:[["10:00","Créa bracelets"],["11:00","Football 5-12 ans"],["17:00","Jeux en bois"],["18:00","Flash games"]],
+a:[],x:[["17:00","Volley (multisport)"]]},
+"2026-07-27":{e:[["10:00","Accueil en bonbons"],["10:30","Tirage au sort Parc animalier","*"],["11:00","Loup-garou (+8 ans)"],["11:00","Création pochette souvenir"],["12:00","Mini-disco piscine"],["16:00","Création sculptée"],["16:00","Tournoi babyfoot"],["17:30","Rallye photo","F"]],
+a:[["11:00","Top départ"],["16:00","Initiation padel"],["17:00","Biathlon carabine laser"],["19:00","Réunion ados"],["20:30","Loup-garou"]],
+x:[["10:00","Circuit training"],["10:30","Tchoukball"],["11:00","Pilates postural"],["11:00","Basket"],["16:00","Water-polo"],["17:00","Volley"],["18:00","Initiation cocktail (bar)"],["18:15","Blind test (+18)"],["20:30","Concours de pétanque","*"]]},
+"2026-07-28":{e:[["10:00","Grand jeu KPop Demon Hunters"],["11:00","Concours Kapla"],["11:00","Peinture à bulles"],["16:00","Bricolage jeu de billes"],["17:00","Biathlon junior"],["17:30","Nail art"]],
+a:[["15:00","Water-polo piscine"],["16:00","Tournoi FIFA"],["17:00","Football"],["20:30","Soirée pizza party","*"]],
+x:[["09:30","Footing"],["11:00","Biathlon laser (ados + adultes)"],["16:00","Initiation padel"],["17:00","Football"],["18:15","Défi fléchettes"],["20:30","Tournoi padel nocturne","*"]]},
+"2026-07-29":{e:[["10:00","Sortie encadrée Parc animalier (10h-12h)","*"],["10:00","Dessin pixel art"],["10:30","Modelage"],["12:00","Mini-disco piscine"],["16:00","Créa dessin à gratter"],["16:00","Multisport"],["17:30","Tournoi de puzzle","F"],["17:30","Tchoukball (+10 ans)"]],
+a:[["11:00","Basket"],["15:00","Balle au prisonnier"],["17:00","Volley"],["20:30","Ado Pool Party (piscine)","*"]],
+x:[["10:00","Cours de yoga"],["10:00","Palet breton"],["11:00","Aquagym"],["11:00","Tournoi Mario / FIFA"],["16:00","Jeux défis piscine"],["16:30","Ping-pong"],["17:00","Spikeball (ados-adultes)"],["18:00","Tir à l'arc (+8 ans)","I"],["18:00","Rugby touché"],["18:15","Défis des animateurs"]]},
+"2026-07-30":{e:[["10:00","Le savant fou"],["10:00","Tournoi Mario Kart (+7 ans)"],["11:00","Ping-pong (+9 ans)"],["11:00","Dot painting"],["16:00","Créa squishy papier"],["16:00","Jeux piscine One Piece"],["17:30","Initiation padel (+10 ans)"],["18:00","Street dance"]],
+a:[["11:00","Mölkky"],["15:00","Jeux musicaux piscine"],["16:30","Undercover"],["17:00","Tournoi de foot"],["20:30","Cache-cache géant","*"]],
+x:[["10:00","Balade pédestre"],["11:00","Aquagym"],["11:00","Volley (11h-12h30)"],["16:00","Water-polo"],["17:00","Tournoi de foot (17h-19h)"],["18:15","Défi carabine laser (bar)"],["20:30","Tournoi de ping-pong","*"]]},
+"2026-07-31":{e:[["10:00","Créa festive"],["10:00","Football (city stade)","F"],["11:30","Jeux en ligne"],["12:00","Mini-disco piscine"],["16:30","Olympiades pour tous","F"],["18:00","Parade animée","*"],["18:30","Happy end en bonbons"]],
+a:[["11:00","La chasse aux stars"],["15:00","Jeux piscine chrono"],["16:30","Olympiades"],["18:00","Parade"],["20:30","Zombie attaque / foot","*"]],
+x:[["10:00","Cuisses-abdos-fessiers"],["10:00","Footing trail"],["11:00","Zumba"],["11:00","Tchoukball"],["16:30","Olympiades pour tous","F"],["18:00","Tir à l'arc (+8 ans)","I"],["18:15","Défis des animateurs"]]},
+"2026-08-01":{e:[["10:00","Peinture Aquarellum"],["11:00","Basket"],["17:00","Tournoi De Blocks"],["18:00","Création d'un marque-page"]],
+a:[["17:00","Water-polo"],["18:00","Tournoi baby-foot"],["20:30","Soirée blind test","*"]],
+x:[["11:00","Aquagym"],["11:00","Ping-pong"],["17:00","Football"]]}
+};
+const NOTES = {
+"2026-07-27":"⭐ 10h30 au Yelloh Park : tirage au sort pour la sortie Parc animalier — soyez-y !",
+"2026-07-28":"🧺 Marché d'Argelès-Gazost le matin (gâteau à la broche, fromages d'Azun).",
+"2026-07-29":"🦊 10h-12h : sortie encadrée au Parc animalier (5-12 ans, tirés au sort). Tir à l'arc +8 ans à 18h (inscription).",
+"2026-07-31":"👨‍👩‍👧‍👦 Journée famille au camping : foot 10h, olympiades 16h30, parade 18h. Tir à l'arc +8 ans à 18h.",
+"2026-08-01":"🔁 Nouveau programme affiché aujourd'hui → prends-le en photo pour mettre le QG à jour !",
+"2026-08-04":"🧺 Marché d'Argelès-Gazost le matin.",
+"2026-08-08":"🧳 Jour du départ — check-list rangement et route du retour."
+};
+const DAYS = ["2026-07-26","2026-07-27","2026-07-28","2026-07-29","2026-07-30","2026-07-31","2026-08-01","2026-08-02","2026-08-03","2026-08-04","2026-08-05","2026-08-06","2026-08-07","2026-08-08"];
+const JSEM = ["dim","lun","mar","mer","jeu","ven","sam"];
 
-/* ---------------------- Données du trajet ---------------------- */
-
-const STEPS = [
-  { id:"etape-01", t:"Départ — Montaigu (Vendée)", km:0, h:"départ",
-    note:"Pression des pneus et plein faits la veille. Rejoindre l’A83 direction Niort / Bordeaux.",
-    ll:[46.976,-1.312] },
-  { id:"etape-02", t:"A83 — pause à l’aire des Ruralies", km:105, h:"≈ 1 h 00",
-    note:"Café + toilettes. Reprendre l’A83, qui rejoint l’A10 après Niort, direction Bordeaux.",
-    ll:[46.280,-0.390] },
-  { id:"etape-03", t:"A10 — Saintes", km:190, h:"≈ 1 h 50",
-    note:"Continuer direction Bordeaux. Ralentissements fréquents l’été entre Saintes et Mirambeau.",
-    ll:[45.746,-0.633] },
-  { id:"etape-04", t:"Rocade de Bordeaux", km:300, h:"≈ 2 h 50",
-    note:"Suivre « Toulouse (A62) » par la rocade. Chargée entre 11 h et 15 h — garder de la marge.",
-    ll:[44.865,-0.554] },
-  { id:"etape-05", t:"Langon — A65 direction Pau", km:345, h:"≈ 3 h 20",
-    note:"Quitter l’A62 à Langon pour l’A65 (Pau). Chère mais déserte : on roule bien.",
-    ll:[44.556,-0.245] },
-  { id:"etape-06", t:"Pause déjeuner — aire de Garlin (A65)", km:470, h:"≈ 4 h 20",
-    note:"Pique-nique + plein d’appoint si besoin. Dernière grande aire avant Pau.",
-    ll:[43.560,-0.283] },
-  { id:"etape-07", t:"Pau — bascule sur l’A64", km:500, h:"≈ 4 h 45",
-    note:"L’A65 se termine et rejoint l’A64 : suivre Tarbes / Toulouse.",
-    ll:[43.325,-0.405] },
-  { id:"etape-08", t:"Sortie 12 « Tarbes-Ouest » → N21", km:535, h:"≈ 5 h 05",
-    note:"Sortir à Tarbes-Ouest après le péage, puis N21 direction Lourdes (voie rapide).",
-    ll:[43.245,0.005] },
-  { id:"etape-09", t:"Lourdes → D821", km:553, h:"≈ 5 h 20",
-    note:"Contourner Lourdes en suivant Argelès-Gazost / Gavarnie : la D821 file droit dans la vallée.",
-    ll:[43.095,-0.047] },
-  { id:"etape-10", t:"Arrivée — Argelès-Gazost 🎉", km:566, h:"≈ 5 h 35",
-    note:"Camping ! Check-in, installation… et apéro face aux montagnes.",
-    ll:[43.006,-0.100] },
+/* Sorties & activités hors camping (extrait du guide — prix indicatifs, vérifiés le 26/07) */
+const CATS = {G:"⛰️ Grands sites",E:"🦊 Spécial enfants",S:"🚴 Vélo & sensations",O:"💧 Eau & détente",V:"🏘️ Villages & marchés"};
+const SORTIES = [
+{id:"pontespagne",c:"G",e:"🌊",n:"Pont d'Espagne & lac de Gaube",r:"40 min",d:"½ à 1 j",p:"parking 8 € offert avec pass ~16 €/ad.",pre:"Partir avant 9h · télécabine + télésiège + 15 min à plat · veste",u:"https://www.cauterets.com/grand-site-pont-despagne/",s:1,gm:"Parking du Puntas, Pont d'Espagne, Cauterets",w:"Pont d'Espagne",
+ds:"Le grand site du Parc national : cascades rugissantes dès le parking, pont mythique, puis le lac de Gaube au pied du Vignemale. Avec le petit : télécabine + télésiège, et 15 min à plat jusqu'au lac — marmottes fréquentes.",
+acc:"D921 jusqu'à Pierrefitte, D920 vers Cauterets puis route du Pont d'Espagne jusqu'au parking du Puntas (27 km). Navettes possibles depuis Cauterets.",
+ho:"Remontées en journée [horaires exacts à vérifier] — viser le parking avant 9h (saturation + orages d'après-midi).",
+di:"Demi-journée le matin, ou journée avec pique-nique au lac.",
+pf:["Cascades dès le parking","Lac glaciaire mythique","Marmottes","Télésiège = zéro pleurs"]},
+{id:"gavarnie",c:"G",e:"🏔️",n:"Cirque de Gavarnie (UNESCO)",r:"50 min",d:"3-4 h",p:"gratuit · parking ~7 €",pre:"Départ matinal · sentier 1h15 · ânes au village pour le petit",u:"https://www.valleesdegavarnie.com",s:1,gm:"Gavarnie village",w:"Cirque de Gavarnie",
+ds:"La muraille classée UNESCO : 1 500 m de parois et la Grande Cascade (~420 m, la plus haute de France métropolitaine). Sentier large village → hôtellerie du Cirque, faisable à 5 ans en flânant — ou à dos d'âne loué au village.",
+acc:"D921 par Luz-Saint-Sauveur jusqu'au village de Gavarnie (30 km, ~50 min). Stationnement obligatoire au village (~7 €/jour). Aussi desservi par la ligne LIO 965.",
+ho:"Site libre en permanence — partir du camping vers 8h pour marcher au frais et éviter la foule.",
+di:"3-4 h sur place (1h15 de marche aller, pauses, pique-nique) : la journée avec les trajets.",
+pf:["Classé UNESCO","Plus haute cascade de France","Ânes pour les enfants","Pique-nique face au cirque"]},
+{id:"picdumidi",c:"G",e:"🔭",n:"Pic du Midi (2 877 m)",r:"55 min",d:"½ j",p:"dès 44 €/ad · 34 €/enf (5-17)",pre:"Résa J-3 = -25 % · météo dégagée · vêtements chauds",u:"https://picdumidi.com/fr/billetterie/",s:1,gm:"Téléphérique du Pic du Midi, La Mongie",w:"Pic du Midi de Bigorre",
+ds:"2 877 m : téléphérique en deux tronçons, terrasses à 360° sur toute la chaîne, ponton dans le ciel et musée-observatoire le plus haut d'Europe. L'effet « waouh » du séjour — au prix fort.",
+acc:"D921 jusqu'à Luz puis D918 par le col du Tourmalet jusqu'à La Mongie (40 km, ~55 min), puis téléphérique (15 min).",
+ho:"Première rotation le matin ; interruption du téléphérique 12h30-14h. Météo dégagée impérative — vérifier les webcams avant de partir.",
+di:"2-3 h au sommet, demi-journée avec la route — montée du matin, souvent < 10-15 °C là-haut.",
+pf:["Panorama à 360°","Ponton dans le ciel","Passage du Tourmalet","Musée le plus haut d'Europe"]},
+{id:"estaing",c:"G",e:"🐄",n:"Lac d'Estaing",r:"30 min",d:"½ j",p:"gratuit",pre:"Tour du lac plat ~1h · pique-nique · poneys sur place",u:"",s:0,gm:"Lac d'Estaing",w:"Lac d'Estaing",
+ds:"Lac de montagne accessible en voiture : eau claire, vaches en liberté, ruisseaux et auberge. Le spot zéro contrainte pour souffler entre deux grosses sorties.",
+acc:"D918 dans le val d'Azun puis D103 par la vallée d'Estaing (20 km, ~30 min). Parking au bord du lac.",
+ho:"Accès libre — parfait tôt le matin ou en fin de journée pour la lumière.",
+di:"2-3 h : tour du lac (45 min-1h, praticable poussette côté principal) + pique-nique ou goûter à l'auberge.",
+pf:["Accessible poussette","Poneys sur place","Pique-nique au bord de l'eau","Gratuit"]},
+{id:"soulor",c:"G",e:"🦅",n:"Cols du Soulor & de l'Aubisque",r:"35-45 min",d:"½ j",p:"gratuit",pre:"Route en corniche étroite · vautours · crêpes au col",u:"",s:0,gm:"Col du Soulor",w:"Col du Soulor",
+ds:"L'une des plus belles routes des Pyrénées : la corniche du Litor entre les deux cols, vautours fauves en vol, troupeaux en estive — et crêpes au sommet.",
+acc:"D918 jusqu'au col du Soulor (20 km, ~35 min) puis corniche vers l'Aubisque (+10 km, route étroite : conducteur serein).",
+ho:"Libre — lumière au top le matin et en fin de journée ; renoncer par brouillard.",
+di:"Demi-journée en voiture avec arrêts photo et petites marches au départ des cols.",
+pf:["Corniche spectaculaire","Vautours fauves","Crêpes au Soulor","Décor du Tour de France"]},
+{id:"troumouse",c:"G",e:"🌿",n:"Cirque de Troumouse (option)",r:"1h05",d:"½ j",p:"accès sommital payant [à vérifier]",pre:"Le Gavarnie sans la foule · plateau où le petit gambade",u:"",s:0,gm:"Cirque de Troumouse",w:"Cirque de Troumouse",
+ds:"Un cirque immense et méconnu : plateau d'altitude où le petit court en liberté, marmottes et isards, sans la foule de Gavarnie.",
+acc:"D921 jusqu'à Gèdre puis D922 vers Héas et l'auberge du Maillet (~40 km, 1h05). Fin d'accès payante (petit train navette selon saison) [à vérifier].",
+ho:"Journée claire uniquement ; monter le matin.",
+di:"2-3 h sur le plateau, demi-journée avec la route.",
+pf:["Le Gavarnie sans la foule","Plateau où gambader","Marmottes","Route panoramique"]},
+{id:"parcanimalier",c:"E",e:"🦫",n:"Parc animalier des Pyrénées",r:"3 min",d:"3-4 h",p:"~20-25 €/ad [à vérifier]",pre:"Arriver à 9h · porte-bébé conseillé · marmottes à nourrir",u:"https://www.parc-animalier-pyrenees.com/page/horaires-et-tarifs",s:1,gm:"Parc animalier des Pyrénées, Ayzac-Ost",w:"Parc animalier des Pyrénées",
+ds:"Le site le mieux noté du secteur : marmottes à nourrir à la main, ours bruns, loups, loutres en vision sous-marine — un parc immersif à flanc de montagne.",
+acc:"À l'entrée d'Argelès côté Ayzac-Ost (2 km) : à pied depuis le camping ou 3 min de voiture, parking gratuit.",
+ho:"Tous les jours 9h-18h30 — arriver à l'ouverture pour les nourrissages ; ouvert même par mauvais temps.",
+di:"3-4 h le matin, ou la journée tranquille avec pique-nique (aires sur place).",
+pf:["Marmottes à la main","Ours & loups","À 2 km du camping","Ouvert même par pluie"]},
+{id:"donjon",c:"E",e:"🦅",n:"Donjon des Aigles (Beaucens)",r:"10 min",d:"2-3 h",p:"16 € / 10,50 € (5-11) / <5 gratuit",pre:"Spectacles 15h30 & 17h30 · arriver 30 min avant · casquette",u:"https://www.donjon-des-aigles.com/information-tarifs-horaires/",s:1,gm:"Donjon des Aigles, Beaucens",w:"Donjon des Aigles",
+ds:"Château féodal du XIe siècle et spectacle de rapaces en vol libre : aigles, vautours, condor et perroquets qui frôlent les têtes du public.",
+acc:"D13 vers Beaucens (6 km, 10 min), route jusqu'au château, parking gratuit.",
+ho:"En ce moment (14/07-25/08) : spectacles à 15h30 et 17h30, arriver 30 min avant ; le matin, visite simple à tarif réduit.",
+di:"2-3 h en après-midi — par canicule, viser le spectacle de 17h30 (peu d'ombre : casquette + eau).",
+pf:["Rapaces en vol libre","Château médiéval","10 min du camping","Gratuit avant 5 ans"]},
+{id:"betharram",c:"E",e:"⛵",n:"Grottes de Bétharram",r:"35 min",d:"1h20 + trajet",p:"~17 €/ad · <4 gratuit",pre:"Réserver en ligne · 14 °C = veste · 250 marches, pas de poussette",u:"https://www.betharram.com/page/tarifs-horaires",s:1,gm:"Grottes de Bétharram",w:"Grottes de Bétharram",
+ds:"Traversée complète de la montagne : salles géantes, descente d'escaliers, barque sur la rivière souterraine et retour en petit train — le combo qui fait mouche à 5 ans.",
+acc:"N21 vers Lourdes puis D937 direction Saint-Pé-de-Bigorre (25 km, ~35 min). Grand parking gratuit, navette incluse jusqu'à l'entrée.",
+ho:"Visites guidées sur créneau réservé en ligne ; arriver 15 min avant. 14 °C constants toute l'année.",
+di:"1h20 de visite, demi-journée avec la route — LE joker canicule ou pluie.",
+pf:["Barque souterraine","Petit train","14 °C garanti","Émerveillement assuré"]},
+{id:"chlorofil",c:"E",e:"🌳",n:"Chloro'fil Parc (accrobranche)",r:"5 min",d:"½ j",p:"selon activité",pre:"Parcours petits dès ~4 ans · réserver l'été · baskets",u:"https://www.chlorofil-parc.com/",s:0,gm:"Chloro'fil Parc, Agos-Vidalos",w:"",
+ds:"Parc aventure au-dessus du gave : accrobranche accessible aux petits (selon capacités), tyroliennes, trampolines géants, Tubby Jump — et base d'eaux vives pour les grands.",
+acc:"Direction Agos-Vidalos (4 km, 5 min), parking sur place.",
+ho:"Créneaux à la demi-journée ; réservation conseillée en été.",
+di:"Demi-journée ; baskets fermées obligatoires, snack sur place.",
+pf:["Parcours petits","Tyroliennes","À 5 min","Sensations dosées"]},
+{id:"artouste",c:"E",e:"🚂",n:"Petit train d'Artouste (option)",r:"1h20",d:"journée",p:"28 € / 20 € (-12) / <4 gratuit",pre:"Résa quasi obligatoire · 3h30 sur site · non remboursable",u:"https://artouste.fr/ete/le-train-dartouste/les-tarifs/",s:0,gm:"Petit train d'Artouste, Fabrèges, Laruns",w:"Petit train d'Artouste",
+ds:"Le plus haut petit train d'Europe : télécabine puis 55 minutes de voyage à flanc de falaise à 2 000 m jusqu'au lac d'Artouste. LA journée exceptionnelle du séjour.",
+acc:"D918 par les cols du Soulor et de l'Aubisque jusqu'à Laruns puis lac de Fabrèges (55 km, ~1h20 par la route d'été, superbe).",
+ho:"Saison du 8 mai au 4 octobre, créneaux horaires réservés — quasi complet en août sans résa ; billets non remboursables.",
+di:"3h30 sur site + 2 × 1h20 de route : journée complète, à coupler avec la route des cols.",
+pf:["Train le plus haut d'Europe","Falaises + lac","Aventure inoubliable","Gratuit avant 4 ans"]},
+{id:"voieverte",c:"S",e:"🚴",n:"Voie verte des Gaves",r:"0 min",d:"2 h - ½ j",p:"gratuit (location vélos ~15-25 €)",pre:"Plate et sans voitures · Argelès→Pierrefitte 6 km ou →Lourdes 13 km",u:"",s:1,gm:"Ancienne gare, Argelès-Gazost",w:"Voie verte des Gaves",
+ds:"Ancienne voie ferrée goudronnée, plate et 100 % sans voitures, de Lourdes à Pierrefitte (18 km) le long du gave, à travers 12 villages.",
+acc:"Entrée à l'ancienne gare d'Argelès, à ~1 km du camping — on y va directement à vélo (location au camping ou en ville, sièges et carrioles).",
+ho:"Libre — le matin avant la chaleur, ou en fin de journée.",
+di:"2 h : Argelès → Pierrefitte A/R (12 km) avec le petit ; les grands peuvent pousser vers Lourdes. Ne pas engager Pierrefitte → Cauterets (raide, VTT).",
+pf:["Zéro voiture","Plat = 5 ans OK","Départ du camping","Pieds dans le gave"]},
+{id:"hautacam",c:"S",e:"🛷",n:"Mountain Luge du Hautacam",r:"30 min",d:"½ j",p:"8 €/descente",pre:"Dès 3 ans en biplace avec adulte · 10h-18h · pique-nique",u:"https://hautacam.com/fr/tarifs",s:1,gm:"Station du Hautacam",w:"Hautacam",
+ds:"Luge sur rails de 700 m face au panorama de toute la vallée, plus tubing, vélo suspendu et aires de jeux : la demi-journée sensations en altitude.",
+acc:"D100 par Ayros-Arbouix puis 14 km de lacets (~30 min). Parking gratuit à la station (navette estivale signalée par le camping).",
+ho:"Tous les jours 10h-18h jusqu'au 31/08, sans réservation. Snack limité l'après-midi → monter avec le pique-nique.",
+di:"Demi-journée ; le petit descend en biplace avec un adulte, les grands seuls dès 8 ans.",
+pf:["Luge dès 3 ans (biplace)","Panorama géant","8 €/descente","Air frais en altitude"]},
+{id:"cheval",c:"S",e:"🐴",n:"Balade à cheval (chemin de Sère)",r:"5 min",d:"1-2 h",p:"tarifs à l'accueil",pre:"« Tout âge, tout niveau » d'après le panneau du camping",u:"",s:0,gm:"Chemin de Sère, Argelès-Gazost",w:"",
+ds:"Balades à cheval et poney « pour tout âge et tout niveau » d'après le panneau du camping — la version locale des ânes de Gavarnie, sans la route.",
+acc:"Chemin de Sère, à ~5 min du camping. Adresse exacte et réservation via l'accueil.",
+ho:"[à vérifier à l'accueil du camping]",
+di:"1-2 h en fin de journée, quand la chaleur retombe.",
+pf:["Tout âge","À 5 min","Alternative aux ânes","Souvenir garanti"]},
+{id:"rafting",c:"S",e:"🛶",n:"Rafting / eaux vives (Agos)",r:"5 min",d:"2-3 h",p:"selon formule",pre:"Âge mini 6-8 ans selon niveau d'eau → confirmer par téléphone",u:"https://www.chlorofil-parc.com/",s:0,gm:"Agos-Vidalos",w:"Gave de Pau",
+ds:"Descente du gave de Pau en raft ou airboat pour les plus grands ; le petit de 5 ans est sous l'âge minimum de la plupart des formules.",
+acc:"Bases d'eaux vives à Agos-Vidalos (5 min), dont Chloro'fil.",
+ho:"Créneaux selon le niveau d'eau — réserver par téléphone en confirmant les âges.",
+di:"2-3 h ; se répartir : un adulte à l'eau avec les grands, l'autre à l'accrobranche avec le petit.",
+pf:["Sensations gave","À 5 min","Encadré","Formules selon âge"]},
+{id:"bainsrocher",c:"O",e:"♨️",n:"Bains du Rocher (Cauterets)",r:"25 min",d:"2 h",p:"pass 2 h [tarif sur site]",pre:"Enfants accompagnés OK · sauna/hammam <16 interdits · pas de bermuda",u:"https://www.bains-rocher.fr/",s:1,gm:"Les Bains du Rocher, Cauterets",w:"Cauterets",
+ds:"Lagune extérieure d'eau thermale à 33 °C face aux sommets, bassin intérieur sous verrière : la récompense parfaite après le Pont d'Espagne.",
+acc:"D920 jusqu'à Cauterets centre (17 km, 25 min), parkings payants du centre.",
+ho:"Pass de 2 h ; éviter 17h-19h (affluence). Maillot près du corps obligatoire (bermuda refusé).",
+di:"2 h en fin d'après-midi, idéalement couplées à une sortie Cauterets.",
+pf:["33 °C face aux sommets","Enfants bienvenus","Combo Pont d'Espagne","Détente parents"]},
+{id:"jardinbains",c:"O",e:"🛁",n:"Le Jardin des Bains (Argelès)",r:"à pied",d:"1h30-2 h",p:"[tarif sur site]",pre:"Viser l'ouverture (files l'été) · parc thermal à côté",u:"https://www.lejardindesbains.com/",s:0,gm:"Le Jardin des Bains, Argelès-Gazost",w:"Argelès-Gazost",
+ds:"La balnéo zéro voiture : bassins, jets et détente, avec le grand parc thermal juste à côté (aire de jeux, canards, casino-cinéma).",
+acc:"Centre d'Argelès, ~10 min à pied du camping (les thermes sont à 200 m).",
+ho:"Viser l'ouverture (10h30 ou 15h) — files d'attente signalées l'été [horaires à vérifier].",
+di:"1h30-2 h + le parc thermal en sortant, en fin de journée.",
+pf:["À pied","Parc thermal à côté","Plan fin de journée","Sans voiture"]},
+{id:"chateaufort",c:"O",e:"🏰",n:"Château fort de Lourdes (plan pluie)",r:"15 min",d:"1h30-2 h",p:"~8 €/ad",pre:"Ascenseur · musée pyrénéen · superbe vue",u:"https://www.chateaufort-lourdes.fr/",s:0,gm:"Château fort de Lourdes",w:"Château fort de Lourdes",
+ds:"Un vrai château fort sur son piton, avec le Musée pyrénéen : maquettes, collections d'autrefois, chemins de ronde et une vue superbe sur la ville et les sommets.",
+acc:"N21 jusqu'à Lourdes (13 km, 15 min), stationnement en ville ; un ascenseur monte au château.",
+ho:"Ouvert en journée [horaires à vérifier] — le plan pluie idéal.",
+di:"1h30-2 h, à coupler avec le Pic du Jer ou la procession aux flambeaux de 21h.",
+pf:["Vrai château","Ascenseur","Vue sur Lourdes","Plan pluie"]},
+{id:"marche",c:"V",e:"🧺",n:"Marché d'Argelès (mardi matin)",r:"à pied",d:"2 h",p:"gratuit (espèces !)",pre:"Avant 11h · gâteau à la broche · vieille ville + parc thermal",u:"",s:1,gm:"Marché d'Argelès-Gazost",w:"Argelès-Gazost",
+ds:"L'institution du mardi matin : gâteau à la broche cuit sous vos yeux, fromages du val d'Azun, garbure et producteurs — puis flânerie dans la vieille ville.",
+acc:"Centre d'Argelès, à pied depuis le camping (300 m).",
+ho:"Mardi matin — y être avant 11h pour le choix et l'ambiance.",
+di:"2 h en flânant, panier et espèces en poche, goûter compris.",
+pf:["Gâteau à la broche","Producteurs locaux","À pied","Ambiance bigourdane"]},
+{id:"picdujer",c:"V",e:"🚞",n:"Funiculaire du Pic du Jer (Lourdes)",r:"15 min",d:"½ j",p:"~13-15 € A/R [à vérifier]",pre:"Panorama à 1 000 m · combinable château fort ou procession 21h",u:"https://www.picdujer.com/",s:0,gm:"Funiculaire du Pic du Jer, Lourdes",w:"Pic du Jer",
+ds:"Funiculaire centenaire (1902) jusqu'à ~1 000 m : panorama sur Lourdes, la plaine et les Pyrénées, sentier sommital facile et petite grotte l'été.",
+acc:"N21 jusqu'à Lourdes (15 min), parking au pied du funiculaire, avenue Francis Lagardère.",
+ho:"~9h30-18h [à vérifier] — belle lumière en fin d'après-midi.",
+di:"2-3 h, combinable avec le château fort ou la procession aux flambeaux (21h).",
+pf:["Funiculaire 1902","Panorama à 1 000 m","Petit prix vs Pic du Midi","Facile à 5 ans"]},
+{id:"saintsavin",c:"V",e:"⛪",n:"Saint-Savin & Piétat",r:"5 min",d:"1-2 h",p:"gratuit",pre:"Village de balcon · abbatiale XIIe · goûter en terrasse",u:"",s:0,gm:"Saint-Savin, Hautes-Pyrénées",w:"Saint-Savin (Hautes-Pyrénées)",
+ds:"Village de balcon dominant toute la vallée : abbatiale romane du XIIe, ruelles fleuries, et le belvédère de la chapelle de Piétat à côté pour le goûter.",
+acc:"D101, 3 km (5 min), parking sur la place du village.",
+ho:"Libre — idéal en fin d'après-midi.",
+di:"1-2 h, crêpe en terrasse comprise.",
+pf:["5 min du camping","Abbatiale XIIe","Belvédère","Goûter en terrasse"]},
+{id:"luz",c:"V",e:"🌉",n:"Luz-Saint-Sauveur & pont Napoléon",r:"25 min",d:"½ j",p:"gratuit",pre:"Église des Templiers · pont à 65 m au-dessus du gave · marché lundi",u:"",s:0,gm:"Pont Napoléon, Luz-Saint-Sauveur",w:"Luz-Saint-Sauveur",
+ds:"Bourg de caractère : église fortifiée dite des Templiers, ruelles animées, et le pont Napoléon suspendu à ~65 m au-dessus du gave — frisson sécurisé garanti.",
+acc:"D921, 19 km (25 min) ; se garer au centre, le pont Napoléon est juste au sud vers Saint-Sauveur.",
+ho:"Libre ; marché le lundi matin.",
+di:"Demi-journée douce, combinable avec Gavarnie (c'est sur la route).",
+pf:["Pont à 65 m","Église des Templiers","Marché du lundi","Sur la route de Gavarnie"]}
 ];
 
-const CONSIGNES = [
-  { icon:"🚦", t:"Circulation",
-    p:"Départ conseillé avant 8 h. Les samedis de juillet sont classés rouge ou noir dans ce sens : jeter un œil à Bison Futé la veille. Point dur : la rocade de Bordeaux entre 11 h et 15 h." },
-  { icon:"💶", t:"Péages",
-    p:"Compter environ 55–65 € l’aller en classe 1 (A83 + A10 + A62 + A65 + A64). Badge télépéage à portée de main — sinon préparer la CB, pas de monnaie à chercher au péage." },
-  { icon:"⛽", t:"Carburant",
-    p:"Plein la veille. Appoint possible à l’aire de Garlin (A65) ou, moins cher, en sortant à Lourdes. Ne pas viser la réserve en montagne." },
-  { icon:"☕", t:"Pauses",
-    p:"Une vraie pause toutes les 2 h (Ruralies, Garlin…). Boire régulièrement : la clim déshydrate. Si deux conducteurs : relais à Bordeaux puis à Pau." },
-  { icon:"🏕️", t:"Arrivée au camping",
-    p:"Vérifier l’heure d’arrivée sur la confirmation de réservation (souvent 14 h – 19 h). Supermarchés en entrée d’Argelès-Gazost pour les courses du premier soir." },
-  { icon:"🌦️", t:"Météo montagne",
-    p:"Orages fréquents en fin d’après-midi dans les Pyrénées : kways et bâche accessibles sur le dessus du coffre, pas au fond." },
-  { icon:"🆘", t:"Urgences",
-    p:"112 partout, 15 SAMU, 18 pompiers. Sur autoroute : borne orange ou 112 en précisant le sens et le point kilométrique. Enregistrer le numéro du camping dans les contacts." },
+const METEO = {
+beau:{ic:"☀️",t:"Grand beau",tip:"Journée dégagée : foncez sur un gros morceau, départ avant 9h.",ids:["gavarnie","picdumidi","pontespagne","artouste"]},
+orage:{ic:"⛈️",t:"Orages l'aprem",tip:"Le cas classique ici : tout se joue le matin, redescendus avant 15h — après-midi camping.",ids:["pontespagne","estaing","voieverte","hautacam"]},
+pluie:{ic:"🌧️",t:"Pluie",tip:"Journée refuge : grottes à 14 °C, château, balnéo — le Parc animalier reste ouvert.",ids:["betharram","chateaufort","bainsrocher","parcanimalier"]},
+canicule:{ic:"🥵",t:"Canicule",tip:"Altitude le matin, eau de 12h à 16h, sortie fraîche ensuite. Une gourde par personne.",ids:["pontespagne","betharram","bainsrocher","hautacam"]}
+};
+
+const MISSIONS = [
+"Tirage au sort Parc animalier — lundi 27, 10h30 (Yelloh Park)",
+"Inscrire les +8 ans au tir à l'arc (mer 29 & ven 31, 18h)",
+"Réserver le Pic du Midi (J-3 = -25 %)",
+"Réserver les grottes de Bétharram (créneau)",
+"Demander les horaires navette / bus LIO 965 à l'accueil",
+"Marché d'Argelès — mardi matin (prévoir espèces)",
+"Photographier le planning de la semaine 2 (samedi)",
+"(Option) Réserver le petit train d'Artouste"
 ];
 
-const BAGS = [
-  { icon:"📄", t:"Papiers & argent", items:[
-    ["pap-id","Cartes d’identité + permis de conduire"],
-    ["pap-vitale","Cartes vitale + cartes de mutuelle"],
-    ["pap-resa","Confirmation de réservation du camping"],
-    ["pap-cb","CB + un peu d’espèces"],
-    ["pap-badge","Badge télépéage"],
-    ["pap-assur","Attestation d’assurance auto + constat (boîte à gants)"],
-    ["pap-sante","Carnets de santé + ordonnances en cours"],
-  ]},
-  { icon:"⛺", t:"Camping & couchage", items:[
-    ["camp-tente","Tente complète (arceaux, sardines, maillet)"],
-    ["camp-duvets","Duvets / couettes"],
-    ["camp-oreillers","Oreillers"],
-    ["camp-matelas","Matelas + gonfleur"],
-    ["camp-frontales","Lampes frontales + piles de rechange"],
-    ["camp-rallonge","Rallonge élec. + adaptateur prise camping (CEE)"],
-    ["camp-multiprise","Multiprise"],
-    ["camp-table","Table + chaises pliantes"],
-    ["camp-corde","Corde à linge + pinces"],
-    ["camp-lumiere","Lampe d’ambiance / guirlande"],
-  ]},
-  { icon:"👕", t:"Vêtements", items:[
-    ["vet-jour","Tenues légères pour la journée"],
-    ["vet-chaud","Polaires / pulls (soirées fraîches en montagne)"],
-    ["vet-pluie","Kways / vestes imperméables"],
-    ["vet-rando","Chaussures de rando"],
-    ["vet-baskets","Baskets + tongs"],
-    ["vet-maillots","Maillots de bain"],
-    ["vet-tete","Casquettes / chapeaux + lunettes de soleil"],
-    ["vet-pyjamas","Pyjamas chauds"],
-    ["vet-linge","Linge pour la semaine + filet à linge sale + lessive"],
-  ]},
-  { icon:"🧴", t:"Hygiène & pharmacie", items:[
-    ["hyg-trousses","Trousses de toilette"],
-    ["hyg-serviettes","Serviettes (douche + piscine)"],
-    ["hyg-solaire","Crème solaire indice 50 + après-soleil"],
-    ["hyg-moustique","Anti-moustiques"],
-    ["hyg-pharma","Trousse pharmacie (paracétamol, pansements, désinfectant, antihistaminique, tire-tique)"],
-    ["hyg-medic","Médicaments personnels (+ ordonnances)"],
-    ["hyg-gel","Gel hydroalcoolique + mouchoirs"],
-    ["hyg-pq","Papier toilette (secours)"],
-  ]},
-  { icon:"🍳", t:"Cuisine", items:[
-    ["cui-rechaud","Réchaud + cartouches de gaz"],
-    ["cui-feu","Briquet / allumettes"],
-    ["cui-popote","Popote : casserole + poêle"],
-    ["cui-vaisselle","Assiettes, couverts, verres, bols"],
-    ["cui-couteau","Couteau + planche à découper"],
-    ["cui-ouvre","Ouvre-boîte + tire-bouchon"],
-    ["cui-cafe","Café / thé + sucre"],
-    ["cui-epices","Sel, poivre, huile"],
-    ["cui-lavage","Éponge + liquide vaisselle + torchons"],
-    ["cui-glaciere","Glacière + pains de glace"],
-    ["cui-boites","Boîtes hermétiques + alu / film"],
-    ["cui-sacs","Sacs poubelle"],
-  ]},
-  { icon:"🎒", t:"Activités & rando", items:[
-    ["act-sacs","Sacs à dos de rando"],
-    ["act-gourdes","Gourdes / poches à eau"],
-    ["act-batons","Bâtons de marche"],
-    ["act-cartes","Carte IGN + appli rando hors-ligne téléchargée"],
-    ["act-jumelles","Jumelles + appareil photo"],
-    ["act-jeux","Jeux de société + cartes"],
-    ["act-petanque","Boules de pétanque"],
-    ["act-livres","Livres / liseuses"],
-    ["act-lac","Serviettes + jeux pour le lac / la piscine"],
-  ]},
-  { icon:"🚗", t:"Voiture & trajet", items:[
-    ["car-pneus","Pression des pneus + roue de secours vérifiées"],
-    ["car-plein","Plein de carburant (la veille)"],
-    ["car-niveaux","Niveaux OK (lave-glace, huile)"],
-    ["car-secu","Gilets jaunes + triangle accessibles"],
-    ["car-chargeurs","Chargeurs + câbles + batterie externe"],
-    ["car-musique","Musique / podcasts téléchargés"],
-    ["car-eau","Eau + encas dans l’habitacle"],
-    ["car-sacs","Sacs anti « mal des transports »"],
-    ["car-oreiller","Petits oreillers de voyage"],
-  ]},
-];
-
-const TOTAL_ITEMS = STEPS.length + BAGS.reduce((n, c) => n + c.items.length, 0);
-
-/* ---------------------- État partagé ---------------------- */
-
-const LS_KEY = "roadbook:" + TRIP;
-const API = "/api/sync?trip=" + encodeURIComponent(TRIP);
-
-let state = loadLocal();
-
-function loadLocal() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === "object") {
-        return { items: parsed.items || {}, resetAt: parsed.resetAt || 0 };
-      }
-    }
-  } catch (e) { /* stockage local indisponible : on vivra en mémoire */ }
-  return { items: {}, resetAt: 0 };
+/* ================= ÉTAT PARTAGÉ ================= */
+let ST = {state:{}, resetAt:0};
+let vue = "jour";
+let jourSel = defJour();
+let enLigne = null;
+let timerSync = null;
+const ouverts = {};   // fiches sorties dépliées (local à l'appareil, non synchronisé)
+const wikiImg = {};   // cache des photos Wikipédia
+function chargePhoto(o){
+  if(!o.w || wikiImg[o.id] !== undefined) return;
+  wikiImg[o.id] = null;
+  fetch("https://fr.wikipedia.org/api/rest_v1/page/summary/" + encodeURIComponent(o.w))
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){
+      wikiImg[o.id] = (j && j.thumbnail && j.thumbnail.source) ? j.thumbnail.source : false;
+      if(ouverts[o.id] && vue === "sorties") rendre();
+    })
+    .catch(function(){ wikiImg[o.id] = false; });
 }
 
-function saveLocal() {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* idem */ }
+function defJour(){
+  const d = new Date(); const iso = d.toISOString().slice(0,10);
+  return DAYS.includes(iso) ? iso : DAYS[0];
+}
+function put(k,v){ ST.state[k] = {v:v, t:Date.now()}; rendre(); planifSync(); }
+function val(k,def){ const e = ST.state[k]; return (e && (e.t||0) >= (ST.resetAt||0)) ? e.v : def; }
+function fusion(remote){
+  if(!remote || typeof remote !== "object") return;
+  ST.resetAt = Math.max(ST.resetAt||0, remote.resetAt||0);
+  const rs = remote.state || {};
+  for(const k in rs){ const a = ST.state[k], b = rs[k];
+    if(b && typeof b.t === "number" && (!a || b.t > a.t)) ST.state[k] = b; }
+  for(const k in ST.state){ if((ST.state[k].t||0) < ST.resetAt) delete ST.state[k]; }
+}
+async function sync(){
+  try{
+    const r = await fetch(API + "?trip=" + encodeURIComponent(TRIP), {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(ST)});
+    if(!r.ok) throw new Error(r.status);
+    fusion(await r.json()); enLigne = true;
+  }catch(e){ enLigne = false; }
+  majSync(); rendre();
+}
+function planifSync(){ clearTimeout(timerSync); timerSync = setTimeout(sync, 800); }
+setInterval(function(){ if(document.visibilityState === "visible") sync(); }, 15000);
+function majSync(){
+  const b = document.getElementById("sync");
+  if(enLigne === true){ b.textContent = "✓ partagé"; b.className = "badge-sync ok"; }
+  else if(enLigne === false){ b.textContent = "hors ligne"; b.className = "badge-sync off"; b.title = "Coches gardées sur cet appareil — sync dès que /api/sync répond"; }
 }
 
-// Même fusion que le serveur : le ts le plus récent gagne, resetAt efface.
-function merge(a, b) {
-  const resetAt = Math.max(a.resetAt || 0, b.resetAt || 0);
-  const items = {};
-  for (const source of [a.items || {}, b.items || {}]) {
-    for (const key in source) {
-      const item = source[key];
-      if (!item || typeof item.ts !== "number" || item.ts <= resetAt) continue;
-      if (!items[key] || item.ts > items[key].ts) items[key] = item;
-    }
-  }
-  return { items, resetAt };
+/* ================= SCORE ================= */
+function score(){
+  let s = 0;
+  SORTIES.forEach(function(o){ if(val("done:"+o.id,false)) s += 10; });
+  MISSIONS.forEach(function(_,i){ if(val("md:"+i,false)) s += 2; });
+  (val("cm",[])).forEach(function(m){ if(m.done) s += 2; });
+  return s;
+}
+function majScore(){
+  const s = score();
+  const niveaux = [[0,"🐹 Marmotte"],[30,"🐐 Isard"],[80,"🦅 Vautour"],[150,"🐻 Ours des Pyrénées"]];
+  let n = niveaux[0], max = 160;
+  niveaux.forEach(function(x){ if(s >= x[0]) n = x; });
+  document.getElementById("niveau").textContent = n[1];
+  document.getElementById("scoretxt").textContent = s + " pt";
+  document.getElementById("scorefill").style.width = Math.min(100, Math.round(s/max*100)) + "%";
 }
 
-function isDone(id) {
-  const item = state.items[id];
-  return !!(item && item.v);
+/* ================= RENDUS ================= */
+const esc = function(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;"); };
+function chip(h){
+  const H = parseInt(h,10);
+  const cl = H < 13 ? "m-matin" : (H < 19 ? "m-aprem" : "m-soir");
+  return '<span class="chip ' + cl + '">' + h + '</span>';
 }
-
-function toggle(id) {
-  state.items[id] = { v: !isDone(id), ts: Date.now() };
-  saveLocal();
-  renderAll();
-  syncNow();
-}
-
-/* ---------------------- Synchronisation ---------------------- */
-
-const pill = document.getElementById("syncPill");
-let syncing = false, pendingAgain = false, lastOk = 0;
-
-function setStatus(mode) {
-  pill.classList.remove("pill-ok", "pill-off");
-  if (mode === "ok") { pill.classList.add("pill-ok"); lastOk = Date.now(); tickPill(); }
-  else if (mode === "sync") { pill.textContent = "⏳ synchro…"; }
-  else { pill.classList.add("pill-off"); pill.textContent = "📴 hors ligne — coches gardées ici"; }
-}
-
-function tickPill() {
-  if (!pill.classList.contains("pill-ok") || !lastOk) return;
-  const seconds = Math.max(0, Math.round((Date.now() - lastOk) / 1000));
-  pill.textContent = seconds < 3 ? "🟢 synchronisé" : "🟢 synchro il y a " + seconds + " s";
-}
-setInterval(tickPill, 3000);
-
-async function syncNow() {
-  if (syncing) { pendingAgain = true; return; }
-  syncing = true;
-  setStatus("sync");
-  try {
-    const res = await fetch(API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ state }),
-    });
-    if (!res.ok) throw new Error("http " + res.status);
-    const data = await res.json();
-    // Re-fusion avec l'état local : ne perd pas une coche faite pendant la requête.
-    state = merge(data.state || { items: {}, resetAt: 0 }, state);
-    saveLocal();
-    renderAll();
-    setStatus("ok");
-  } catch (e) {
-    setStatus("off");
-  }
-  syncing = false;
-  if (pendingAgain) { pendingAgain = false; syncNow(); }
-}
-
-// Toutes les 12 s quand la page est visible, + au retour au premier plan.
-setInterval(() => { if (document.visibilityState === "visible") syncNow(); }, 12000);
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") syncNow();
-});
-window.addEventListener("online", syncNow);
-window.addEventListener("pagehide", () => {
-  try {
-    navigator.sendBeacon(API, new Blob([JSON.stringify({ state })], { type: "application/json" }));
-  } catch (e) { /* tant pis */ }
-});
-pill.addEventListener("click", syncNow);
-
-/* ---------------------- Rendu ---------------------- */
-
-function renderSteps() {
-  const doneCount = STEPS.filter((s) => isDone(s.id)).length;
-  document.getElementById("routeCount").textContent = doneCount + "/" + STEPS.length;
-  document.getElementById("routeCount").className = "badge" + (doneCount === STEPS.length ? " ok" : "");
-  document.getElementById("steps").innerHTML = STEPS.map((s, i) => {
-    const done = isDone(s.id);
-    return '<li class="step' + (done ? " done" : "") + '">' +
-      '<button type="button" class="step-card" data-id="' + s.id + '" aria-pressed="' + done + '">' +
-        '<span class="step-bullet">' + (done ? "✓" : i + 1) + "</span>" +
-        '<span class="step-body">' +
-          '<span class="step-title">' + s.t + "</span>" +
-          '<span class="step-meta">km ' + s.km + " · " + s.h + "</span>" +
-          '<span class="step-note">' + s.note + "</span>" +
-        "</span>" +
-        '<span class="checkbox' + (done ? " on" : "") + '" aria-hidden="true"></span>' +
-      "</button></li>";
+function lignes(arr){
+  if(!arr.length) return '<div class="ligne" style="opacity:.55">— rien d\'affiché —</div>';
+  return arr.map(function(a){
+    const fl = a[2]||"";
+    let extra = "";
+    if(fl.indexOf("*")>-1) extra += " ⭐";
+    if(fl.indexOf("F")>-1) extra += ' <b style="color:var(--braise)">EN FAMILLE</b>';
+    if(fl.indexOf("I")>-1) extra += ' <b style="color:var(--gave)">SUR INSCRIPTION</b>';
+    return '<div class="ligne">' + chip(a[0]) + '<div>' + esc(a[1]) + extra + '</div></div>';
   }).join("");
 }
-
-function renderConsignes() {
-  document.getElementById("consignes").innerHTML = CONSIGNES.map((c) =>
-    '<div class="note-card"><h3>' + c.icon + " " + c.t + "</h3><p>" + c.p + "</p></div>"
-  ).join("");
-}
-
-function renderBags() {
-  let doneTotal = 0, total = 0;
-  const html = BAGS.map((cat) => {
-    const done = cat.items.filter(([id]) => isDone(id)).length;
-    doneTotal += done; total += cat.items.length;
-    return '<div class="cat">' +
-      '<div class="cat-head"><span>' + cat.icon + " " + cat.t + "</span>" +
-      '<span class="badge' + (done === cat.items.length ? " ok" : "") + '">' + done + "/" + cat.items.length + "</span></div>" +
-      '<div class="cat-items">' + cat.items.map(([id, label]) => {
-        const done = isDone(id);
-        return '<button type="button" class="item' + (done ? " done" : "") + '" data-id="' + id + '" aria-pressed="' + done + '">' +
-          '<span class="checkbox' + (done ? " on" : "") + '" aria-hidden="true"></span>' +
-          '<span class="item-label">' + label + "</span></button>";
-      }).join("") + "</div></div>";
+function vueJour(){
+  const d = new Date(jourSel + "T12:00:00");
+  const pills = DAYS.map(function(iso){
+    const dd = new Date(iso + "T12:00:00");
+    const met = val("met:"+iso,"");
+    return '<button class="jour' + (iso===jourSel?" actif":"") + '" data-act="jour" data-v="' + iso + '">' +
+      '<small>' + JSEM[dd.getDay()] + '</small>' + dd.getDate() +
+      '<span class="pt">' + (met ? METEO[met].ic : "&nbsp;") + '</span></button>';
   }).join("");
-  document.getElementById("bags").innerHTML = html;
-  const badge = document.getElementById("bagCount");
-  badge.textContent = doneTotal + "/" + total;
-  badge.className = "badge" + (doneTotal === total ? " ok" : "");
-}
-
-function renderHeader() {
-  const done = STEPS.filter((s) => isDone(s.id)).length +
-    BAGS.reduce((n, c) => n + c.items.filter(([id]) => isDone(id)).length, 0);
-  document.getElementById("headBar").style.width = Math.round((100 * done) / TOTAL_ITEMS) + "%";
-}
-
-function renderAll() {
-  renderSteps();
-  renderBags();
-  renderHeader();
-  renderMarkers();
-}
-
-document.getElementById("steps").addEventListener("click", onToggleClick);
-document.getElementById("bags").addEventListener("click", onToggleClick);
-function onToggleClick(e) {
-  const el = e.target.closest("[data-id]");
-  if (el) toggle(el.dataset.id);
-}
-
-/* ---------------------- Remise à zéro (double appui) ---------------------- */
-
-const resetBtn = document.getElementById("resetBtn");
-const RESET_LABEL = '🗑️ Tout remettre à zéro <span class="reset-sub">(appuyer 2 fois — efface pour tout le monde)</span>';
-let armTimer = null;
-
-resetBtn.addEventListener("click", () => {
-  if (!resetBtn.classList.contains("armed")) {
-    resetBtn.classList.add("armed");
-    resetBtn.innerHTML = '⚠️ Confirmer la remise à zéro <span class="reset-sub">sur tous les téléphones</span>';
-    armTimer = setTimeout(disarmReset, 3500);
-    return;
+  const met = val("met:"+jourSel,"");
+  const meteoBtns = Object.keys(METEO).map(function(k){
+    return '<button data-act="met" data-v="' + k + '" class="' + (met===k?"actif":"") + '">' + METEO[k].ic + "<br>" + METEO[k].t + '</button>';
+  }).join("");
+  let plan = "";
+  if(met){
+    const M = METEO[met];
+    plan = '<div class="note">💡 ' + M.tip + '</div>' + M.ids.map(function(id){
+      const o = SORTIES.find(function(x){return x.id===id;});
+      return '<div class="ligne"><span class="chip m-matin" style="min-width:auto">' + o.e + '</span><div><b>' + esc(o.n) + '</b> · ' + o.r + ' · ' + esc(o.p) + '</div></div>';
+    }).join("");
+  } else {
+    plan = '<div class="note">Choisis la météo du jour ci-dessus → le QG propose le bon plan (partagé avec toute la famille).</div>';
   }
-  clearTimeout(armTimer);
-  disarmReset();
-  state = { items: {}, resetAt: Date.now() };
-  saveLocal();
-  renderAll();
-  syncNow();
+  const camp = CAMP[jourSel];
+  let bloc;
+  if(camp){
+    bloc = ["e","a","x"].map(function(g,i){
+      const noms = ["🧒 Enfants 5-12 ans","🎧 Ados","🍹 Adultes"];
+      const open = val("acc:"+g, g==="e");
+      return '<button class="pub" data-act="acc" data-v="' + g + '">' + noms[i] +
+        '<span class="n">' + camp[g].length + ' activité' + (camp[g].length>1?"s":"") + ' ' + (open?"▾":"▸") + '</span></button>' +
+        (open ? lignes(camp[g]) : "");
+    }).join("");
+  } else {
+    bloc = '<div class="note">📸 Programme de la semaine 2 pas encore affiché — photographie le panneau samedi et envoie-le à Claude pour mettre le QG à jour.</div>';
+  }
+  const note = NOTES[jourSel] ? '<div class="note">' + NOTES[jourSel] + '</div>' : "";
+  return '<div class="jours">' + pills + '</div>' + note +
+    '<section class="fiche"><h2>Aujourd\'hui on fait quoi ? <span style="text-transform:none;font-weight:600;font-size:12px">(' + JSEM[d.getDay()] + " " + d.getDate() + ')</span></h2>' +
+    '<div class="meteo">' + meteoBtns + '</div>' + plan + '</section>' +
+    '<section class="fiche"><h2>🏕️ Animations camping <span class="extra">toujours en extra ✨</span></h2>' + bloc +
+    '<div class="note" style="margin-top:10px">Rappels : rien pour personne entre 12h30 et 16h (piscine !) · présence à l\'heure de début exigée · l\'appli Yelloh! fait foi.</div></section>';
+}
+function vueSorties(){
+  const faits = SORTIES.filter(function(o){return val("done:"+o.id,false);}).length;
+  let html = '<section class="fiche"><h2>Compteur d’aventures</h2><div class="note">✅ ' + faits + ' / ' + SORTIES.length +
+    ' — 10 points par sortie faite. Touche une fiche pour ouvrir le détail : photo, accès, itinéraire, horaires, points forts.</div></section>';
+  Object.keys(CATS).forEach(function(c){
+    html += '<div class="cat-t">' + CATS[c] + '</div>';
+    SORTIES.filter(function(o){return o.c===c;}).forEach(function(o){ html += carteSortie(o); });
+  });
+  return html;
+}
+function carteSortie(o){
+  const done = val("done:"+o.id,false), want = val("want:"+o.id,false), open = !!ouverts[o.id];
+  let det = "";
+  if(open){
+    const img = wikiImg[o.id];
+    const visuel = (typeof img === "string")
+      ? '<img class="s-photo" loading="lazy" alt="' + esc(o.n) + '" src="' + img + '">'
+      : '<div class="s-banner bn-' + o.c + '">' + o.e + '</div>';
+    const pfs = o.pf.map(function(pt){ return '<span>' + esc(pt) + '</span>'; }).join("");
+    det = '<div class="s-det">' + visuel +
+      '<div class="s-bloc">' + esc(o.ds) + '</div>' +
+      '<div class="s-bloc"><b>🚗 Accès</b>' + esc(o.acc) + '</div>' +
+      '<div class="s-bloc"><b>🕘 Horaires</b>' + esc(o.ho) + '</div>' +
+      '<div class="s-bloc"><b>⏱ Durée idéale famille</b>' + esc(o.di) + '</div>' +
+      '<div class="s-bloc"><b>✨ Points forts</b><div class="pf">' + pfs + '</div></div>' +
+      ((typeof img === "string") ? '<div style="font-size:10px;color:#8A96AB;margin-top:4px">Photo : Wikimédia, chargée en ligne</div>' : "") +
+      '</div>';
+  }
+  return '<article class="sortie' + (done?" fait":"") + '">' +
+    '<button class="s-open" data-act="det" data-v="' + o.id + '">' +
+      '<div class="s-top"><span>' + o.e + '</span><span class="s-nom">' + esc(o.n) + (o.s?" ⭐":"") + '</span>' +
+      '<span class="s-hint">' + (open?"replier ▴":"détails ▾") + '</span></div>' +
+      '<div class="s-meta">🚗 ' + o.r + ' · ⏱ ' + o.d + ' · 💶 ' + esc(o.p) + '</div></button>' +
+    det +
+    '<div class="s-pre">📌 ' + esc(o.pre) + '</div>' +
+    '<div class="s-act">' +
+    (o.gm ? '<a class="b-iti" href="https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(o.gm) + '" target="_blank" rel="noopener">🧭 Itinéraire</a>' : "") +
+    (o.u ? '<a class="b-resa" href="' + o.u + '" target="_blank" rel="noopener">Réserver / infos</a>' : "") +
+    '<button class="b-want' + (want?" on":"") + '" data-act="want" data-v="' + o.id + '">' + (want?"⭐ Au programme":"☆ On y va ?") + '</button>' +
+    '<button class="b-fait' + (done?" on":"") + '" data-act="done" data-v="' + o.id + '">' + (done?"✓ Fait !":"C’est fait ?") + '</button>' +
+    '</div></article>';
+}
+function vueMissions(){
+  const cm = val("cm",[]);
+  let li = MISSIONS.map(function(m,i){
+    const done = val("md:"+i,false);
+    return '<div class="mi' + (done?" done":"") + '"><button class="cb" data-act="md" data-v="' + i + '">' + (done?"✓":"") + '</button><span>' + esc(m) + '</span></div>';
+  }).join("");
+  li += cm.map(function(m){
+    return '<div class="mi' + (m.done?" done":"") + '"><button class="cb" data-act="cm" data-v="' + m.id + '">' + (m.done?"✓":"") + '</button><span>' + esc(m.txt) + '</span></div>';
+  }).join("");
+  return '<section class="fiche"><h2>✅ Missions de la famille</h2>' + li +
+    '<div class="aj"><input id="nm" maxlength="90" placeholder="Ajouter une mission…"><button data-act="add">+</button></div>' +
+    '<div class="note" style="margin-top:10px">2 points par mission accomplie — cochée sur un téléphone, cochée pour tous.</div></section>';
+}
+function vueInfos(){
+  const L = [
+    ["🚌","Navette estivale + bus LIO 965 → Gavarnie & Pont d'Espagne (horaires à l'accueil)",""],
+    ["🌦️","Météo-France Argelès-Gazost","https://meteofrance.com/previsions-meteo-france/argeles-gazost/65400"],
+    ["⚠️","Vigilance Hautes-Pyrénées","https://vigilance.meteofrance.fr/fr/hautes-pyrenees"],
+    ["📷","Webcams du Pic du Midi (go / no-go du matin)","https://picdumidi.com/"],
+    ["🎟️","Billetterie Pic du Midi (J-3 = -25 %)","https://picdumidi.com/fr/billetterie/"],
+    ["⛵","Réserver Bétharram","https://www.betharram.com/page/tarifs-horaires"],
+    ["🚂","Réserver Artouste","https://artouste.fr/ete/le-train-dartouste/les-tarifs/"],
+    ["🦫","Billets Parc animalier","https://www.parc-animalier-pyrenees.com/page/horaires-et-tarifs"],
+    ["🏕️","Appli & animations Les 3 Vallées","https://www.camping3vallees.com/activites-et-animations"]
+  ];
+  const li = L.map(function(x){
+    return x[2] ? '<a class="lien" href="' + x[2] + '" target="_blank" rel="noopener">' + x[0] + " " + esc(x[1]) + '</a>'
+                : '<div class="lien">' + x[0] + " " + esc(x[1]) + '</div>';
+  }).join("");
+  return '<section class="fiche"><h2>ℹ️ Liens & réflexes</h2>' + li + '</section>' +
+    '<section class="fiche"><h2>Règles d\'or</h2>' +
+    '<div class="ligne">🕘 Grosses sorties : départ avant 9h (parkings + orages d\'après-midi).</div>' +
+    '<div class="ligne">🏊 12h30-16h : créneau libre pour tous → piscine, sieste, départ différé.</div>' +
+    '<div class="ligne">🎭 Retour 17h30-18h les jours d\'excursion → activités famille + soirée.</div>' +
+    '<div class="ligne">🧥 Une polaire chacun, même par 30 °C en vallée.</div>' +
+    '<div class="ligne">💶 À 5 ans, le petit paie tarif enfant presque partout (gratuités < 4-5 ans).</div>' +
+    '<button class="danger" data-act="raz">Tout remettre à zéro (appuyer 2×)</button>' +
+    '<div class="note" style="margin-top:10px">Données du 26/07/2026 · prix susceptibles d\'évoluer · [à vérifier] = non confirmé en ligne.</div></section>';
+}
+let razArme = 0;
+function rendre(){
+  const app = document.getElementById("app");
+  app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="missions" ? vueMissions() : vueInfos();
+  majScore();
+}
+
+/* ================= INTERACTIONS ================= */
+document.addEventListener("click", function(ev){
+  const nb = ev.target.closest("nav button");
+  if(nb){ vue = nb.dataset.vue;
+    document.querySelectorAll("nav button").forEach(function(b){ b.classList.toggle("actif", b===nb); });
+    rendre(); return; }
+  const el = ev.target.closest("[data-act]");
+  if(!el) return;
+  const a = el.dataset.act, v = el.dataset.v;
+  if(a==="jour"){ jourSel = v; rendre(); }
+  else if(a==="met"){ put("met:"+jourSel, val("met:"+jourSel,"")===v ? "" : v); }
+  else if(a==="acc"){ put("acc:"+v, !val("acc:"+v, v==="e")); }
+  else if(a==="done"){ const nv = !val("done:"+v,false); put("done:"+v, nv); if(nv) confetti(ev); }
+  else if(a==="want"){ put("want:"+v, !val("want:"+v,false)); }
+  else if(a==="det"){ ouverts[v] = !ouverts[v];
+    if(ouverts[v]){ const o = SORTIES.find(function(x){return x.id===v;}); if(o) chargePhoto(o); }
+    rendre(); }
+  else if(a==="md"){ put("md:"+v, !val("md:"+v,false)); }
+  else if(a==="cm"){ const cm = val("cm",[]).map(function(m){ return m.id===v ? {id:m.id,txt:m.txt,done:!m.done} : m; }); put("cm", cm); }
+  else if(a==="add"){ const inp = document.getElementById("nm"); const t = (inp.value||"").trim();
+    if(t){ const cm = val("cm",[]).concat([{id:"c"+Date.now(),txt:t,done:false}]); put("cm", cm); } }
+  else if(a==="raz"){
+    const now = Date.now();
+    if(now - razArme < 4000){ ST = {state:{}, resetAt:now}; razArme = 0; rendre(); planifSync(); }
+    else { razArme = now; el.textContent = "Sûr ? Réappuyer pour confirmer"; setTimeout(function(){ el.textContent = "Tout remettre à zéro (appuyer 2×)"; }, 4000); }
+  }
 });
-
-function disarmReset() {
-  resetBtn.classList.remove("armed");
-  resetBtn.innerHTML = RESET_LABEL;
-}
-
-/* ---------------------- Carte ---------------------- */
-
-let map = null, markersLayer = null;
-
-function initMap() {
-  if (map) return;
-  const container = document.getElementById("map");
-  if (typeof L === "undefined") {
-    container.innerHTML = '<div class="map-fallback">Carte indisponible (pas de connexion pour charger le fond de carte).</div>';
-    return;
-  }
-  map = L.map(container, { scrollWheelZoom: false });
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 17,
-    attribution: "© OpenStreetMap",
-  }).addTo(map);
-  L.polyline(STEPS.map((s) => s.ll), {
-    color: "#2a6f97", weight: 4, opacity: 0.85, dashArray: "1 9", lineCap: "round",
-  }).addTo(map);
-  markersLayer = L.layerGroup().addTo(map);
-  map.fitBounds(L.latLngBounds(STEPS.map((s) => s.ll)).pad(0.09));
-  renderMarkers();
-}
-
-function renderMarkers() {
-  if (!markersLayer) return;
-  markersLayer.clearLayers();
-  STEPS.forEach((s, i) => {
-    const done = isDone(s.id);
-    const icon = L.divIcon({
-      className: "",
-      html: '<div class="mk' + (done ? " mk-done" : "") + '">' + (done ? "✓" : i + 1) + "</div>",
-      iconSize: [28, 28],
-      iconAnchor: [14, 14],
-    });
-    L.marker(s.ll, { icon }).addTo(markersLayer)
-      .bindPopup("<b>" + s.t + "</b><br>km " + s.km + " · " + s.h + "<br>" + s.note);
+function confetti(ev){
+  ["🎉","⛰️","☀️"].forEach(function(c,i){
+    const s = document.createElement("span");
+    s.className = "confetti"; s.textContent = c;
+    s.style.left = (ev.clientX - 10 + i*18) + "px"; s.style.top = (ev.clientY - 10) + "px";
+    document.body.appendChild(s); setTimeout(function(){ s.remove(); }, 1000);
   });
 }
 
-/* ---------------------- Onglets ---------------------- */
-
-document.getElementById("tabs").addEventListener("click", (e) => {
-  const btn = e.target.closest("button[data-tab]");
-  if (btn) showTab(btn.dataset.tab);
-});
-
-function showTab(name) {
-  document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
-  document.querySelectorAll(".tab").forEach((s) => { s.hidden = s.id !== "tab-" + name; });
-  if (name === "carte") {
-    initMap();
-    setTimeout(() => { if (map) map.invalidateSize(); }, 80);
-  }
-}
-
-/* ---------------------- Démarrage ---------------------- */
-
-renderConsignes();
-renderAll();
-syncNow();
+/* ================= DÉMARRAGE ================= */
+rendre();
+sync();
 </script>
 </body>
 </html>
