@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Le QG des vacances · Argelès-Gazost 2026</title>
 <style>
 :root{
@@ -19,7 +19,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{font-family:var(--sans);background:var(--papier);color:var(--encre);line-height:1.45;padding-bottom:84px}
+body{font-family:var(--sans);background:var(--papier);color:var(--encre);line-height:1.45;padding-bottom:calc(100px + env(safe-area-inset-bottom))}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 :focus-visible{outline:3px solid var(--braise);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -167,7 +167,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .danger{margin-top:12px;width:100%;min-height:48px;border:2px solid var(--braise);color:var(--braise);border-radius:12px;font-weight:800}
 
 /* ---- barre d'onglets ---- */
-nav{position:fixed;bottom:0;left:0;right:0;background:var(--craie);border-top:2px solid var(--encre);z-index:60}
+nav{position:fixed;bottom:0;left:0;right:0;background:var(--craie);border-top:2px solid var(--encre);z-index:60;padding-bottom:env(safe-area-inset-bottom)}
 .n-in{max-width:760px;margin:0 auto;display:flex}
 nav button{flex:1;min-height:64px;font-size:10px;font-weight:700;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;color:#5A6A85}
 nav button .ic{font-size:19px}
@@ -456,7 +456,7 @@ const MISSIONS = [
 "🎯 Sport : tenter le tir à l'arc (+8 ans — mer. & ven. 18 h, sur inscription)",
 "🥾 Sport : boucler l'Arrieulat ou le Balandrau à pied",
 "🛷 Sport : dévaler la Mountain Luge du Hautacam",
-"🚴 Sport : la voie verte à vélo jusqu'à Pierrefitte",
+"🪂 Sortie : le baptême de parapente (mer. 29, 16 h — baskets !)",
 "🎨 Créa : faire une création au Yelloh Park (bracelets, modelage, Aquarellum…)",
 "🖌️ Créa : ramener un souvenir fait main (marque-page, dessin à gratter…)",
 "📸 Créa : réussir la plus belle photo de marmotte du séjour",
@@ -1024,7 +1024,19 @@ function rendre(){
   document.getElementById("carte").hidden = !enCarte;
   app.hidden = enCarte;
   if(enCarte){ majCarte(); majScore(); return; }
+  // La synchro périodique re-rend la vue : sans ça, elle effaçait le champ
+  // d'ajout (mission / membre) en pleine frappe et fermait le clavier.
+  const actif = document.activeElement;
+  const saisie = (actif && (actif.id === "nm" || actif.id === "nmb"))
+    ? { id: actif.id, v: actif.value, s: actif.selectionStart, e: actif.selectionEnd } : null;
+  const valeurs = {};
+  ["nm","nmb"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
   app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="randos" ? vueRandos() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
+  for(const id in valeurs){ const el = document.getElementById(id); if(el && !el.value) el.value = valeurs[id]; }
+  if(saisie){
+    const el = document.getElementById(saisie.id);
+    if(el){ el.value = saisie.v; el.focus(); try{ el.setSelectionRange(saisie.s, saisie.e); }catch(err){} }
+  }
   majScore();
 }
 function majNav(){
@@ -1032,6 +1044,27 @@ function majNav(){
 }
 
 /* ================= INTERACTIONS ================= */
+function ajouterMission(){
+  const inp = document.getElementById("nm"); if(!inp) return;
+  const t = (inp.value||"").trim(); if(!t) return;
+  inp.value = "";
+  put("cm", val("cm",[]).concat([{id:"c"+Date.now(),txt:t,done:false}]));
+}
+function ajouterMembre(){
+  const inp = document.getElementById("nmb"); if(!inp) return;
+  const t = (inp.value||"").trim(); if(!t) return;
+  const mb = membres(); const id = slugMembre(t);
+  inp.value = "";
+  if(!mb.some(function(m){ return m.id===id; })){
+    if(!moi) moi = id;   // premier ajout sur cet appareil = probablement soi-même
+    put("mb", mb.concat([{id:id, n:t, e:MOJIS[mb.length % MOJIS.length]}]));
+  } else { rendre(); }
+}
+document.addEventListener("keydown", function(ev){
+  if(ev.key !== "Enter") return;
+  if(ev.target && ev.target.id === "nm"){ ev.preventDefault(); ajouterMission(); }
+  else if(ev.target && ev.target.id === "nmb"){ ev.preventDefault(); ajouterMembre(); }
+});
 document.addEventListener("click", function(ev){
   const nb = ev.target.closest("nav button");
   if(nb){ vue = nb.dataset.vue; majNav(); rendre(); return; }
@@ -1044,16 +1077,7 @@ document.addEventListener("click", function(ev){
   else if(a==="done"){ const nv = !val("done:"+v,false); put("done:"+v, nv); if(nv) confetti(ev); }
   else if(a==="want"){ put("want:"+v, !val("want:"+v,false)); }
   else if(a==="moi"){ moi = (moi===v ? "" : v); rendre(); }
-  else if(a==="mbadd"){
-    const inp = document.getElementById("nmb"); const t = (inp.value||"").trim();
-    if(t){
-      const mb = membres(); const id = slugMembre(t);
-      if(!mb.some(function(m){ return m.id===id; })){
-        if(!moi) moi = id;   // premier ajout sur cet appareil = probablement soi-même
-        put("mb", mb.concat([{id:id, n:t, e:MOJIS[mb.length % MOJIS.length]}]));
-      } else { inp.value = ""; rendre(); }
-    }
-  }
+  else if(a==="mbadd"){ ajouterMembre(); }
   else if(a==="mbdel"){
     if(moi===v) moi = "";
     put("mb", membres().filter(function(m){ return m.id!==v; }));
@@ -1092,8 +1116,7 @@ document.addEventListener("click", function(ev){
     rendre(); }
   else if(a==="md"){ put("md:"+v, !val("md:"+v,false)); }
   else if(a==="cm"){ const cm = val("cm",[]).map(function(m){ return m.id===v ? {id:m.id,txt:m.txt,done:!m.done} : m; }); put("cm", cm); }
-  else if(a==="add"){ const inp = document.getElementById("nm"); const t = (inp.value||"").trim();
-    if(t){ const cm = val("cm",[]).concat([{id:"c"+Date.now(),txt:t,done:false}]); put("cm", cm); } }
+  else if(a==="add"){ ajouterMission(); }
   else if(a==="raz"){
     const now = Date.now();
     if(now - razArme < 4000){ ST = {state:{}, resetAt:now}; razArme = 0; rendre(); planifSync(); }
