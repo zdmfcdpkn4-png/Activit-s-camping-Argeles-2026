@@ -55,6 +55,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 
 /* ---- chips horaires ---- */
 .ligne{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px dotted #D8DCE5;font-size:14px}
+.lg-btn{width:100%;text-align:left;cursor:pointer;min-height:44px}
 .ligne:last-child{border-bottom:none}
 .chip{font-family:var(--mono);font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;min-width:52px;text-align:center;transform:rotate(-1deg)}
 .m-matin{background:var(--soleil);color:var(--encre)}
@@ -428,10 +429,10 @@ pf:["Plan pluie","Visite courte","Plein centre de Lourdes","Conseil du camping"]
 ];
 
 const METEO = {
-beau:{ic:"☀️",t:"Grand beau",tip:"Journée dégagée : foncez sur un gros morceau, départ avant 9h.",ids:["gavarnie","picdumidi","pontespagne","artouste"]},
-orage:{ic:"⛈️",t:"Orages l'aprem",tip:"Le cas classique ici : tout se joue le matin, redescendus avant 15h — après-midi camping.",ids:["pontespagne","estaing","voieverte","hautacam"]},
+beau:{ic:"☀️",t:"Grand beau",tip:"Journée dégagée : foncez sur un gros morceau, départ avant 9h.",ids:["gavarnie","picdumidi","pontespagne","artouste","rd-gaube","rd-cascades"]},
+orage:{ic:"⛈️",t:"Orages l'aprem",tip:"Le cas classique ici : tout se joue le matin, redescendus avant 15h — après-midi camping.",ids:["pontespagne","estaing","voieverte","hautacam","rd-soum","rd-hautacam"]},
 pluie:{ic:"🌧️",t:"Pluie",tip:"Journée refuge : grottes à 14 °C, château, balnéo — le Parc animalier reste ouvert.",ids:["betharram","chateaufort","bainsrocher","parcanimalier"]},
-canicule:{ic:"🥵",t:"Canicule",tip:"Altitude le matin, eau de 12h à 16h, sortie fraîche ensuite. Une gourde par personne.",ids:["pontespagne","betharram","bainsrocher","hautacam"]}
+canicule:{ic:"🥵",t:"Canicule",tip:"Altitude le matin, eau de 12h à 16h, sortie fraîche ensuite. Une gourde par personne.",ids:["pontespagne","betharram","bainsrocher","hautacam","rd-clot","rd-lutour"]}
 };
 
 /* Missions famille — mix sport / créa / sorties, tiré du planning du camping et des fiches (26/07) */
@@ -685,8 +686,11 @@ function vueJour(){
     const M = METEO[met];
     plan = '<div class="note">💡 ' + M.tip + '</div>' + M.ids.map(function(id){
       const o = SORTIES.find(function(x){return x.id===id;});
-      return '<div class="ligne"><span class="chip m-matin" style="min-width:auto">' + o.e + '</span><div><b>' + esc(o.n) + '</b> · ' + o.r + ' · ' + esc(o.p) + '</div></div>';
-    }).join("");
+      if(o) return '<button class="ligne lg-btn" data-act="fiche" data-v="' + o.id + '"><span class="chip m-matin" style="min-width:auto">' + o.e + '</span><div><b>' + esc(o.n) + '</b> · ' + o.r + ' · ' + esc(o.p) + '</div></button>';
+      const r = RANDOS.find(function(x){return x.id===id;});
+      if(!r) return "";
+      return '<button class="ligne lg-btn" data-act="rando" data-v="' + r.id + '"><span class="chip m-aprem" style="min-width:auto">' + r.e + '</span><div><b>🥾 ' + esc(r.n) + '</b> · ' + esc(r.t) + ' · ' + esc(r.dh) + '</div></button>';
+    }).join("") + '<div class="note" style="margin-top:8px">👆 Touche une idée pour ouvrir sa fiche (🥾 = rando, détails et tracé dans l\'onglet Randos).</div>';
   } else {
     plan = '<div class="note">Choisis la météo du jour ci-dessus → le QG propose le bon plan (partagé avec toute la famille).</div>';
   }
