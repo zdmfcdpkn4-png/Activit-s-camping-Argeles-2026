@@ -133,6 +133,20 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .fv-n.z{color:#8A96AB}
 .fv.mien .fv-n{background:var(--braise);border-color:var(--braise);color:var(--craie)}
 
+/* ---- carte ---- */
+#carte{max-width:760px;margin:0 auto;padding:14px}
+#map{height:min(58vh,520px);border:2px solid var(--encre);border-radius:14px;background:#DDE7EE;box-shadow:4px 4px 0 rgba(35,50,74,.12)}
+.map-off{display:flex;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;color:#5A6A85;font-size:14px}
+.mk{width:30px;height:30px;border-radius:50%;background:var(--craie);border:3px solid var(--encre);display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.mk-done{opacity:.55;filter:grayscale(.4)}
+.mk-camp{width:36px;height:36px;font-size:18px;background:var(--soleil)}
+.legende{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.legende span{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;background:var(--craie);border:1px solid #D8DCE5;border-radius:999px;padding:4px 9px}
+.legende i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.pop-fiche{display:inline-block;margin-top:6px;padding:7px 11px;border-radius:8px;background:var(--encre);color:var(--craie);font-weight:700;font-size:12px}
+.sortie{scroll-margin-top:100px}
+.bn-R{background:linear-gradient(160deg,#DCE9D5 55%,#F6E3B8 55%)}
+
 /* ---- infos ---- */
 .lien{display:flex;min-height:46px;align-items:center;font-size:14px;border-bottom:1px dotted #D8DCE5;color:var(--encre);text-decoration:none;font-weight:600;gap:8px}
 .lien:last-child{border-bottom:none}
@@ -166,9 +180,24 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:4px;backg
 
 <main id="app"></main>
 
+<div id="carte" hidden>
+  <div class="note">📍 Repères indicatifs autour du <b>camping des 3 Vallées</b> 🏕️ — zoomer sur Argelès pour séparer les sorties toutes proches, toucher un repère puis « Voir la fiche ». Itinéraire précis via 🧭 sur chaque fiche.</div>
+  <div id="map"></div>
+  <div class="legende">
+    <span><i style="background:#FFB800"></i>🏕️ Camping</span>
+    <span><i style="background:#2E7D4F"></i>Grands sites</span>
+    <span><i style="background:#E4572E"></i>Spécial enfants</span>
+    <span><i style="background:#1E7F86"></i>Vélo &amp; sensations</span>
+    <span><i style="background:#B07A00"></i>Balades à pied</span>
+    <span><i style="background:#39506F"></i>Eau &amp; détente</span>
+    <span><i style="background:#7E57C2"></i>Villages &amp; marchés</span>
+  </div>
+</div>
+
 <nav><div class="n-in">
   <button data-vue="jour" class="actif"><span class="ic">📅</span>Semaine</button>
   <button data-vue="sorties"><span class="ic">🏔️</span>Sorties</button>
+  <button data-vue="carte"><span class="ic">🗺️</span>Carte</button>
   <button data-vue="favoris"><span class="ic">⭐</span>Favoris</button>
   <button data-vue="missions"><span class="ic">✅</span>Missions</button>
   <button data-vue="infos"><span class="ic">ℹ️</span>Infos</button>
@@ -218,140 +247,170 @@ const DAYS = ["2026-07-26","2026-07-27","2026-07-28","2026-07-29","2026-07-30","
 const JSEM = ["dim","lun","mar","mer","jeu","ven","sam"];
 
 /* Sorties & activités hors camping (extrait du guide — prix indicatifs, vérifiés le 26/07) */
-const CATS = {G:"⛰️ Grands sites",E:"🦊 Spécial enfants",S:"🚴 Vélo & sensations",O:"💧 Eau & détente",V:"🏘️ Villages & marchés"};
+const CATS = {G:"⛰️ Grands sites",E:"🦊 Spécial enfants",S:"🚴 Vélo & sensations",R:"🚶 Balades à pied",O:"💧 Eau & détente",V:"🏘️ Villages & marchés"};
 const SORTIES = [
-{id:"pontespagne",c:"G",e:"🌊",n:"Pont d'Espagne & lac de Gaube",r:"40 min",d:"½ à 1 j",p:"parking 8 € offert avec pass ~16 €/ad.",pre:"Partir avant 9h · télécabine + télésiège + 15 min à plat · veste",u:"https://www.cauterets.com/grand-site-pont-despagne/",s:1,gm:"Parking du Puntas, Pont d'Espagne, Cauterets",w:"Pont d'Espagne",
+{id:"pontespagne",ll:[42.852,-0.156],c:"G",e:"🌊",n:"Pont d'Espagne & lac de Gaube",r:"40 min",d:"½ à 1 j",p:"parking 8 € offert avec pass ~16 €/ad.",pre:"Partir avant 9h · télécabine + télésiège + 15 min à plat · veste",u:"https://www.cauterets.com/grand-site-pont-despagne/",s:1,gm:"Parking du Puntas, Pont d'Espagne, Cauterets",w:"Pont d'Espagne",
 ds:"Le grand site du Parc national : cascades rugissantes dès le parking, pont mythique, puis le lac de Gaube au pied du Vignemale. Avec le petit : télécabine + télésiège, et 15 min à plat jusqu'au lac — marmottes fréquentes.",
 acc:"D921 jusqu'à Pierrefitte, D920 vers Cauterets puis route du Pont d'Espagne jusqu'au parking du Puntas (27 km). Navettes possibles depuis Cauterets.",
-ho:"Remontées en journée [horaires exacts à vérifier] — viser le parking avant 9h (saturation + orages d'après-midi).",
-di:"Demi-journée le matin, ou journée avec pique-nique au lac.",
+ho:"Remontées en journée [horaires exacts à vérifier] — viser le parking avant 9h (saturation + orages d'après-midi). Navette estivale + ligne LIO 965 depuis la vallée (horaires à l’accueil).",
+di:"Demi-journée le matin, ou journée avec pique-nique au lac (2 h 30 aller-retour à pied depuis le pont, d’après le panneau).",
 pf:["Cascades dès le parking","Lac glaciaire mythique","Marmottes","Télésiège = zéro pleurs"]},
-{id:"gavarnie",c:"G",e:"🏔️",n:"Cirque de Gavarnie (UNESCO)",r:"50 min",d:"3-4 h",p:"gratuit · parking ~7 €",pre:"Départ matinal · sentier 1h15 · ânes au village pour le petit",u:"https://www.valleesdegavarnie.com",s:1,gm:"Gavarnie village",w:"Cirque de Gavarnie",
+{id:"gavarnie",ll:[42.734,-0.009],c:"G",e:"🏔️",n:"Cirque de Gavarnie (UNESCO)",r:"50 min",d:"3-4 h",p:"gratuit · parking ~7 €",pre:"Départ matinal · sentier 1h15 · ânes au village pour le petit",u:"https://www.valleesdegavarnie.com",s:1,gm:"Gavarnie village",w:"Cirque de Gavarnie",
 ds:"La muraille classée UNESCO : 1 500 m de parois et la Grande Cascade (~420 m, la plus haute de France métropolitaine). Sentier large village → hôtellerie du Cirque, faisable à 5 ans en flânant — ou à dos d'âne loué au village.",
-acc:"D921 par Luz-Saint-Sauveur jusqu'au village de Gavarnie (30 km, ~50 min). Stationnement obligatoire au village (~7 €/jour). Aussi desservi par la ligne LIO 965.",
+acc:"D921 par Luz-Saint-Sauveur jusqu'au village de Gavarnie (30 km, ~50 min). Stationnement obligatoire au village (~7 €/jour). Aussi desservi par la ligne LIO 965 (≈ 50 min de bus, panneau du camping).",
 ho:"Site libre en permanence — partir du camping vers 8h pour marcher au frais et éviter la foule.",
-di:"3-4 h sur place (1h15 de marche aller, pauses, pique-nique) : la journée avec les trajets.",
+di:"3-4 h sur place (3 h 30 aller-retour affichés par le camping, pauses comprises) : la journée avec les trajets.",
 pf:["Classé UNESCO","Plus haute cascade de France","Ânes pour les enfants","Pique-nique face au cirque"]},
-{id:"picdumidi",c:"G",e:"🔭",n:"Pic du Midi (2 877 m)",r:"55 min",d:"½ j",p:"dès 44 €/ad · 34 €/enf (5-17)",pre:"Résa J-3 = -25 % · météo dégagée · vêtements chauds",u:"https://picdumidi.com/fr/billetterie/",s:1,gm:"Téléphérique du Pic du Midi, La Mongie",w:"Pic du Midi de Bigorre",
+{id:"picdumidi",ll:[42.91,0.18],c:"G",e:"🔭",n:"Pic du Midi (2 877 m)",r:"50-55 min",d:"½ j",p:"dès 44 €/ad · 34 €/enf (5-17)",pre:"Résa J-3 = -25 % · météo dégagée · vêtements chauds",u:"https://picdumidi.com/fr/billetterie/",s:1,gm:"Téléphérique du Pic du Midi, La Mongie",w:"Pic du Midi de Bigorre",
 ds:"2 877 m : téléphérique en deux tronçons, terrasses à 360° sur toute la chaîne, ponton dans le ciel et musée-observatoire le plus haut d'Europe. L'effet « waouh » du séjour — au prix fort.",
 acc:"D921 jusqu'à Luz puis D918 par le col du Tourmalet jusqu'à La Mongie (40 km, ~55 min), puis téléphérique (15 min).",
 ho:"Première rotation le matin ; interruption du téléphérique 12h30-14h. Météo dégagée impérative — vérifier les webcams avant de partir.",
 di:"2-3 h au sommet, demi-journée avec la route — montée du matin, souvent < 10-15 °C là-haut.",
 pf:["Panorama à 360°","Ponton dans le ciel","Passage du Tourmalet","Musée le plus haut d'Europe"]},
-{id:"estaing",c:"G",e:"🐄",n:"Lac d'Estaing",r:"30 min",d:"½ j",p:"gratuit",pre:"Tour du lac plat ~1h · pique-nique · poneys sur place",u:"",s:0,gm:"Lac d'Estaing",w:"Lac d'Estaing",
+{id:"estaing",ll:[42.938,-0.181],c:"G",e:"🐄",n:"Lac d'Estaing",r:"30 min",d:"½ j",p:"gratuit",pre:"Tour du lac plat ~1h · pique-nique · poneys sur place",u:"",s:0,gm:"Lac d'Estaing",w:"Lac d'Estaing",
 ds:"Lac de montagne accessible en voiture : eau claire, vaches en liberté, ruisseaux et auberge. Le spot zéro contrainte pour souffler entre deux grosses sorties.",
-acc:"D918 dans le val d'Azun puis D103 par la vallée d'Estaing (20 km, ~30 min). Parking au bord du lac.",
+acc:"D918 dans le val d'Azun puis D103 par la vallée d'Estaing (20 km, ~30 min). Parking au bord du lac. Navette estivale signalée par le camping [à vérifier à l’accueil].",
 ho:"Accès libre — parfait tôt le matin ou en fin de journée pour la lumière.",
 di:"2-3 h : tour du lac (45 min-1h, praticable poussette côté principal) + pique-nique ou goûter à l'auberge.",
 pf:["Accessible poussette","Poneys sur place","Pique-nique au bord de l'eau","Gratuit"]},
-{id:"soulor",c:"G",e:"🦅",n:"Cols du Soulor & de l'Aubisque",r:"35-45 min",d:"½ j",p:"gratuit",pre:"Route en corniche étroite · vautours · crêpes au col",u:"",s:0,gm:"Col du Soulor",w:"Col du Soulor",
+{id:"soulor",ll:[42.96,-0.259],c:"G",e:"🦅",n:"Cols du Soulor & de l'Aubisque",r:"35-45 min",d:"½ j",p:"gratuit",pre:"Route en corniche étroite · vautours · crêpes au col",u:"",s:0,gm:"Col du Soulor",w:"Col du Soulor",
 ds:"L'une des plus belles routes des Pyrénées : la corniche du Litor entre les deux cols, vautours fauves en vol, troupeaux en estive — et crêpes au sommet.",
 acc:"D918 jusqu'au col du Soulor (20 km, ~35 min) puis corniche vers l'Aubisque (+10 km, route étroite : conducteur serein).",
 ho:"Libre — lumière au top le matin et en fin de journée ; renoncer par brouillard.",
 di:"Demi-journée en voiture avec arrêts photo et petites marches au départ des cols.",
 pf:["Corniche spectaculaire","Vautours fauves","Crêpes au Soulor","Décor du Tour de France"]},
-{id:"troumouse",c:"G",e:"🌿",n:"Cirque de Troumouse (option)",r:"1h05",d:"½ j",p:"accès sommital payant [à vérifier]",pre:"Le Gavarnie sans la foule · plateau où le petit gambade",u:"",s:0,gm:"Cirque de Troumouse",w:"Cirque de Troumouse",
+{id:"troumouse",ll:[42.695,0.092],c:"G",e:"🌿",n:"Cirque de Troumouse (option)",r:"1h05",d:"½ j",p:"accès sommital payant [à vérifier]",pre:"Le Gavarnie sans la foule · plateau où le petit gambade",u:"",s:0,gm:"Cirque de Troumouse",w:"Cirque de Troumouse",
 ds:"Un cirque immense et méconnu : plateau d'altitude où le petit court en liberté, marmottes et isards, sans la foule de Gavarnie.",
 acc:"D921 jusqu'à Gèdre puis D922 vers Héas et l'auberge du Maillet (~40 km, 1h05). Fin d'accès payante (petit train navette selon saison) [à vérifier].",
 ho:"Journée claire uniquement ; monter le matin.",
 di:"2-3 h sur le plateau, demi-journée avec la route.",
 pf:["Le Gavarnie sans la foule","Plateau où gambader","Marmottes","Route panoramique"]},
-{id:"parcanimalier",c:"E",e:"🦫",n:"Parc animalier des Pyrénées",r:"3 min",d:"3-4 h",p:"~20-25 €/ad [à vérifier]",pre:"Arriver à 9h · porte-bébé conseillé · marmottes à nourrir",u:"https://www.parc-animalier-pyrenees.com/page/horaires-et-tarifs",s:1,gm:"Parc animalier des Pyrénées, Ayzac-Ost",w:"Parc animalier des Pyrénées",
-ds:"Le site le mieux noté du secteur : marmottes à nourrir à la main, ours bruns, loups, loutres en vision sous-marine — un parc immersif à flanc de montagne.",
+{id:"parcanimalier",ll:[43.019,-0.098],c:"E",e:"🦫",n:"Parc animalier des Pyrénées",r:"3 min",d:"3-4 h",p:"~20-25 €/ad [à vérifier]",pre:"Arriver à 9h · porte-bébé conseillé · marmottes à nourrir",u:"https://www.parc-animalier-pyrenees.com/page/horaires-et-tarifs",s:1,gm:"Parc animalier des Pyrénées, Ayzac-Ost",w:"Parc animalier des Pyrénées",
+ds:"Le site le mieux noté du secteur : marmottes à nourrir à la main, ours bruns, loups, loutres en vision sous-marine — plus de 500 animaux dans un parc immersif à flanc de montagne.",
 acc:"À l'entrée d'Argelès côté Ayzac-Ost (2 km) : à pied depuis le camping ou 3 min de voiture, parking gratuit.",
 ho:"Tous les jours 9h-18h30 — arriver à l'ouverture pour les nourrissages ; ouvert même par mauvais temps.",
-di:"3-4 h le matin, ou la journée tranquille avec pique-nique (aires sur place).",
+di:"1 h 30 chrono possible (panneau du camping), 3-4 h pour en profiter, ou la journée avec pique-nique (aires sur place).",
 pf:["Marmottes à la main","Ours & loups","À 2 km du camping","Ouvert même par pluie"]},
-{id:"donjon",c:"E",e:"🦅",n:"Donjon des Aigles (Beaucens)",r:"10 min",d:"2-3 h",p:"16 € / 10,50 € (5-11) / <5 gratuit",pre:"Spectacles 15h30 & 17h30 · arriver 30 min avant · casquette",u:"https://www.donjon-des-aigles.com/information-tarifs-horaires/",s:1,gm:"Donjon des Aigles, Beaucens",w:"Donjon des Aigles",
+{id:"donjon",ll:[42.972,-0.063],c:"E",e:"🦅",n:"Donjon des Aigles (Beaucens)",r:"5-10 min",d:"2-3 h",p:"16 € / 10,50 € (5-11) / <5 gratuit",pre:"Spectacles 15h30 & 17h30 · arriver 30 min avant · casquette",u:"https://www.donjon-des-aigles.com/information-tarifs-horaires/",s:1,gm:"Donjon des Aigles, Beaucens",w:"Donjon des Aigles",
 ds:"Château féodal du XIe siècle et spectacle de rapaces en vol libre : aigles, vautours, condor et perroquets qui frôlent les têtes du public.",
-acc:"D13 vers Beaucens (6 km, 10 min), route jusqu'au château, parking gratuit.",
-ho:"En ce moment (14/07-25/08) : spectacles à 15h30 et 17h30, arriver 30 min avant ; le matin, visite simple à tarif réduit.",
+acc:"D13 vers Beaucens (6 km, 5-10 min) — 100 rue du Château, route jusqu'au château, parking gratuit.",
+ho:"En ce moment (14/07-25/08) : spectacles à 15h30 et 17h30 (~50 min), arriver 30 min avant ; le matin, visite simple à tarif réduit.",
 di:"2-3 h en après-midi — par canicule, viser le spectacle de 17h30 (peu d'ombre : casquette + eau).",
 pf:["Rapaces en vol libre","Château médiéval","10 min du camping","Gratuit avant 5 ans"]},
-{id:"betharram",c:"E",e:"⛵",n:"Grottes de Bétharram",r:"35 min",d:"1h20 + trajet",p:"~17 €/ad · <4 gratuit",pre:"Réserver en ligne · 14 °C = veste · 250 marches, pas de poussette",u:"https://www.betharram.com/page/tarifs-horaires",s:1,gm:"Grottes de Bétharram",w:"Grottes de Bétharram",
+{id:"betharram",ll:[43.1,-0.213],c:"E",e:"⛵",n:"Grottes de Bétharram",r:"35 min",d:"1h20 + trajet",p:"~17 €/ad · <4 gratuit",pre:"Réserver en ligne · 14 °C = veste · 250 marches, pas de poussette",u:"https://www.betharram.com/page/tarifs-horaires",s:1,gm:"Grottes de Bétharram",w:"Grottes de Bétharram",
 ds:"Traversée complète de la montagne : salles géantes, descente d'escaliers, barque sur la rivière souterraine et retour en petit train — le combo qui fait mouche à 5 ans.",
-acc:"N21 vers Lourdes puis D937 direction Saint-Pé-de-Bigorre (25 km, ~35 min). Grand parking gratuit, navette incluse jusqu'à l'entrée.",
+acc:"N21 vers Lourdes puis D937 direction Saint-Pé-de-Bigorre, chemin Léon Ross (25 km, 30-35 min). Grand parking gratuit, navette incluse jusqu'à l'entrée.",
 ho:"Visites guidées sur créneau réservé en ligne ; arriver 15 min avant. 14 °C constants toute l'année.",
 di:"1h20 de visite, demi-journée avec la route — LE joker canicule ou pluie.",
 pf:["Barque souterraine","Petit train","14 °C garanti","Émerveillement assuré"]},
-{id:"chlorofil",c:"E",e:"🌳",n:"Chloro'fil Parc (accrobranche)",r:"5 min",d:"½ j",p:"selon activité",pre:"Parcours petits dès ~4 ans · réserver l'été · baskets",u:"https://www.chlorofil-parc.com/",s:0,gm:"Chloro'fil Parc, Agos-Vidalos",w:"",
-ds:"Parc aventure au-dessus du gave : accrobranche accessible aux petits (selon capacités), tyroliennes, trampolines géants, Tubby Jump — et base d'eaux vives pour les grands.",
-acc:"Direction Agos-Vidalos (4 km, 5 min), parking sur place.",
+{id:"chlorofil",ll:[43.034,-0.08],c:"E",e:"🌳",n:"Chloro'fil Parc (accrobranche)",r:"5 min",d:"½ j",p:"selon activité",pre:"Parcours petits dès ~4 ans · réserver l'été · baskets",u:"https://www.chlorofil-parc.com/",s:0,gm:"Chloro'fil , Route de Silhen, Ayros-Arbouix",w:"",
+ds:"Parc aventure au-dessus du gave : accrobranche accessible aux petits (selon capacités), tyroliennes, trampolines géants, Tubby Jump, SkyZone — et base d'eaux vives pour les grands.",
+acc:"Route de Silhen, 65400 Ayros-Arbouix (5 min en voiture — adresse du panneau du camping), parking sur place.",
 ho:"Créneaux à la demi-journée ; réservation conseillée en été.",
 di:"Demi-journée ; baskets fermées obligatoires, snack sur place.",
 pf:["Parcours petits","Tyroliennes","À 5 min","Sensations dosées"]},
-{id:"artouste",c:"E",e:"🚂",n:"Petit train d'Artouste (option)",r:"1h20",d:"journée",p:"28 € / 20 € (-12) / <4 gratuit",pre:"Résa quasi obligatoire · 3h30 sur site · non remboursable",u:"https://artouste.fr/ete/le-train-dartouste/les-tarifs/",s:0,gm:"Petit train d'Artouste, Fabrèges, Laruns",w:"Petit train d'Artouste",
+{id:"artouste",ll:[42.878,-0.398],c:"E",e:"🚂",n:"Petit train d'Artouste (option)",r:"1h20",d:"journée",p:"28 € / 20 € (-12) / <4 gratuit",pre:"Résa quasi obligatoire · 3h30 sur site · non remboursable",u:"https://artouste.fr/ete/le-train-dartouste/les-tarifs/",s:0,gm:"Petit train d'Artouste, Fabrèges, Laruns",w:"Petit train d'Artouste",
 ds:"Le plus haut petit train d'Europe : télécabine puis 55 minutes de voyage à flanc de falaise à 2 000 m jusqu'au lac d'Artouste. LA journée exceptionnelle du séjour.",
 acc:"D918 par les cols du Soulor et de l'Aubisque jusqu'à Laruns puis lac de Fabrèges (55 km, ~1h20 par la route d'été, superbe).",
 ho:"Saison du 8 mai au 4 octobre, créneaux horaires réservés — quasi complet en août sans résa ; billets non remboursables.",
 di:"3h30 sur site + 2 × 1h20 de route : journée complète, à coupler avec la route des cols.",
 pf:["Train le plus haut d'Europe","Falaises + lac","Aventure inoubliable","Gratuit avant 4 ans"]},
-{id:"voieverte",c:"S",e:"🚴",n:"Voie verte des Gaves",r:"0 min",d:"2 h - ½ j",p:"gratuit (location vélos ~15-25 €)",pre:"Plate et sans voitures · Argelès→Pierrefitte 6 km ou →Lourdes 13 km",u:"",s:1,gm:"Ancienne gare, Argelès-Gazost",w:"Voie verte des Gaves",
+{id:"voieverte",ll:[43.007,-0.096],c:"S",e:"🚴",n:"Voie verte des Gaves",r:"0 min",d:"2 h - ½ j",p:"gratuit (location vélos ~15-25 €)",pre:"Plate et sans voitures · Argelès→Pierrefitte 6 km ou →Lourdes 13 km",u:"",s:1,gm:"Ancienne gare, Argelès-Gazost",w:"Voie verte des Gaves",
 ds:"Ancienne voie ferrée goudronnée, plate et 100 % sans voitures, de Lourdes à Pierrefitte (18 km) le long du gave, à travers 12 villages.",
 acc:"Entrée à l'ancienne gare d'Argelès, à ~1 km du camping — on y va directement à vélo (location au camping ou en ville, sièges et carrioles).",
 ho:"Libre — le matin avant la chaleur, ou en fin de journée.",
 di:"2 h : Argelès → Pierrefitte A/R (12 km) avec le petit ; les grands peuvent pousser vers Lourdes. Ne pas engager Pierrefitte → Cauterets (raide, VTT).",
 pf:["Zéro voiture","Plat = 5 ans OK","Départ du camping","Pieds dans le gave"]},
-{id:"hautacam",c:"S",e:"🛷",n:"Mountain Luge du Hautacam",r:"30 min",d:"½ j",p:"8 €/descente",pre:"Dès 3 ans en biplace avec adulte · 10h-18h · pique-nique",u:"https://hautacam.com/fr/tarifs",s:1,gm:"Station du Hautacam",w:"Hautacam",
-ds:"Luge sur rails de 700 m face au panorama de toute la vallée, plus tubing, vélo suspendu et aires de jeux : la demi-journée sensations en altitude.",
-acc:"D100 par Ayros-Arbouix puis 14 km de lacets (~30 min). Parking gratuit à la station (navette estivale signalée par le camping).",
+{id:"hautacam",ll:[42.975,0.005],c:"S",e:"🛷",n:"Mountain Luge du Hautacam",r:"20-30 min",d:"½ j",p:"8 €/descente",pre:"Dès 3 ans en biplace avec adulte · 10h-18h · pique-nique",u:"https://hautacam.com/fr/tarifs",s:1,gm:"Station du Hautacam",w:"Hautacam",
+ds:"Luge sur rails de 700 m face au panorama de toute la vallée, plus tubing, Zippy bike, déval’trott, vélo suspendu et aires de jeux : la demi-journée sensations en altitude.",
+acc:"D100 par Ayros-Arbouix puis 14 km de lacets (20-30 min) jusqu’au parking Tramassel. Navette estivale signalée par le camping.",
 ho:"Tous les jours 10h-18h jusqu'au 31/08, sans réservation. Snack limité l'après-midi → monter avec le pique-nique.",
 di:"Demi-journée ; le petit descend en biplace avec un adulte, les grands seuls dès 8 ans.",
 pf:["Luge dès 3 ans (biplace)","Panorama géant","8 €/descente","Air frais en altitude"]},
-{id:"cheval",c:"S",e:"🐴",n:"Balade à cheval (chemin de Sère)",r:"5 min",d:"1-2 h",p:"tarifs à l'accueil",pre:"« Tout âge, tout niveau » d'après le panneau du camping",u:"",s:0,gm:"Chemin de Sère, Argelès-Gazost",w:"",
+{id:"cheval",ll:[43.023,-0.113],c:"S",e:"🐴",n:"Balade à cheval (chemin de Sère)",r:"5 min",d:"1-2 h",p:"tarifs à l'accueil",pre:"« Pour tout âge et tout niveau » (5 chemin de Sère, Ouzous) d'après le panneau du camping",u:"",s:0,gm:"5 Chemin de Sere, 65400 Ouzous",w:"",
 ds:"Balades à cheval et poney « pour tout âge et tout niveau » d'après le panneau du camping — la version locale des ânes de Gavarnie, sans la route.",
-acc:"Chemin de Sère, à ~5 min du camping. Adresse exacte et réservation via l'accueil.",
+acc:"5 chemin de Sère, 65400 Ouzous — à 5 min du camping. Réservation via l'accueil.",
 ho:"[à vérifier à l'accueil du camping]",
 di:"1-2 h en fin de journée, quand la chaleur retombe.",
 pf:["Tout âge","À 5 min","Alternative aux ânes","Souvenir garanti"]},
-{id:"rafting",c:"S",e:"🛶",n:"Rafting / eaux vives (Agos)",r:"5 min",d:"2-3 h",p:"selon formule",pre:"Âge mini 6-8 ans selon niveau d'eau → confirmer par téléphone",u:"https://www.chlorofil-parc.com/",s:0,gm:"Agos-Vidalos",w:"Gave de Pau",
+{id:"rafting",ll:[43.038,-0.078],c:"S",e:"🛶",n:"Rafting / eaux vives (Agos)",r:"5 min",d:"2-3 h",p:"selon formule",pre:"Âge mini 6-8 ans selon niveau d'eau → confirmer par téléphone",u:"https://www.chlorofil-parc.com/",s:0,gm:"Agos-Vidalos",w:"Gave de Pau",
 ds:"Descente du gave de Pau en raft ou airboat pour les plus grands ; le petit de 5 ans est sous l'âge minimum de la plupart des formules.",
 acc:"Bases d'eaux vives à Agos-Vidalos (5 min), dont Chloro'fil.",
 ho:"Créneaux selon le niveau d'eau — réserver par téléphone en confirmant les âges.",
 di:"2-3 h ; se répartir : un adulte à l'eau avec les grands, l'autre à l'accrobranche avec le petit.",
 pf:["Sensations gave","À 5 min","Encadré","Formules selon âge"]},
-{id:"bainsrocher",c:"O",e:"♨️",n:"Bains du Rocher (Cauterets)",r:"25 min",d:"2 h",p:"pass 2 h [tarif sur site]",pre:"Enfants accompagnés OK · sauna/hammam <16 interdits · pas de bermuda",u:"https://www.bains-rocher.fr/",s:1,gm:"Les Bains du Rocher, Cauterets",w:"Cauterets",
+{id:"bainsrocher",ll:[42.888,-0.113],c:"O",e:"♨️",n:"Bains du Rocher (Cauterets)",r:"25 min",d:"2 h",p:"pass 2 h [tarif sur site]",pre:"Enfants accompagnés OK · sauna/hammam <16 interdits · pas de bermuda",u:"https://www.bains-rocher.fr/",s:1,gm:"Les Bains du Rocher, Cauterets",w:"Cauterets",
 ds:"Lagune extérieure d'eau thermale à 33 °C face aux sommets, bassin intérieur sous verrière : la récompense parfaite après le Pont d'Espagne.",
-acc:"D920 jusqu'à Cauterets centre (17 km, 25 min), parkings payants du centre.",
+acc:"D920 jusqu'à Cauterets centre (17 km, 25 min) — avenue du Docteur Domer, parkings payants du centre.",
 ho:"Pass de 2 h ; éviter 17h-19h (affluence). Maillot près du corps obligatoire (bermuda refusé).",
 di:"2 h en fin d'après-midi, idéalement couplées à une sortie Cauterets.",
 pf:["33 °C face aux sommets","Enfants bienvenus","Combo Pont d'Espagne","Détente parents"]},
-{id:"jardinbains",c:"O",e:"🛁",n:"Le Jardin des Bains (Argelès)",r:"à pied",d:"1h30-2 h",p:"[tarif sur site]",pre:"Viser l'ouverture (files l'été) · parc thermal à côté",u:"https://www.lejardindesbains.com/",s:0,gm:"Le Jardin des Bains, Argelès-Gazost",w:"Argelès-Gazost",
+{id:"jardinbains",ll:[43.004,-0.1],c:"O",e:"🛁",n:"Le Jardin des Bains (Argelès)",r:"à pied",d:"1h30-2 h",p:"[tarif sur site]",pre:"Viser l'ouverture (files l'été) · parc thermal à côté",u:"https://www.lejardindesbains.com/",s:0,gm:"Le Jardin des Bains, Argelès-Gazost",w:"Argelès-Gazost",
 ds:"La balnéo zéro voiture : bassins, jets et détente, avec le grand parc thermal juste à côté (aire de jeux, canards, casino-cinéma).",
 acc:"Centre d'Argelès, ~10 min à pied du camping (les thermes sont à 200 m).",
 ho:"Viser l'ouverture (10h30 ou 15h) — files d'attente signalées l'été [horaires à vérifier].",
 di:"1h30-2 h + le parc thermal en sortant, en fin de journée.",
 pf:["À pied","Parc thermal à côté","Plan fin de journée","Sans voiture"]},
-{id:"chateaufort",c:"O",e:"🏰",n:"Château fort de Lourdes (plan pluie)",r:"15 min",d:"1h30-2 h",p:"~8 €/ad",pre:"Ascenseur · musée pyrénéen · superbe vue",u:"https://www.chateaufort-lourdes.fr/",s:0,gm:"Château fort de Lourdes",w:"Château fort de Lourdes",
+{id:"chateaufort",ll:[43.095,-0.046],c:"O",e:"🏰",n:"Château fort de Lourdes (plan pluie)",r:"15 min",d:"1h30-2 h",p:"~8 €/ad",pre:"Ascenseur · musée pyrénéen · superbe vue",u:"https://www.chateaufort-lourdes.fr/",s:0,gm:"Château fort de Lourdes",w:"Château fort de Lourdes",
 ds:"Un vrai château fort sur son piton, avec le Musée pyrénéen : maquettes, collections d'autrefois, chemins de ronde et une vue superbe sur la ville et les sommets.",
-acc:"N21 jusqu'à Lourdes (13 km, 15 min), stationnement en ville ; un ascenseur monte au château.",
+acc:"N21 jusqu'à Lourdes (13 km, 15 min) — 25 rue du Fort, stationnement en ville ; un ascenseur monte au château.",
 ho:"Ouvert en journée [horaires à vérifier] — le plan pluie idéal.",
 di:"1h30-2 h, à coupler avec le Pic du Jer ou la procession aux flambeaux de 21h.",
 pf:["Vrai château","Ascenseur","Vue sur Lourdes","Plan pluie"]},
-{id:"marche",c:"V",e:"🧺",n:"Marché d'Argelès (mardi matin)",r:"à pied",d:"2 h",p:"gratuit (espèces !)",pre:"Avant 11h · gâteau à la broche · vieille ville + parc thermal",u:"",s:1,gm:"Marché d'Argelès-Gazost",w:"Argelès-Gazost",
+{id:"marche",ll:[43.006,-0.1],c:"V",e:"🧺",n:"Marché d'Argelès (mardi matin)",r:"à pied",d:"2 h",p:"gratuit (espèces !)",pre:"Avant 11h · gâteau à la broche · vieille ville + parc thermal",u:"",s:1,gm:"Marché d'Argelès-Gazost",w:"Argelès-Gazost",
 ds:"L'institution du mardi matin : gâteau à la broche cuit sous vos yeux, fromages du val d'Azun, garbure et producteurs — puis flânerie dans la vieille ville.",
 acc:"Centre d'Argelès, à pied depuis le camping (300 m).",
 ho:"Mardi matin — y être avant 11h pour le choix et l'ambiance.",
 di:"2 h en flânant, panier et espèces en poche, goûter compris.",
 pf:["Gâteau à la broche","Producteurs locaux","À pied","Ambiance bigourdane"]},
-{id:"picdujer",c:"V",e:"🚞",n:"Funiculaire du Pic du Jer (Lourdes)",r:"15 min",d:"½ j",p:"~13-15 € A/R [à vérifier]",pre:"Panorama à 1 000 m · combinable château fort ou procession 21h",u:"https://www.picdujer.com/",s:0,gm:"Funiculaire du Pic du Jer, Lourdes",w:"Pic du Jer",
+{id:"picdujer",ll:[43.083,-0.041],c:"V",e:"🚞",n:"Funiculaire du Pic du Jer (Lourdes)",r:"15 min",d:"½ j",p:"~13-15 € A/R [à vérifier]",pre:"Panorama à 1 000 m · combinable château fort ou procession 21h",u:"https://www.picdujer.com/",s:0,gm:"Funiculaire du Pic du Jer, Lourdes",w:"Pic du Jer",
 ds:"Funiculaire centenaire (1902) jusqu'à ~1 000 m : panorama sur Lourdes, la plaine et les Pyrénées, sentier sommital facile et petite grotte l'été.",
 acc:"N21 jusqu'à Lourdes (15 min), parking au pied du funiculaire, avenue Francis Lagardère.",
 ho:"~9h30-18h [à vérifier] — belle lumière en fin d'après-midi.",
 di:"2-3 h, combinable avec le château fort ou la procession aux flambeaux (21h).",
 pf:["Funiculaire 1902","Panorama à 1 000 m","Petit prix vs Pic du Midi","Facile à 5 ans"]},
-{id:"saintsavin",c:"V",e:"⛪",n:"Saint-Savin & Piétat",r:"5 min",d:"1-2 h",p:"gratuit",pre:"Village de balcon · abbatiale XIIe · goûter en terrasse",u:"",s:0,gm:"Saint-Savin, Hautes-Pyrénées",w:"Saint-Savin (Hautes-Pyrénées)",
+{id:"saintsavin",ll:[42.986,-0.087],c:"V",e:"⛪",n:"Saint-Savin & Piétat",r:"5 min",d:"1-2 h",p:"gratuit",pre:"Village de balcon · abbatiale XIIe · goûter en terrasse",u:"",s:0,gm:"Saint-Savin, Hautes-Pyrénées",w:"Saint-Savin (Hautes-Pyrénées)",
 ds:"Village de balcon dominant toute la vallée : abbatiale romane du XIIe, ruelles fleuries, et le belvédère de la chapelle de Piétat à côté pour le goûter.",
 acc:"D101, 3 km (5 min), parking sur la place du village.",
 ho:"Libre — idéal en fin d'après-midi.",
 di:"1-2 h, crêpe en terrasse comprise.",
 pf:["5 min du camping","Abbatiale XIIe","Belvédère","Goûter en terrasse"]},
-{id:"luz",c:"V",e:"🌉",n:"Luz-Saint-Sauveur & pont Napoléon",r:"25 min",d:"½ j",p:"gratuit",pre:"Église des Templiers · pont à 65 m au-dessus du gave · marché lundi",u:"",s:0,gm:"Pont Napoléon, Luz-Saint-Sauveur",w:"Luz-Saint-Sauveur",
+{id:"luz",ll:[42.872,-0.001],c:"V",e:"🌉",n:"Luz-Saint-Sauveur & pont Napoléon",r:"25 min",d:"½ j",p:"gratuit",pre:"Église des Templiers · pont à 65 m au-dessus du gave · marché lundi",u:"",s:0,gm:"Pont Napoléon, Luz-Saint-Sauveur",w:"Luz-Saint-Sauveur",
 ds:"Bourg de caractère : église fortifiée dite des Templiers, ruelles animées, et le pont Napoléon suspendu à ~65 m au-dessus du gave — frisson sécurisé garanti.",
 acc:"D921, 19 km (25 min) ; se garer au centre, le pont Napoléon est juste au sud vers Saint-Sauveur.",
 ho:"Libre ; marché le lundi matin.",
 di:"Demi-journée douce, combinable avec Gavarnie (c'est sur la route).",
-pf:["Pont à 65 m","Église des Templiers","Marché du lundi","Sur la route de Gavarnie"]}
+pf:["Pont à 65 m","Église des Templiers","Marché du lundi","Sur la route de Gavarnie"]},
+{id:"lutinpecheur",ll:[42.996,-0.093],c:"E",e:"🎣",n:"Le parc du Lutin Pêcheur",r:"5 min",d:"2-3 h",p:"[à vérifier]",pre:"Pêche pour enfants et adultes, amateurs et habitués (panneau du camping)",u:"",s:0,gm:"43 B Route du Sailhet, 65400 Lau-Balagnas",w:"",
+ds:"Parc de pêche recommandé par le camping : de quoi initier le petit à la ligne, et un coin pour les habitués.",
+acc:"43 B route du Sailhet, Lau-Balagnas — à 5 min du camping.",
+ho:"[à vérifier sur place ou à l’accueil]",
+di:"2-3 h en fin d’après-midi, quand la chaleur retombe.",
+pf:["À 5 min","Enfants et adultes","Initiation facile","Conseil du camping"]},
+{id:"berger",ll:[43.055,-0.437],c:"E",e:"🐑",n:"Balade avec un berger (ferme Maria Blanca)",r:"~1 h [à vérifier]",d:"½ j",p:"[à vérifier]",pre:"Réservation obligatoire : Jean-Pierre 06 87 66 29 03 · Katalin 06 37 99 95 61",u:"",s:0,gm:"Plateau du Bénou, Bilhères",w:"",
+ds:"Une demi-journée auprès d’un berger de la ferme Maria Blanca, au plateau du Bénou (vallée d’Ossau) — l’expérience pastorale proposée par le panneau du camping.",
+acc:"Plateau du Bénou (64) — itinéraire précisé à la réservation ; route des cols possible à l’aller.",
+ho:"Sur réservation obligatoire uniquement (demi-journée).",
+di:"La demi-journée annoncée — à caler un matin de beau temps.",
+pf:["Immersion troupeau","Demi-journée","À coupler avec le Soulor","Souvenir unique"]},
+{id:"arrieulat",ll:[43.007,-0.102],c:"R",e:"🚶",n:"Boucle de l’Arrieulat",r:"à pied",d:"2 h",p:"gratuit",pre:"5,8 km en boucle — départ à l’angle de la bibliothèque municipale",u:"",s:0,gm:"Bibliothèque municipale, Argelès-Gazost",w:"",
+ds:"Boucle balisée de 5,8 km au départ du centre d’Argelès, annoncée à 2 h par le camping — la balade sans voiture des fins de journée.",
+acc:"Départ en centre-ville, à l’angle de la bibliothèque municipale — tout à pied depuis le camping.",
+ho:"Libre — le matin ou après 17 h en été.",
+di:"2 h annoncées ; prévoir davantage au rythme d’un enfant de 5 ans.",
+pf:["Zéro voiture","5,8 km balisés","Gratuit","Rythme libre"]},
+{id:"balandrau",ll:[43.002,-0.105],c:"R",e:"🥾",n:"Boucle du Balandrau",r:"à pied",d:"1 h 30",p:"gratuit",pre:"5 km en boucle — départ place de Vieuzac",u:"",s:0,gm:"Place de Vieuzac, Argelès-Gazost",w:"",
+ds:"La seconde boucle conseillée par le camping : 5 km au départ de la place de Vieuzac, environ 1 h 30 de marche.",
+acc:"Départ place de Vieuzac, en centre-ville — tout à pied depuis le camping.",
+ho:"Libre.",
+di:"1 h 30 annoncée ; viser 2 h avec le petit.",
+pf:["Zéro voiture","5 km balisés","Gratuit","Formule courte"]},
+{id:"museecire",ll:[43.096,-0.052],c:"O",e:"🕯️",n:"Musée de Cire (Lourdes, plan pluie)",r:"15 min",d:"45 min",p:"[à vérifier]",pre:"87 rue de la Grotte — visite courte, à coupler château fort ou Pic du Jer",u:"",s:0,gm:"Musée de Cire, 87 Rue de la Grotte, Lourdes",w:"",
+ds:"Personnages de cire au cœur de Lourdes : la visite courte des jours gris (≈ 45 min), conseillée par le panneau du camping.",
+acc:"87 rue de la Grotte, Lourdes — 15 min de route, stationnement en ville.",
+ho:"[à vérifier]",
+di:"45 min — à enchaîner avec le château fort ou le Pic du Jer pour remplir un jour de pluie.",
+pf:["Plan pluie","Visite courte","Plein centre de Lourdes","Conseil du camping"]}
 ];
 
 const METEO = {
@@ -533,7 +592,7 @@ function carteSortie(o){
       ((typeof img === "string") ? '<div style="font-size:10px;color:#8A96AB;margin-top:4px">Photo : Wikimédia, chargée en ligne</div>' : "") +
       '</div>';
   }
-  return '<article class="sortie' + (done?" fait":"") + '">' +
+  return '<article id="s-' + o.id + '" class="sortie' + (done?" fait":"") + '">' +
     '<button class="s-open" data-act="det" data-v="' + o.id + '">' +
       '<div class="s-top"><span>' + o.e + '</span><span class="s-nom">' + esc(o.n) + (o.s?" ⭐":"") + '</span>' +
       '<span class="s-hint">' + (open?"replier ▴":"détails ▾") + '</span></div>' +
@@ -612,6 +671,58 @@ function vueFavoris(){
     tri + classement +
     '<div class="note" style="margin-top:10px">1 vote par personne et par activité — le cœur se remplit pour tes votes, les émojis montrent qui a voté. Tout est partagé en direct.</div></section>';
 }
+/* ================= CARTE ================= */
+const CAMPING = { n:"Camping des 3 Vallées", ll:[43.014,-0.094] };   // position indicative
+const CATCOL = {G:"#2E7D4F",E:"#E4572E",S:"#1E7F86",R:"#B07A00",O:"#39506F",V:"#7E57C2"};
+let carteObj = null, carteMarqueurs = null, leafletDemande = false, leafletKO = false;
+
+// Leaflet est chargé à la demande (premier affichage de l'onglet Carte) :
+// hors connexion, la page reste rapide et la carte affiche un repli.
+function chargeCarteLib(){
+  if(leafletDemande) return;
+  leafletDemande = true;
+  const css = document.createElement("link");
+  css.rel = "stylesheet"; css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+  document.head.appendChild(css);
+  const js = document.createElement("script");
+  js.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+  js.onload = function(){ if(vue === "carte") majCarte(); };
+  js.onerror = function(){ leafletKO = true; if(vue === "carte") majCarte(); };
+  document.head.appendChild(js);
+}
+function majCarte(){
+  const conteneur = document.getElementById("map");
+  if(typeof L === "undefined"){
+    chargeCarteLib();
+    conteneur.innerHTML = '<div class="map-off">' + (leafletKO
+      ? "🗺️ Fond de carte indisponible hors connexion — les fiches et itinéraires 🧭 restent accessibles dans l’onglet Sorties."
+      : "Chargement de la carte…") + '</div>';
+    return;
+  }
+  if(!carteObj){
+    conteneur.innerHTML = "";
+    carteObj = L.map(conteneur, { scrollWheelZoom:false });
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom:17, attribution:"© OpenStreetMap" }).addTo(carteObj);
+    carteObj.fitBounds(L.latLngBounds(SORTIES.map(function(s){ return s.ll; }).concat([CAMPING.ll])).pad(0.06));
+    L.marker(CAMPING.ll, { zIndexOffset:1000, icon: L.divIcon({ className:"", html:'<div class="mk mk-camp">🏕️</div>', iconSize:[36,36], iconAnchor:[18,18] }) })
+      .addTo(carteObj).bindPopup("<b>" + CAMPING.n + "</b><br>Le point de départ de toutes les aventures !");
+    carteMarqueurs = L.layerGroup().addTo(carteObj);
+  }
+  carteMarqueurs.clearLayers();
+  SORTIES.forEach(function(s){
+    if(!s.ll) return;
+    const done = val("done:"+s.id,false), n = votants(s.id).length;
+    const icon = L.divIcon({ className:"",
+      html:'<div class="mk mk-id-' + s.id + (done?" mk-done":"") + '" style="border-color:' + CATCOL[s.c] + '">' + s.e + '</div>',
+      iconSize:[30,30], iconAnchor:[15,15] });
+    L.marker(s.ll, { icon: icon }).addTo(carteMarqueurs)
+      .bindPopup('<b>' + esc(s.n) + '</b><br>' + CATS[s.c] +
+        '<br>🚗 ' + esc(s.r) + ' · ⏱ ' + esc(s.d) + (n ? ' · ❤️ ' + n : '') + (done ? ' · ✅ fait' : '') +
+        '<br><button class="pop-fiche" data-act="fiche" data-v="' + s.id + '">Voir la fiche ▸</button>');
+  });
+  setTimeout(function(){ carteObj.invalidateSize(); }, 60);
+}
+
 function vueMissions(){
   const cm = val("cm",[]);
   let li = MISSIONS.map(function(m,i){
@@ -649,21 +760,27 @@ function vueInfos(){
     '<div class="ligne">🧥 Une polaire chacun, même par 30 °C en vallée.</div>' +
     '<div class="ligne">💶 À 5 ans, le petit paie tarif enfant presque partout (gratuités < 4-5 ans).</div>' +
     '<button class="danger" data-act="raz">Tout remettre à zéro (appuyer 2×)</button>' +
-    '<div class="note" style="margin-top:10px">Données du 26/07/2026 · prix susceptibles d\'évoluer · [à vérifier] = non confirmé en ligne.</div></section>';
+    '<div class="note" style="margin-top:10px">Données du 26/07/2026, consolidées avec le panneau « Explore & Discover » du camping · prix susceptibles d\'évoluer · [à vérifier] = non confirmé en ligne.</div></section>';
 }
 let razArme = 0;
 function rendre(){
   const app = document.getElementById("app");
+  const enCarte = vue === "carte";
+  // La carte vit hors de #app pour survivre aux re-rendus (zoom conservé à chaque sync).
+  document.getElementById("carte").hidden = !enCarte;
+  app.hidden = enCarte;
+  if(enCarte){ majCarte(); majScore(); return; }
   app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
   majScore();
+}
+function majNav(){
+  document.querySelectorAll("nav button").forEach(function(b){ b.classList.toggle("actif", b.dataset.vue === vue); });
 }
 
 /* ================= INTERACTIONS ================= */
 document.addEventListener("click", function(ev){
   const nb = ev.target.closest("nav button");
-  if(nb){ vue = nb.dataset.vue;
-    document.querySelectorAll("nav button").forEach(function(b){ b.classList.toggle("actif", b===nb); });
-    rendre(); return; }
+  if(nb){ vue = nb.dataset.vue; majNav(); rendre(); return; }
   const el = ev.target.closest("[data-act]");
   if(!el) return;
   const a = el.dataset.act, v = el.dataset.v;
@@ -694,6 +811,13 @@ document.addEventListener("click", function(ev){
     }
   }
   else if(a==="ftri"){ fvTri = v; rendre(); }
+  else if(a==="fiche"){
+    vue = "sorties"; ouverts[v] = true;
+    const o = SORTIES.find(function(x){ return x.id===v; }); if(o) chargePhoto(o);
+    majNav(); rendre();
+    const art = document.getElementById("s-"+v);
+    if(art) art.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
   else if(a==="det"){ ouverts[v] = !ouverts[v];
     if(ouverts[v]){ const o = SORTIES.find(function(x){return x.id===v;}); if(o) chargePhoto(o); }
     rendre(); }
