@@ -1,18 +1,19 @@
 # Le QG des vacances — Argelès-Gazost 2026 (GitHub + Render)
 
-Appli familiale partagée : planning des animations du camping (toujours **en extra**), fiches sorties détaillées (photo, accès, itinéraire, horaires, points forts), missions, météo du jour, score famille. Un seul front (`index.html`) + un petit serveur Node (`server.js`) qui sert la page **et** l'API `/api/sync` (fusion horodatée, persistance Upstash Redis).
+Appli familiale partagée : planning des animations du camping (toujours **en extra**), fiches sorties détaillées (photo, accès, itinéraire, horaires, points forts), missions, météo du jour, score famille. Un seul front (`index.html`) + un petit serveur Node (`server.js`) qui sert la page **et** l'API `/api/sync` (fusion horodatée, persistance PostgreSQL Render).
 
 ## Mise en ligne (une fois, ~10 min)
 
-1. **Upstash** (persistance, gratuit) : console.upstash.com → Create Database (Redis, région Europe) → copier `UPSTASH_REDIS_REST_URL` et `UPSTASH_REDIS_REST_TOKEN` (onglet REST API).
-2. **GitHub** : créer un dépôt (suggestion : `qg-sejour-argeles-2026`, privé) et pousser ce dossier — Claude Code fait ça avec `gh repo create … --private --source . --push`.
-3. **Render** : dashboard.render.com → New + → **Blueprint** → sélectionner le dépôt (le fichier `render.yaml` fait le reste) → renseigner les 2 variables Upstash → Apply. Sans Blueprint : New + → Web Service → runtime Node → Start command `node server.js` → mêmes variables.
-4. **Sécurité minimale** : dans `index.html`, remplacer `TRIP = "sejour-argeles-2026-CHANGEZ-MOI"` par une chaîne aléatoire longue (`openssl rand -hex 16`), commit + push (Render redéploie seul).
+1. **PostgreSQL Render** (persistance) : dashboard.render.com → New + → **Postgres** → plan **Free** (essai ~1 mois, largement assez pour le séjour) → région Europe (Frankfurt) → Create. Une fois la base prête, copier l'**Internal Database URL** (onglet Info / Connections).
+2. **GitHub** : dépôt privé déjà poussé (la valeur de `TRIP` est dans le code : garder le dépôt privé).
+3. **Render** : dashboard.render.com → New + → **Blueprint** → sélectionner le dépôt (le fichier `render.yaml` fait le reste) → renseigner la variable `DATABASE_URL` avec l'URL copiée → Apply. Sans Blueprint : New + → Web Service → runtime Node → Build command `npm install` → Start command `node server.js` → même variable. **Même région que la base** pour pouvoir utiliser l'URL interne ; sinon prendre l'External Database URL (TLS géré automatiquement).
+4. **Sécurité minimale** : `TRIP` a déjà été remplacé dans `index.html` par une chaîne aléatoire (`openssl rand -hex 16`). En cas de fuite de l'URL + du code, regénérer une valeur et pousser (Render redéploie seul, l'état repart de zéro pour le nouveau `TRIP`).
 5. Partager l'URL Render à la famille (l'ajouter à l'écran d'accueil du téléphone = effet appli).
 
 ## Limites connues
 - **Plan gratuit Render : le service s'endort** après inactivité → premier chargement de la journée en ~30-60 s. Acceptable en usage famille ; sinon plan payant, ou variante Vercel (le front est compatible avec l'`api/sync.js` du dépôt roadbook — même contrat `{state:{clé:{v,t}}, resetAt}`).
-- Pas d'authentification : URL + `TRIP` font office de clé. Rien de sensible dedans.
+- **Base Postgres en essai gratuit : expire ~30 jours après création** (le séjour se termine le 08/08, c'est couvert). À l'expiration, l'appli passe en « hors ligne » ; les coches n'ont plus d'enjeu après le séjour.
+- Pas d'authentification : URL + `TRIP` font office de clé. Rien de sensible dedans. **Ne jamais committer `DATABASE_URL`** (elle contient le mot de passe de la base) : elle ne vit que dans les variables d'environnement Render.
 - Sans backend joignable, l'appli fonctionne en local d'appareil (bandeau « hors ligne »).
 
 ## Données embarquées

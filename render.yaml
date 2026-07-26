@@ -1,15 +1,14 @@
 # Blueprint Render — New + > Blueprint > sélectionner ce dépôt.
-# Les deux variables Upstash sont à renseigner à la main (sync: false).
+# DATABASE_URL est à renseigner à la main (sync: false) : URL de la base
+# PostgreSQL Render (Internal Database URL de préférence, même région que le service).
 services:
   - type: web
     name: qg-sejour-argeles
     runtime: node
     plan: free
-    buildCommand: "echo aucune-dependance"
+    buildCommand: npm install
     startCommand: node server.js
     autoDeploy: true
     envVars:
-      - key: UPSTASH_REDIS_REST_URL
-        sync: false
-      - key: UPSTASH_REDIS_REST_TOKEN
+      - key: DATABASE_URL
         sync: false
