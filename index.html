@@ -252,11 +252,20 @@ x:[["11:00","Aquagym"],["11:00","Ping-pong"],["17:00","Football"]]}
 const NOTES = {
 "2026-07-27":"⭐ 10h30 au Yelloh Park : tirage au sort pour la sortie Parc animalier — soyez-y !",
 "2026-07-28":"🧺 Marché d'Argelès-Gazost le matin (gâteau à la broche, fromages d'Azun).",
-"2026-07-29":"🦊 10h-12h : sortie encadrée au Parc animalier (5-12 ans, tirés au sort). Tir à l'arc +8 ans à 18h (inscription).",
+"2026-07-29":"🦊 10h-12h : sortie encadrée au Parc animalier (5-12 ans, tirés au sort). Tir à l'arc +8 ans à 18h (inscription). 🪂 16h : baptême de parapente au col de Couraduque — RDV au parking de l'atterrissage avant Aucun (fiche dans Sorties).",
 "2026-07-31":"👨‍👩‍👧‍👦 Journée famille au camping : foot 10h, olympiades 16h30, parade 18h. Tir à l'arc +8 ans à 18h.",
 "2026-08-01":"🔁 Nouveau programme affiché aujourd'hui → prends-le en photo pour mettre le QG à jour !",
 "2026-08-04":"🧺 Marché d'Argelès-Gazost le matin.",
 "2026-08-08":"🧳 Jour du départ — check-list rangement et route du retour."
+};
+/* Soirées — relevées sur l'appli Yelloh (captures du 26/07). Mini-disco quotidienne ajoutée côté rendu (21h15, tous les soirs). */
+const SOIREES = {
+"2026-07-27":[["21:30","Bal mousse — 1 h 30"]],
+"2026-07-28":[["21:30","Spectacle Hits Rock — 1 h 30, grande scène"]],
+"2026-07-29":[["20:00","Soirée Happy/Duo — 2 h, restaurant Le Brasero"]],
+"2026-07-30":[["21:30","Spectacle Spectacul'Art — 1 h 30, grande scène"]],
+"2026-07-31":[["21:30","Spectacle Tom et Johnny — 1 h 30, grande scène"]],
+"2026-08-01":[["21:30","Samedi tout est permis — 1 h 30, grande scène"]]
 };
 const DAYS = ["2026-07-26","2026-07-27","2026-07-28","2026-07-29","2026-07-30","2026-07-31","2026-08-01","2026-08-02","2026-08-03","2026-08-04","2026-08-05","2026-08-06","2026-08-07","2026-08-08"];
 const JSEM = ["dim","lun","mar","mer","jeu","ven","sam"];
@@ -354,6 +363,12 @@ acc:"Bases d'eaux vives à Agos-Vidalos (5 min), dont Chloro'fil.",
 ho:"Créneaux selon le niveau d'eau — réserver par téléphone en confirmant les âges.",
 di:"2-3 h ; se répartir : un adulte à l'eau avec les grands, l'autre à l'accrobranche avec le petit.",
 pf:["Sensations gave","À 5 min","Encadré","Formules selon âge"]},
+{id:"parapente",ll:[42.975,-0.196],c:"S",e:"🪂",n:"Baptême de parapente (Axiom Parapente)",r:"30 min",d:"½ j",p:"[à vérifier]",pre:"RDV mercredi 29/07 à 16 h — baskets obligatoires · contact Michel 07 86 62 89 28",u:"",s:1,gm:"Axiom Parapente, Aucun",w:"",
+ds:"Vol biplace avec moniteur diplômé au-dessus du Val d'Azun : décollage au col de Couraduque, atterrissage près d'Aucun — le grand frisson réservé pour mercredi.",
+acc:"RDV au parking de l'atterrissage (plan remis) : d'Argelès, route du col d'Aubisque, puis à 8 km direction « Las Poueyes », à gauche 100 m avant le village d'Aucun.",
+ho:"Rendez-vous confirmé : mercredi 29 juillet à 16 h.",
+di:"Compter la demi-journée avec la route, le brief et le vol [à vérifier].",
+pf:["Vol biplace encadré","Décollage Couraduque","Baskets obligatoires","Souvenir énorme"]},
 {id:"bainsrocher",ll:[42.888,-0.113],c:"O",e:"♨️",n:"Bains du Rocher (Cauterets)",r:"25 min",d:"2 h",p:"pass 2 h [tarif sur site]",pre:"Enfants accompagnés OK · sauna/hammam <16 interdits · pas de bermuda",u:"https://www.bains-rocher.fr/",s:1,gm:"Les Bains du Rocher, Cauterets",w:"Cauterets",
 ds:"Lagune extérieure d'eau thermale à 33 °C face aux sommets, bassin intérieur sous verrière : la récompense parfaite après le Pont d'Espagne.",
 acc:"D920 jusqu'à Cauterets centre (17 km, 25 min) — avenue du Docteur Domer, parkings payants du centre.",
@@ -707,6 +722,11 @@ function vueJour(){
   } else {
     bloc = '<div class="note">📸 Programme de la semaine 2 pas encore affiché — photographie le panneau samedi et envoie-le à Claude pour mettre le QG à jour.</div>';
   }
+  const soir = [["21:15","Mini disco — 15 min, grande scène (tous les soirs)"]].concat(SOIREES[jourSel] || []).sort(function(a,b){ return a[0].localeCompare(b[0]); });
+  const openS = val("acc:s", true);
+  bloc += '<button class="pub" data-act="acc" data-v="s">🌙 Soirées' +
+    '<span class="n">' + soir.length + ' rendez-vous ' + (openS?"▾":"▸") + '</span></button>' +
+    (openS ? lignes(soir) : "");
   const note = NOTES[jourSel] ? '<div class="note">' + NOTES[jourSel] + '</div>' : "";
   return '<div class="jours">' + pills + '</div>' + note +
     '<section class="fiche"><h2>Aujourd\'hui on fait quoi ? <span style="text-transform:none;font-weight:600;font-size:12px">(' + JSEM[d.getDay()] + " " + d.getDate() + ')</span></h2>' +
@@ -1020,7 +1040,7 @@ document.addEventListener("click", function(ev){
   const a = el.dataset.act, v = el.dataset.v;
   if(a==="jour"){ jourSel = v; rendre(); }
   else if(a==="met"){ put("met:"+jourSel, val("met:"+jourSel,"")===v ? "" : v); }
-  else if(a==="acc"){ put("acc:"+v, !val("acc:"+v, v==="e")); }
+  else if(a==="acc"){ put("acc:"+v, !val("acc:"+v, v==="e" || v==="s")); }
   else if(a==="done"){ const nv = !val("done:"+v,false); put("done:"+v, nv); if(nv) confetti(ev); }
   else if(a==="want"){ put("want:"+v, !val("want:"+v,false)); }
   else if(a==="moi"){ moi = (moi===v ? "" : v); rendre(); }
