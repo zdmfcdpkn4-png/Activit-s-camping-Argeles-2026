@@ -147,6 +147,19 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .sortie{scroll-margin-top:100px}
 .bn-R{background:linear-gradient(160deg,#DCE9D5 55%,#F6E3B8 55%)}
 
+/* ---- randos ---- */
+.etp{margin:8px 0 2px;padding:0;list-style:none;counter-reset:et}
+.etp li{position:relative;padding:6px 0 6px 34px;font-size:13px;border-bottom:1px dotted #D8DCE5}
+.etp li:last-child{border-bottom:none}
+.etp li::before{counter-increment:et;content:counter(et);position:absolute;left:0;top:7px;width:24px;height:24px;
+  border-radius:50%;background:var(--encre);color:var(--craie);font-weight:800;font-size:12px;
+  display:flex;align-items:center;justify-content:center}
+.etp b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:#5A6A85}
+.svgmap{width:100%;height:auto;border:2px solid var(--encre);border-radius:10px;background:#EAF2EC;display:block;margin:8px 0 2px}
+.svg-cap{font-size:10px;color:#8A96AB;margin-bottom:6px}
+.mkstep{width:22px;height:22px;border-radius:50%;background:var(--gave);color:#fff;font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+
 /* ---- infos ---- */
 .lien{display:flex;min-height:46px;align-items:center;font-size:14px;border-bottom:1px dotted #D8DCE5;color:var(--encre);text-decoration:none;font-weight:600;gap:8px}
 .lien:last-child{border-bottom:none}
@@ -155,8 +168,8 @@ main{max-width:760px;margin:0 auto;padding:14px}
 /* ---- barre d'onglets ---- */
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--craie);border-top:2px solid var(--encre);z-index:60}
 .n-in{max-width:760px;margin:0 auto;display:flex}
-nav button{flex:1;min-height:64px;font-size:11px;font-weight:700;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;color:#5A6A85}
-nav button .ic{font-size:20px}
+nav button{flex:1;min-height:64px;font-size:10px;font-weight:700;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;color:#5A6A85}
+nav button .ic{font-size:19px}
 nav button.actif{color:var(--encre)}
 nav button.actif .ic{transform:translateY(-2px)}
 nav button.actif::after{content:"";width:26px;height:4px;border-radius:4px;background:var(--soleil)}
@@ -198,6 +211,7 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:4px;backg
   <button data-vue="jour" class="actif"><span class="ic">📅</span>Semaine</button>
   <button data-vue="sorties"><span class="ic">🏔️</span>Sorties</button>
   <button data-vue="carte"><span class="ic">🗺️</span>Carte</button>
+  <button data-vue="randos"><span class="ic">🥾</span>Randos</button>
   <button data-vue="favoris"><span class="ic">⭐</span>Favoris</button>
   <button data-vue="missions"><span class="ic">✅</span>Missions</button>
   <button data-vue="infos"><span class="ic">ℹ️</span>Infos</button>
@@ -435,6 +449,130 @@ const MISSIONS = [
 "🧺 Sortie : goûter le gâteau à la broche au marché du mardi"
 ];
 
+/* Randonnées famille — vérifiées en ligne le 26/07/2026 (sources : lien de chaque fiche).
+   g:"ville" = départ à pied d'Argelès · g:"auto" = voiture ≤ 40 min.
+   Étapes : [titre, détail, [lat,lng] indicatif pour le schéma et la grande carte]. */
+const RANDOS = [
+{id:"arrieulat",c:"H",g:"ville",e:"🚶",n:"Boucle de l’Arrieulat",dep:"Angle de la bibliothèque municipale (à pied)",km:"5,8 km (variante longue 10,3 km)",dh:"+150 m env. (longue +322 m)",t:"2 h (longue ~3 h)",age:"dès 5 ans",
+int:"La boucle du panneau du camping : coteaux au-dessus d’Argelès, vues sur la vallée et les villages balcons.",
+pts:[["Départ","Angle de la bibliothèque municipale, centre-ville — suivre le balisage local.",[43.0065,-0.1012]],
+["Coteaux de l’Arrieulat","Chemins entre murets et prairies au-dessus de la ville, premiers points de vue.",[43.0,-0.108]],
+["Option longue","La variante web pousse vers Arcizans-Avant (10,3 km · +322 m · ~3 h) [à vérifier sur la carte locale].",[42.9906,-0.109]],
+["Retour","Boucle qui redescend tranquillement vers le centre.",[43.005,-0.103]]],
+lien:"https://rando.valleesdegavarnie.com/trek/29212-La-Boucle-de-l-Arrieulat",liensrc:"Rando Vallées de Gavarnie",gm:"Bibliothèque municipale, Argelès-Gazost"},
+{id:"balandrau",c:"H",g:"ville",e:"🥾",n:"Pierres du Balandrau & châtaigneraies",dep:"Place de Vieuzac (à pied)",km:"4,5-4,7 km",dh:"+150 m",t:"1 h 30",age:"dès 5 ans",
+int:"Depuis Vieuzac, lisière de forêt bordée de murets jusqu’aux pierres à légendes du Balandrau — panorama original sur la vallée.",
+pts:[["Départ","Place de Vieuzac (départ du panneau du camping).",[43.0045,-0.1035]],
+["Lisière & murets","Montée douce le long de la lisière, jolis murets de pierre.",[43.001,-0.108]],
+["Pierres du Balandrau","Le belvédère aux légendes : vue sur toute la vallée d’Argelès.",[42.999,-0.11]],
+["Châtaigneraies","Retour en boucle par les châtaigneraies puis le centre-ville.",[43.002,-0.106]]],
+lien:"https://www.alltrails.com/fr/randonnee/france/hautes-pyrenees/pierre-du-balandrau-via-argeles-gazost",liensrc:"AllTrails",gm:"Place de Vieuzac, Argelès-Gazost"},
+{id:"rd-savin",c:"H",g:"ville",e:"⛪",n:"Saint-Savin & belvédère de Piétat",dep:"Voie verte puis montée (à pied)",km:"~6-7 km A/R [à vérifier]",dh:"+150 m env. [à vérifier]",t:"~2 h-2 h 30",age:"dès 5 ans",
+int:"Village balcon, abbatiale du XIIe et belvédère de la chapelle de Piétat — crêpe en terrasse à l’arrivée.",
+pts:[["Départ","Voie verte à l’ancienne gare d’Argelès, direction sud.",[43.007,-0.096]],
+["Lau-Balagnas","Quitter la voie verte pour la montée vers Saint-Savin (fléchage) [itinéraire exact à vérifier — carte rando à 1 € à l’office de tourisme].",[42.996,-0.093]],
+["Saint-Savin","Abbatiale romane, ruelles fleuries, terrasses.",[42.9857,-0.0873]],
+["Belvédère de Piétat","Chapelle et vue plongeante sur la vallée et le gave.",[42.988,-0.082]],
+["Retour","Redescente par le même chemin (ou récupération en voiture au village).",[42.99,-0.09]]],
+lien:"https://www.visorando.com/randonnee-saint-savin-hautes-pyrenees.html",liensrc:"Visorando (Saint-Savin)",gm:"Saint-Savin, Hautes-Pyrénées"},
+{id:"rd-gaves",c:"H",g:"ville",e:"🏞️",n:"Berges du Gave & lac des Gaves",dep:"Complexe sportif de Lau-Balagnas (à pied ou 5 min)",km:"~5-6 km A/R",dh:"plat",t:"1 h-1 h 30",age:"poussette OK",
+int:"Le long du gave jusqu’au plan d’eau du lac des Gaves : passerelles, gravières, sommets en toile de fond.",
+pts:[["Départ","Complexe sportif de Lau-Balagnas (accessible par la voie verte depuis le camping).",[42.994,-0.092]],
+["Berges du gave","Chemin plat au fil de l’eau, sans difficulté.",[42.988,-0.089]],
+["Lac des Gaves","La retenue et ses plages de galets, entre Préchac et Beaucens.",[42.982,-0.086]],
+["Retour","Même chemin au bord de l’eau.",[42.99,-0.09]]],
+lien:"https://rando.valleesdegavarnie.com/trek/12501-Le-gave-de-Pau%2C-au-fil-de-l-eau",liensrc:"Rando Vallées de Gavarnie",gm:"Complexe sportif, Lau-Balagnas"},
+{id:"rd-voieverte",c:"H",g:"ville",e:"🚶",n:"Voie verte des Gaves, version marche",dep:"Ancienne gare d’Argelès (à pied)",km:"libre : 2 à 13 km",dh:"plat",t:"1 h à ½ j",age:"poussette OK",
+int:"L’ancienne voie ferrée 100 % sans voitures : on marche le temps qu’on veut, demi-tour quand on veut.",
+pts:[["Départ","Ancienne gare d’Argelès (~1 km du camping).",[43.007,-0.096]],
+["Sens sud","Vers Adast et Pierrefitte (6 km) au fil du gave.",[42.97,-0.08]],
+["Sens nord","Vers Agos-Vidalos (4 km) — pause au village possible.",[43.04,-0.074]],
+["Retour","Demi-tour libre selon les jambes du plus petit.",[43.007,-0.096]]],
+lien:"",liensrc:"",gm:"Ancienne gare, Argelès-Gazost"},
+{id:"rd-estaing-tour",c:"H",g:"auto",e:"👨‍👩‍👧",n:"Tour du lac d’Estaing",dep:"Parking du lac d’Estaing (30 min)",km:"2,4 km",dh:"plat",t:"~1 h",age:"poussette rive gauche",
+int:"Labellisée « En famille » : berges, chemin forestier, vaches en liberté — zéro marche d’approche.",
+pts:[["Départ","Parking directement au bord du lac (1 161 m).",[42.938,-0.181]],
+["Rive gauche","Berge accessible poussette / fauteuil (avec aide) au ras de l’eau.",[42.935,-0.184]],
+["Fond du lac","Prairies, ruisseaux et pique-nique face aux crêtes.",[42.933,-0.186]],
+["Retour rive droite","Par le chemin forestier ou la petite route (boucle possible dans les deux sens).",[42.937,-0.179]]],
+lien:"https://rando.valleesdegavarnie.com/trek/25648-Le-tour-du-lac-d-Estaing",liensrc:"Rando Vallées de Gavarnie",gm:"Lac d'Estaing"},
+{id:"rd-estaing-amont",c:"H",g:"auto",e:"🐑",n:"Vallée d’Estaing : vers le Plaa de Prat",dep:"Fond du lac d’Estaing (30 min)",km:"~5-6 km A/R [à vérifier]",dh:"+150 m env. [à vérifier]",t:"~2 h A/R",age:"dès 5 ans",
+int:"Fond de vallée entre forêt et ruisseau, troupeaux en liberté, cabanes de bergers — demi-tour où l’on veut.",
+pts:[["Départ","Bout du lac d’Estaing, sentier du fond de vallée.",[42.933,-0.186]],
+["Au fil du ruisseau","Le chemin sort de la forêt et longe le torrent au milieu des vaches et brebis.",[42.925,-0.191]],
+["Cabane des Masseys","Cabane pastorale ; en été, le berger et ses 600 brebis ne sont pas loin.",[42.918,-0.196]],
+["Plaa de Prat","Clairière et cabane-refuge rustique : pique-nique, puis retour par le même chemin.",[42.912,-0.2]]],
+lien:"https://www.auberge-lac-estaing.com/itineraires-propose",liensrc:"Auberge du lac d’Estaing",gm:"Lac d'Estaing"},
+{id:"rd-soum",c:"H",g:"auto",e:"🦅",n:"Lac de Soum (col du Soulor)",dep:"Col du Soulor (35 min)",km:"6 km A/R",dh:"+110 à 200 m",t:"2 h-2 h 15",age:"dès 5 ans",
+int:"Traversée à flanc face aux vautours jusqu’au lac à 1 510 m — vue Pic du Midi par temps clair, troupeaux partout.",
+pts:[["Départ","Parking du col du Soulor (1 474 m) — crêperies au col.",[42.9603,-0.2594]],
+["À flanc de montagne","Sentier large et tranquille direction nord, chevaux, vaches et moutons.",[42.966,-0.259]],
+["Lac de Soum","Le lac à 1 510 m, tour du plan d’eau possible, coin pique-nique.",[42.9718,-0.2626]],
+["Retour","Même chemin — crêpe méritée au col.",[42.9603,-0.2594]]],
+lien:"https://rando.valleesdegavarnie.com/trek/28040-Le-lac-de-Soum",liensrc:"Rando Vallées de Gavarnie",gm:"Col du Soulor"},
+{id:"rd-couraduque",c:"H",g:"auto",e:"🌄",n:"Balcons du col de Couraduque",dep:"Col de Couraduque, Aucun (30 min)",km:"~5 km",dh:"+200 m env.",t:"~2 h",age:"dès 5 ans",
+int:"Sentiers larges et balisés en zone pastorale, panoramas sur tout le Val d’Azun — buvette au col.",
+pts:[["Départ","Parking du col de Couraduque (1 367 m), buvette et table d’orientation.",[42.987,-0.216]],
+["Pistes pastorales","Larges chemins entre granges et estives, vue permanente sur la vallée heureuse.",[42.981,-0.225]],
+["Côté Soulor","Point de vue vers la crête qui relie Couraduque au Soulor (boucle facile ~200 m D+ d’après les topos).",[42.976,-0.233]],
+["Retour","Boucle vers le col — goûter à la buvette.",[42.987,-0.216]]],
+lien:"https://www.station-valdazun.com/randonnee/",liensrc:"Station Val d’Azun",gm:"Col de Couraduque, Aucun"},
+{id:"rd-hautacam",c:"H",g:"auto",e:"⛰️",n:"Crêtes du Hautacam",dep:"Parking Tramassel (30 min)",km:"4,4 km A/R (boucle Komoot 6,2 km)",dh:"+79 m",t:"1 h 30-1 h 45",age:"dès 5 ans",
+int:"Balcon à 1 630 m au-dessus de la vallée d’Argelès : montagnes à 360°, moutons, presque pas de dénivelé.",
+pts:[["Départ","Parking supérieur du col de Tramassel (1 630 m), snack-bar.",[42.975,0.012]],
+["Sentier en balcon","Progression face au vide (raisonnable !) au-dessus de la vallée du gave.",[42.97,0.008]],
+["Crêtes","Vue Pic du Midi côté est, vallée d’Argelès côté ouest.",[42.966,0.005]],
+["Retour","Fin en légère descente vers le parking.",[42.975,0.012]]],
+lien:"https://www.komoot.com/fr-fr/smarttour/e877276396/boucle-des-cretes-du-hautacam",liensrc:"Komoot",gm:"Station du Hautacam"},
+{id:"rd-isaby",c:"H",g:"auto",e:"🏞️",n:"Lac d’Isaby (Hautacam)",dep:"Route du Hautacam (35 min)",km:"[à vérifier]",dh:"+250 m env. [à vérifier]",t:"~2 h 30 A/R [à vérifier]",age:"enfants marcheurs",
+int:"Le lac « randonnée facile en famille » de l’office de tourisme, dans les estives au-dessus de la station.",
+pts:[["Départ","Se garer sur la route de la station du Hautacam au départ fléché du lac [à vérifier sur place].",[42.962,0.008]],
+["Montée en estive","Chemin régulier au milieu des troupeaux.",[42.957,0.006]],
+["Lac d’Isaby","Le lac à 1 558 m, pique-nique au bord de l’eau.",[42.951,0.004]],
+["Retour","Même chemin en descente douce.",[42.962,0.008]]],
+lien:"https://www.lourdes-infotourisme.com/explorer/plaisirs-de-la-montagne-a-hautacam/le-lac-disaby-une-randonnee-facile-en-famille/",liensrc:"OT Lourdes",gm:"Hautacam"},
+{id:"rd-cascades",c:"H",g:"auto",e:"💦",n:"Chemin des Cascades (Raillère → Pont d’Espagne)",dep:"La Raillère, Cauterets (25 min + navette gratuite)",km:"~4 km aller",dh:"+407 m",t:"~2 h montée (3 h-3 h 30 A/R)",age:"6 ans et + motivés · tronçon court : tous",
+int:"Six cascades dans la hêtraie : Cerise, Escane-Gat, Boussès, Pouey Bacou, Mauhourat et Pont d’Espagne — 532 avis sur AllTrails.",
+pts:[["Départ","Navette gratuite Cauterets → La Raillère, début du sentier ombragé.",[42.8797,-0.1122]],
+["Cascades Cerise & Escane-Gat","Premier tiers, le plus accessible : idéal demi-tour avec un petit de 5 ans.",[42.872,-0.126]],
+["Boussès & Pouey Bacou","Passages plus raides et rocheux : chaussures fermées, main tenue près des à-pics.",[42.864,-0.138]],
+["Mauhourat puis Pont d’Espagne","Dernière montée et bouquet final à la grande cascade.",[42.852,-0.156]],
+["Retour","Redescente par le même sentier, ou navette / télécabine côté Puntas [à vérifier].",[42.8532,-0.1531]]],
+lien:"https://www.alltrails.com/trail/france/hautes-pyrenees/chemin-des-cascades-du-pont-d-espagne",liensrc:"AllTrails (532 avis)",gm:"La Raillère, Cauterets"},
+{id:"rd-clot",c:"H",g:"auto",e:"🌿",n:"Plateau du Clot & pont du Cayan",dep:"Parking du Puntas (40 min)",km:"boucle 8 km · version courte libre",dh:"+150 m",t:"1 h à 2 h 30",age:"dès 4-5 ans",
+int:"Plateau quasi plat à 1 600 m : passerelles sur le gave du Marcadau, pique-nique géant, marmottes en lisière.",
+pts:[["Départ","Parking du Puntas puis Pont d’Espagne.",[42.8532,-0.1531]],
+["Montée au Clot","Courte rampe jusqu’au chalet du Clot et son plateau.",[42.849,-0.161]],
+["Le plateau","~1 h de marche plate le long du gave, passerelles et prairies.",[42.846,-0.166]],
+["Pont du Cayan","Option boucle : traverser au Cayan et revenir par l’autre rive.",[42.843,-0.171]],
+["Retour","Redescente vers le Pont d’Espagne et le Puntas.",[42.8532,-0.1531]]],
+lien:"https://www.le-bouquetin-boiteux.fr/2025/10/pont-espagne-clot-cayan.html",liensrc:"topo Le Bouquetin boiteux",gm:"Parking du Puntas, Cauterets"},
+{id:"rd-gaube",c:"H",g:"auto",e:"🏔️",n:"Lac de Gaube par le sentier",dep:"Parking du Puntas (40 min)",km:"2,6 km aller",dh:"+260 à 300 m",t:"1 h 30 montée (2 h 20 avec un petit)",age:"5-6 ans marcheurs · télésiège en secours",
+int:"Le lac mythique au pied du Vignemale, gagné à la force des mollets — ou télésiège pour couper montée ou descente.",
+pts:[["Départ","Pont d’Espagne, panneau lac de Gaube.",[42.852,-0.156]],
+["Forêt du gave de Gaube","Sentier d’abord pavé puis marches rocheuses, à l’ombre.",[42.846,-0.15]],
+["Arrivée au lac","Le lac à 1 725 m face au Vignemale — berges à explorer, buvette.",[42.8386,-0.1425]],
+["Retour","Sentier en descente, ou télésiège de Gaube pour économiser les jambes.",[42.845,-0.147]]],
+lien:"https://www.komoot.com/smarttour/993025",liensrc:"Komoot",gm:"Parking du Puntas, Cauterets"},
+{id:"rd-lutour",c:"H",g:"auto",e:"🌊",n:"Cascade de Lutour & la Fruitière",dep:"Route de la vallée du Lutour (25 min)",km:"5,8 km A/R depuis Cauterets · bien moins depuis la Fruitière",dh:"+150-250 m selon départ [à vérifier]",t:"45 min à 2 h",age:"dès 5 ans",
+int:"L’une des plus belles cascades des Pyrénées, puis pause à l’auberge de la Fruitière au bord du gave.",
+pts:[["Départ","Route de la vallée du Lutour depuis Cauterets, parking vers la Fruitière [à vérifier].",[42.868,-0.112]],
+["Cascade de Lutour","La grande cascade en contrebas du chemin — prudence sur les abords mouillés.",[42.86,-0.11]],
+["La Fruitière","Auberge au bord du gave : crêpe, prairies, ruisseau à cailloux.",[42.855,-0.109]],
+["Variante sportive","Tout à pied depuis Cauterets par le bois : 5,8 km A/R, ~2 h.",[42.885,-0.114]]],
+lien:"https://www.komoot.com/fr-fr/smarttour/38625053",liensrc:"Komoot",gm:"La Fruitière, Cauterets"},
+{id:"rd-lourdes",c:"H",g:"auto",e:"🦆",n:"Tour du lac de Lourdes & tourbière",dep:"Lac de Lourdes (20 min)",km:"6 km",dh:"plat",t:"1 h 30",age:"poussette OK",
+int:"Boucle plate « carte postale canadienne » : tourbière Natura 2000, pontons, aires de jeux et baignade surveillée l’été.",
+pts:[["Départ","Parking du lac, côté golf.",[43.0975,-0.08]],
+["Rive sud","Sous-bois au bord de l’eau.",[43.093,-0.083]],
+["La tourbière","Zone humide classée Natura 2000 à mi-parcours, platelage en bois.",[43.091,-0.087]],
+["Rive nord","Plages, aires de jeux, baignade surveillée en juillet-août.",[43.099,-0.084]],
+["Retour","Fin de boucle au parking — glace au bord du lac.",[43.0975,-0.08]]],
+lien:"https://www.cirkwi.com/fr/circuit/98433-tour-du-lac-de-lourdes",liensrc:"Cirkwi",gm:"Lac de Lourdes"}
+];
+const FAVCATS = Object.assign({}, CATS, {H:"🥾 Randos"});
+function FAVLIST(){ return SORTIES.concat(RANDOS.filter(function(r){ return !SORTIES.some(function(s){ return s.id===r.id; }); })); }
+
 /* ================= ÉTAT PARTAGÉ ================= */
 let ST = {state:{}, resetAt:0};
 let vue = "jour";
@@ -442,6 +580,7 @@ let jourSel = defJour();
 let enLigne = null;
 let timerSync = null;
 const ouverts = {};   // fiches sorties dépliées (local à l'appareil, non synchronisé)
+const ouvertsR = {};  // fiches randos dépliées (idem)
 const wikiImg = {};   // cache des photos Wikipédia
 let moi = "";         // membre qui vote sur CET appareil — mémoire seulement (pas de stockage navigateur)
 let fvTri = "votes";  // tri du classement des favoris : "votes" | "type"
@@ -492,7 +631,10 @@ function majSync(){
 /* ================= SCORE ================= */
 function score(){
   let s = 0;
-  SORTIES.forEach(function(o){ if(val("done:"+o.id,false)) s += 10; });
+  const faits = {};
+  SORTIES.forEach(function(o){ if(val("done:"+o.id,false)) faits[o.id] = 1; });
+  RANDOS.forEach(function(r){ if(val("done:"+r.id,false)) faits[r.id] = 1; });
+  s += 10 * Object.keys(faits).length;
   MISSIONS.forEach(function(_,i){ if(val("md:"+i,false)) s += 2; });
   (val("cm",[])).forEach(function(m){ if(m.done) s += 2; });
   return s;
@@ -604,6 +746,7 @@ function carteSortie(o){
     det +
     '<div class="s-pre">📌 ' + esc(o.pre) + '</div>' +
     '<div class="s-act">' +
+    (RANDOS.some(function(r){ return r.id===o.id; }) ? '<button class="b-iti" data-act="rando" data-v="' + o.id + '">🥾 Fiche rando détaillée</button>' : "") +
     (o.gm ? '<a class="b-iti" href="https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(o.gm) + '" target="_blank" rel="noopener">🧭 Itinéraire</a>' : "") +
     (o.u ? '<a class="b-resa" href="' + o.u + '" target="_blank" rel="noopener">Réserver / infos</a>' : "") +
     '<button class="b-want' + (want?" on":"") + '" data-act="want" data-v="' + o.id + '">' + (want?"⭐ Au programme":"☆ On y va ?") + '</button>' +
@@ -623,7 +766,7 @@ function slugMembre(n){
 function ligneFav(s, med){
   const vs = votants(s.id), n = vs.length;
   const mien = moi ? val("fav:" + moi + ":" + s.id, false) : false;
-  const sub = (fvTri==="votes" ? CATS[s.c] + (n ? " · " : "") : "") + vs.map(function(x){ return x.e; }).join(" ");
+  const sub = (fvTri==="votes" ? FAVCATS[s.c] + (n ? " · " : "") : "") + vs.map(function(x){ return x.e; }).join(" ");
   return '<button class="fv' + (mien?" mien":"") + '" data-act="vote" data-v="' + s.id + '">' +
     '<span class="fv-med">' + med + '</span>' +
     '<span class="fv-e">' + s.e + '</span>' +
@@ -652,20 +795,20 @@ function vueFavoris(){
   if(fvTri === "votes"){
     const meds = ["🥇","🥈","🥉"];
     let rang = 0;
-    classement = SORTIES.slice()
+    classement = FAVLIST()
       .sort(function(a,b){ return nb(b) - nb(a) || a.n.localeCompare(b.n, "fr"); })
       .map(function(s){ return ligneFav(s, (nb(s) > 0 && rang < 3) ? meds[rang++] : ""); })
       .join("");
   } else {
-    classement = Object.keys(CATS).map(function(c){
-      return '<div class="cat-t">' + CATS[c] + '</div>' +
-        SORTIES.filter(function(s){ return s.c===c; })
+    classement = Object.keys(FAVCATS).map(function(c){
+      return '<div class="cat-t">' + FAVCATS[c] + '</div>' +
+        FAVLIST().filter(function(s){ return s.c===c; })
           .sort(function(a,b){ return nb(b) - nb(a) || a.n.localeCompare(b.n, "fr"); })
           .map(function(s){ return ligneFav(s, ""); }).join("");
     }).join("");
   }
   const totalVotes = mb.reduce(function(t,m){
-    return t + SORTIES.filter(function(s){ return val("fav:" + m.id + ":" + s.id, false); }).length;
+    return t + FAVLIST().filter(function(s){ return val("fav:" + m.id + ":" + s.id, false); }).length;
   }, 0);
   return '<section class="fiche"><h2>👨‍👩‍👧‍👦 Qui vote ?</h2>' +
     '<div class="mbrs">' + chips + '</div>' +
@@ -724,7 +867,90 @@ function majCarte(){
         '<br>🚗 ' + esc(s.r) + ' · ⏱ ' + esc(s.d) + (n ? ' · ❤️ ' + n : '') + (done ? ' · ✅ fait' : '') +
         '<br><button class="pop-fiche" data-act="fiche" data-v="' + s.id + '">Voir la fiche ▸</button>');
   });
+  RANDOS.forEach(function(r){
+    if(SORTIES.some(function(s){ return s.id===r.id; })) return;   // déjà un repère sortie
+    const done = val("done:"+r.id,false), n = votants(r.id).length;
+    const icon = L.divIcon({ className:"",
+      html:'<div class="mk mk-id-' + r.id + (done?" mk-done":"") + '" style="border-color:#B07A00">' + r.e + '</div>',
+      iconSize:[30,30], iconAnchor:[15,15] });
+    L.marker(r.pts[0][2], { icon: icon }).addTo(carteMarqueurs)
+      .bindPopup('<b>' + esc(r.n) + '</b><br>🥾 Rando famille<br>' + esc(r.dh) + ' · ⏱ ' + esc(r.t) + (n ? ' · ❤️ ' + n : '') + (done ? ' · ✅ faite' : '') +
+        '<br><button class="pop-fiche" data-act="rando" data-v="' + r.id + '">Voir la fiche ▸</button>');
+  });
   setTimeout(function(){ carteObj.invalidateSize(); }, 60);
+}
+// Tracé d'une rando mis en avant sur la grande carte (depuis le bouton de sa fiche)
+let randoFocusLayer = null;
+function focusRando(id){
+  if(typeof L === "undefined" || !carteObj) return;
+  const r = RANDOS.find(function(x){ return x.id===id; });
+  if(!r) return;
+  if(randoFocusLayer) carteObj.removeLayer(randoFocusLayer);
+  const P = r.pts.filter(function(p){ return p[2]; });
+  const couches = P.map(function(p,i){
+    return L.marker(p[2], { zIndexOffset:800, icon: L.divIcon({ className:"", html:'<div class="mkstep">' + (i+1) + '</div>', iconSize:[22,22], iconAnchor:[11,11] }) })
+      .bindPopup('<b>' + (i+1) + '. ' + esc(p[0]) + '</b><br>' + esc(p[1]));
+  });
+  couches.push(L.polyline(P.map(function(p){ return p[2]; }), { color:"#1E7F86", weight:4, opacity:.9, dashArray:"2 8", lineCap:"round" }));
+  randoFocusLayer = L.layerGroup(couches).addTo(carteObj);
+  carteObj.fitBounds(L.latLngBounds(P.map(function(p){ return p[2]; })).pad(0.3));
+}
+
+/* ================= RANDOS ================= */
+function svgMini(r){
+  const P = r.pts.filter(function(p){ return p[2]; });
+  if(P.length < 2) return "";
+  const lats = P.map(function(p){ return p[2][0]; }), lngs = P.map(function(p){ return p[2][1]; });
+  const miLat = Math.min.apply(null, lats), maLat = Math.max.apply(null, lats);
+  const miLng = Math.min.apply(null, lngs), maLng = Math.max.apply(null, lngs);
+  const spanLat = Math.max(maLat - miLat, 0.004), spanLng = Math.max(maLng - miLng, 0.004);
+  const W = 300, H = 150, M = 24;
+  const fx = function(lng){ return M + (lng - miLng) / spanLng * (W - 2*M); };
+  const fy = function(lat){ return H - M - (lat - miLat) / spanLat * (H - 2*M); };
+  const xy = P.map(function(p){ return [fx(p[2][1]), fy(p[2][0])]; });
+  const poly = xy.map(function(c){ return c[0].toFixed(1) + "," + c[1].toFixed(1); }).join(" ");
+  const dots = xy.map(function(c,i){
+    return '<circle cx="' + c[0].toFixed(1) + '" cy="' + c[1].toFixed(1) + '" r="9" fill="#23324A"/>' +
+      '<text x="' + c[0].toFixed(1) + '" y="' + (c[1]+3.5).toFixed(1) + '" text-anchor="middle" font-size="9" font-weight="800" fill="#FFFFFF">' + (i+1) + '</text>';
+  }).join("");
+  return '<svg class="svgmap" viewBox="0 0 300 150" role="img" aria-label="schéma de l’itinéraire">' +
+    '<polyline points="' + poly + '" fill="none" stroke="#1E7F86" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round"/>' + dots + '</svg>' +
+    '<div class="svg-cap">Schéma indicatif (points-clés reliés, numéros = étapes ci-dessus) — sur le terrain, suivre le balisage et le tracé lié.</div>';
+}
+function carteRando(r){
+  const done = val("done:"+r.id,false), n = votants(r.id).length, open = !!ouvertsR[r.id];
+  let det = "";
+  if(open){
+    const etapes = r.pts.map(function(p){ return '<li><b>' + esc(p[0]) + '</b>' + esc(p[1]) + '</li>'; }).join("");
+    det = '<div class="s-det">' +
+      '<div class="s-bloc"><b>🚗 Départ</b>' + esc(r.dep) + '</div>' +
+      '<div class="s-bloc"><b>👣 Itinéraire étape par étape</b><ol class="etp">' + etapes + '</ol></div>' +
+      svgMini(r) + '</div>';
+  }
+  return '<article id="r-' + r.id + '" class="sortie' + (done?" fait":"") + '">' +
+    '<button class="s-open" data-act="rdet" data-v="' + r.id + '">' +
+      '<div class="s-top"><span>' + r.e + '</span><span class="s-nom">' + esc(r.n) + '</span>' +
+      '<span class="s-hint">' + (open?"replier ▴":"détails ▾") + '</span></div>' +
+      '<div class="s-meta">📏 ' + esc(r.km) + ' · ⛰ ' + esc(r.dh) + ' · ⏱ ' + esc(r.t) + ' · 👶 ' + esc(r.age) + (n ? ' · ❤️ ' + n : '') + '</div></button>' +
+    det +
+    '<div class="s-pre">📌 ' + esc(r.int) + '</div>' +
+    '<div class="s-act">' +
+    (r.gm ? '<a class="b-iti" href="https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(r.gm) + '" target="_blank" rel="noopener">🧭 Aller au départ</a>' : "") +
+    '<button class="b-iti" data-act="rmap" data-v="' + r.id + '">🗺️ Grande carte</button>' +
+    (r.lien ? '<a class="b-resa" href="' + r.lien + '" target="_blank" rel="noopener">🔗 Tracé — ' + esc(r.liensrc) + '</a>' : "") +
+    (SORTIES.some(function(s){ return s.id===r.id; }) ? '<button class="b-want" data-act="fiche" data-v="' + r.id + '">↔ Fiche sortie</button>' : "") +
+    '<button class="b-fait' + (done?" on":"") + '" data-act="done" data-v="' + r.id + '">' + (done?"✓ Faite !":"C’est fait ?") + '</button>' +
+    '</div></article>';
+}
+function vueRandos(){
+  const faites = RANDOS.filter(function(r){ return val("done:"+r.id,false); }).length;
+  let html = '<section class="fiche"><h2>🥾 Randos famille <span class="badge' + (faites===RANDOS.length?" ok":"") + '">' + faites + "/" + RANDOS.length + '</span></h2>' +
+    '<div class="note">Sélection ≤ 500 m de D+ et ≤ demi-journée, vérifiée en ligne le 26/07/2026 (source liée sur chaque fiche) — <b>[à vérifier]</b> = non recoupé. Réflexes : départ matinal, eau, kways, chaussures fermées ; 10 points par rando faite, votes ❤️ dans l’onglet Favoris.</div></section>';
+  html += '<div class="cat-t">🏘️ À pied depuis Argelès</div>';
+  RANDOS.filter(function(r){ return r.g==="ville"; }).forEach(function(r){ html += carteRando(r); });
+  html += '<div class="cat-t">🚗 En voiture (≤ 40 min)</div>';
+  RANDOS.filter(function(r){ return r.g==="auto"; }).forEach(function(r){ html += carteRando(r); });
+  return html;
 }
 
 function vueMissions(){
@@ -774,7 +1000,7 @@ function rendre(){
   document.getElementById("carte").hidden = !enCarte;
   app.hidden = enCarte;
   if(enCarte){ majCarte(); majScore(); return; }
-  app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
+  app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="randos" ? vueRandos() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
   majScore();
 }
 function majNav(){
@@ -821,6 +1047,21 @@ document.addEventListener("click", function(ev){
     majNav(); rendre();
     const art = document.getElementById("s-"+v);
     if(art) art.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+  else if(a==="rdet"){ ouvertsR[v] = !ouvertsR[v]; rendre(); }
+  else if(a==="rando"){
+    vue = "randos"; ouvertsR[v] = true;
+    majNav(); rendre();
+    const fr = document.getElementById("r-"+v);
+    if(fr) fr.scrollIntoView({ behavior:"smooth", block:"start" });
+  }
+  else if(a==="rmap"){
+    vue = "carte"; majNav(); rendre();
+    let essais = 0;
+    const boucle = setInterval(function(){
+      if(typeof L !== "undefined" && carteObj){ focusRando(v); clearInterval(boucle); }
+      else if(++essais > 25) clearInterval(boucle);
+    }, 150);
   }
   else if(a==="det"){ ouverts[v] = !ouverts[v];
     if(ouverts[v]){ const o = SORTIES.find(function(x){return x.id===v;}); if(o) chargePhoto(o); }

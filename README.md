@@ -1,6 +1,6 @@
 # Le QG des vacances — Argelès-Gazost 2026 (GitHub + Render)
 
-Appli familiale partagée : planning des animations du camping (toujours **en extra**), 27 fiches sorties détaillées (photo, accès, itinéraire, horaires, points forts — consolidées avec le panneau « Explore & Discover » du camping), carte des sorties autour du camping, favoris votés par chaque membre (classement par votes ou par type), missions, météo du jour, score famille. Un seul front (`index.html`) + un petit serveur Node (`server.js`) qui sert la page **et** l'API `/api/sync` (fusion horodatée, persistance PostgreSQL Render).
+Appli familiale partagée : planning des animations du camping (toujours **en extra**), 27 fiches sorties détaillées (photo, accès, itinéraire, horaires, points forts — consolidées avec le panneau « Explore & Discover » du camping), carte des sorties autour du camping, 16 randonnées famille vérifiées avec itinéraires étape par étape et liens de tracés (Komoot, Visorando…), favoris votés par chaque membre (classement par votes ou par type), missions, météo du jour, score famille. Un seul front (`index.html`) + un petit serveur Node (`server.js`) qui sert la page **et** l'API `/api/sync` (fusion horodatée, persistance PostgreSQL Render).
 
 ## Mise en ligne (une fois, ~10 min)
 
