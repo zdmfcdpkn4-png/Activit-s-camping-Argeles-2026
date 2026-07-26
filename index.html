@@ -260,10 +260,9 @@ const NOTES = {
 };
 /* Soirées — relevées sur l'appli Yelloh (captures du 26/07). Mini-disco quotidienne ajoutée côté rendu (21h15, tous les soirs). */
 const SOIREES = {
-"2026-07-26":[["21:30","Fête du Sud-Ouest — 1 h 30, scène"]],
 "2026-07-27":[["21:30","Bal mousse — 1 h 30"]],
 "2026-07-28":[["21:30","Spectacle Hits Rock — 1 h 30, grande scène"]],
-"2026-07-29":[["20:00","Soirée Happy/Duo — 2 h, restaurant Le Brasero"]],
+"2026-07-29":[["20:00","Soirée Happy/Duo — 2 h, restaurant Le Brasero"],["21:30","Fête du Sud-Ouest — 1 h 30, scène"]],
 "2026-07-30":[["21:30","Spectacle Spectacul'Art — 1 h 30, grande scène"]],
 "2026-07-31":[["21:30","Spectacle Tom et Johnny — 1 h 30, grande scène"]],
 "2026-08-01":[["21:30","Samedi tout est permis — 1 h 30, grande scène"]]
@@ -879,6 +878,12 @@ function majCarte(){
     L.marker(CAMPING.ll, { zIndexOffset:1000, icon: L.divIcon({ className:"", html:'<div class="mk mk-camp">🏕️</div>', iconSize:[36,36], iconAnchor:[18,18] }) })
       .addTo(carteObj).bindPopup("<b>" + CAMPING.n + "</b><br>Le point de départ de toutes les aventures !");
     carteMarqueurs = L.layerGroup().addTo(carteObj);
+  }
+  // Une bulle est ouverte : on ne reconstruit pas les repères maintenant,
+  // sinon la synchro périodique ferme la popup en pleine lecture.
+  if(document.querySelector("#map .leaflet-popup")){
+    setTimeout(function(){ carteObj.invalidateSize(); }, 60);
+    return;
   }
   carteMarqueurs.clearLayers();
   SORTIES.forEach(function(s){
