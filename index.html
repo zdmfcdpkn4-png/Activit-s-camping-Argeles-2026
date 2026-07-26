@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16425b">
+<meta name="description" content="Roadbook partagé Montaigu → Argelès-Gazost : carte, étapes, consignes et check-list bagages synchronisées entre tous les téléphones.">
+<title>Roadbook · Montaigu → Argelès-Gazost</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏔️</text></svg>">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root{
+    --bg:#eef2f5; --card:#ffffff; --ink:#1c2b33; --muted:#5c6f7a; --line:#e2e9ee;
+    --accent:#2a6f97; --ok:#2a9d8f; --danger:#c94f4f;
+    --head1:#16425b; --head2:#2a6f97; --gold:#ffd166;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0f181e; --card:#18252e; --ink:#e8eef2; --muted:#93a7b3; --line:#253540;
+      --head1:#0c2735; --head2:#1d5375;
+    }
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; }
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.45;
+    padding-bottom:calc(66px + env(safe-area-inset-bottom));
+  }
+  button{ font:inherit; color:inherit; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+
+  /* ---------- En-tête ---------- */
+  header{
+    position:sticky; top:0; z-index:1100;
+    background:linear-gradient(135deg,var(--head1),var(--head2));
+    color:#fff; padding:12px 16px 12px calc(16px + env(safe-area-inset-left));
+    box-shadow:0 2px 12px rgba(0,0,0,.28);
+  }
+  .head-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; max-width:760px; margin:0 auto; }
+  .head-row h1{ margin:0; font-size:1.25rem; letter-spacing:.2px; }
+  .head-sub{ margin:2px auto 0; max-width:760px; font-size:.82rem; opacity:.92; }
+  .head-progress{ max-width:760px; margin:10px auto 0; height:6px; border-radius:99px; background:rgba(255,255,255,.25); overflow:hidden; }
+  #headBar{ height:100%; width:0; background:var(--gold); border-radius:99px; transition:width .35s ease; }
+  .pill{
+    flex:0 0 auto; border:0; border-radius:99px; padding:6px 12px;
+    font-size:.78rem; font-weight:650; background:rgba(255,255,255,.16); color:#fff; cursor:pointer;
+    white-space:nowrap;
+  }
+  .pill-ok{ background:rgba(42,157,143,.35); }
+  .pill-off{ background:rgba(0,0,0,.30); color:#ffc9c9; }
+
+  /* ---------- Sections ---------- */
+  main{ max-width:760px; margin:0 auto; padding:16px; }
+  .section-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:4px 0 8px; }
+  .section-head h2{ margin:0; font-size:1.12rem; }
+  .hint{ margin:0 0 14px; color:var(--muted); font-size:.85rem; }
+  .badge{
+    background:rgba(42,111,151,.14); color:var(--accent);
+    padding:3px 10px; border-radius:99px; font-weight:700; font-size:.8rem; white-space:nowrap;
+  }
+  .badge.ok{ background:rgba(42,157,143,.16); color:var(--ok); }
+
+  /* ---------- Carte ---------- */
+  #map{ height:min(62vh,520px); border-radius:14px; border:1px solid var(--line); background:var(--card); }
+  .map-note{ color:var(--muted); font-size:.8rem; margin:10px 2px 0; }
+  .map-fallback{ display:flex; align-items:center; justify-content:center; height:100%; color:var(--muted); padding:20px; text-align:center; }
+  .mk{
+    width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.8rem;
+    border:2px solid #fff; box-shadow:0 1px 5px rgba(0,0,0,.45);
+  }
+  .mk-done{ background:var(--ok); }
+
+  /* ---------- Feuille de route ---------- */
+  .timeline{ list-style:none; margin:0; padding:0; position:relative; }
+  .timeline::before{
+    content:""; position:absolute; left:29px; top:10px; bottom:10px; width:3px;
+    background:var(--line); border-radius:2px;
+  }
+  .step{ position:relative; margin:0 0 10px; }
+  .step-card{
+    display:flex; gap:12px; width:100%; text-align:left; cursor:pointer;
+    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px;
+  }
+  .step-bullet{
+    position:relative; z-index:1; flex:0 0 34px; height:34px; border-radius:50%;
+    background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center;
+    font-weight:700; align-self:flex-start;
+  }
+  .step.done .step-bullet{ background:var(--ok); }
+  .step.done .step-card{ opacity:.72; }
+  .step.done .step-title{ text-decoration:line-through; }
+  .step-body{ min-width:0; }
+  .step-title{ display:block; font-weight:650; }
+  .step-meta{
+    display:inline-block; font-size:.78rem; color:var(--muted);
+    background:var(--bg); padding:1px 9px; border-radius:99px; margin:5px 0 3px;
+  }
+  .step-note{ display:block; font-size:.87rem; color:var(--muted); }
+
+  /* ---------- Cases à cocher ---------- */
+  .checkbox{
+    flex:0 0 26px; width:26px; height:26px; border-radius:8px;
+    border:2px solid var(--line); align-self:center; position:relative; transition:background .15s,border-color .15s;
+  }
+  .step-card .checkbox{ margin-left:auto; }
+  .checkbox.on{ background:var(--ok); border-color:var(--ok); }
+  .checkbox.on::after{
+    content:"✓"; color:#fff; position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.9rem;
+  }
+
+  /* ---------- Consignes ---------- */
+  .note-card{
+    background:var(--card); border:1px solid var(--line); border-left:5px solid var(--accent);
+    border-radius:12px; padding:12px 14px; margin-bottom:10px;
+  }
+  .note-card h3{ margin:0 0 4px; font-size:.95rem; }
+  .note-card p{ margin:0; font-size:.88rem; color:var(--muted); }
+
+  /* ---------- Bagages ---------- */
+  .cat{ background:var(--card); border:1px solid var(--line); border-radius:14px; margin-bottom:12px; overflow:hidden; }
+  .cat-head{
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    padding:11px 14px; border-bottom:1px solid var(--line); font-weight:700;
+  }
+  .item{
+    display:flex; align-items:center; gap:11px; width:100%; padding:11px 14px;
+    background:none; border:0; border-bottom:1px solid var(--line); text-align:left; cursor:pointer;
+  }
+  .item:last-child{ border-bottom:0; }
+  .item-label{ min-width:0; }
+  .item.done .item-label{ text-decoration:line-through; color:var(--muted); }
+
+  /* ---------- Remise à zéro ---------- */
+  .resetzone{ margin:28px 0 8px; text-align:center; }
+  #resetBtn{
+    background:none; border:1.5px dashed var(--line); color:var(--muted);
+    border-radius:12px; padding:10px 16px; cursor:pointer;
+  }
+  #resetBtn.armed{ border-color:var(--danger); color:var(--danger); background:rgba(201,79,79,.08); }
+  .reset-sub{ display:block; font-size:.72rem; opacity:.85; }
+
+  /* ---------- Onglets ---------- */
+  #tabs{
+    position:fixed; left:0; right:0; bottom:0; z-index:1100; display:flex;
+    background:var(--card); border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom); box-shadow:0 -2px 12px rgba(0,0,0,.07);
+  }
+  #tabs button{
+    flex:1; background:none; border:0; padding:8px 0 6px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    font-size:1.15rem; color:var(--muted);
+  }
+  #tabs button span{ font-size:.67rem; font-weight:650; }
+  #tabs button.active{ color:var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <h1>🏔️ Roadbook</h1>
+    <button id="syncPill" class="pill" type="button" title="Appuyer pour synchroniser maintenant">⏳ connexion…</button>
+  </div>
+  <p class="head-sub">Montaigu → Argelès-Gazost · <b>≈ 565 km</b> · ≈ 5 h 35 hors pauses</p>
+  <div class="head-progress"><div id="headBar"></div></div>
+</header>
+
+<main>
+  <noscript><p class="hint">Cette page a besoin de JavaScript pour fonctionner.</p></noscript>
+
+  <section id="tab-route" class="tab">
+    <div class="section-head"><h2>Feuille de route</h2><span class="badge" id="routeCount"></span></div>
+    <p class="hint">Cocher chaque étape une fois passée — la progression apparaît sur tous les téléphones.</p>
+    <ol id="steps" class="timeline"></ol>
+  </section>
+
+  <section id="tab-carte" class="tab" hidden>
+    <div class="section-head"><h2>Carte du trajet</h2></div>
+    <div id="map"></div>
+    <p class="map-note">Tracé indicatif reliant les étapes (pas le tracé routier exact). Appuyer sur un repère pour voir la consigne de l’étape.</p>
+  </section>
+
+  <section id="tab-consignes" class="tab" hidden>
+    <div class="section-head"><h2>Consignes</h2></div>
+    <div id="consignes"></div>
+  </section>
+
+  <section id="tab-bagages" class="tab" hidden>
+    <div class="section-head"><h2>Check-list bagages</h2><span class="badge" id="bagCount"></span></div>
+    <p class="hint">Chaque coche est partagée : on voit en direct ce que les autres ont déjà chargé.</p>
+    <div id="bags"></div>
+  </section>
+
+  <div class="resetzone">
+    <button id="resetBtn" type="button">🗑️ Tout remettre à zéro <span class="reset-sub">(appuyer 2 fois — efface pour tout le monde)</span></button>
+  </div>
+</main>
+
+<nav id="tabs">
+  <button data-tab="route" class="active" type="button">🧭<span>Roadbook</span></button>
+  <button data-tab="carte" type="button">🗺️<span>Carte</span></button>
+  <button data-tab="consignes" type="button">📋<span>Consignes</span></button>
+  <button data-tab="bagages" type="button">🎒<span>Bagages</span></button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+'use strict';
+
+/* ============================================================
+   Identifiant du voyage — la seule « clé d'accès » au suivi.
+   Avant mise en ligne, remplacer par une chaîne longue et
+   aléatoire (ex. "argeles-k3v9tqx27m") — cf. README, étape 5.
+   ============================================================ */
+const TRIP = "argeles-2026";
+
+/* ---------------------- Données du trajet ---------------------- */
+
+const STEPS = [
+  { id:"etape-01", t:"Départ — Montaigu (Vendée)", km:0, h:"départ",
+    note:"Pression des pneus et plein faits la veille. Rejoindre l’A83 direction Niort / Bordeaux.",
+    ll:[46.976,-1.312] },
+  { id:"etape-02", t:"A83 — pause à l’aire des Ruralies", km:105, h:"≈ 1 h 00",
+    note:"Café + toilettes. Reprendre l’A83, qui rejoint l’A10 après Niort, direction Bordeaux.",
+    ll:[46.280,-0.390] },
+  { id:"etape-03", t:"A10 — Saintes", km:190, h:"≈ 1 h 50",
+    note:"Continuer direction Bordeaux. Ralentissements fréquents l’été entre Saintes et Mirambeau.",
+    ll:[45.746,-0.633] },
+  { id:"etape-04", t:"Rocade de Bordeaux", km:300, h:"≈ 2 h 50",
+    note:"Suivre « Toulouse (A62) » par la rocade. Chargée entre 11 h et 15 h — garder de la marge.",
+    ll:[44.865,-0.554] },
+  { id:"etape-05", t:"Langon — A65 direction Pau", km:345, h:"≈ 3 h 20",
+    note:"Quitter l’A62 à Langon pour l’A65 (Pau). Chère mais déserte : on roule bien.",
+    ll:[44.556,-0.245] },
+  { id:"etape-06", t:"Pause déjeuner — aire de Garlin (A65)", km:470, h:"≈ 4 h 20",
+    note:"Pique-nique + plein d’appoint si besoin. Dernière grande aire avant Pau.",
+    ll:[43.560,-0.283] },
+  { id:"etape-07", t:"Pau — bascule sur l’A64", km:500, h:"≈ 4 h 45",
+    note:"L’A65 se termine et rejoint l’A64 : suivre Tarbes / Toulouse.",
+    ll:[43.325,-0.405] },
+  { id:"etape-08", t:"Sortie 12 « Tarbes-Ouest » → N21", km:535, h:"≈ 5 h 05",
+    note:"Sortir à Tarbes-Ouest après le péage, puis N21 direction Lourdes (voie rapide).",
+    ll:[43.245,0.005] },
+  { id:"etape-09", t:"Lourdes → D821", km:553, h:"≈ 5 h 20",
+    note:"Contourner Lourdes en suivant Argelès-Gazost / Gavarnie : la D821 file droit dans la vallée.",
+    ll:[43.095,-0.047] },
+  { id:"etape-10", t:"Arrivée — Argelès-Gazost 🎉", km:566, h:"≈ 5 h 35",
+    note:"Camping ! Check-in, installation… et apéro face aux montagnes.",
+    ll:[43.006,-0.100] },
+];
+
+const CONSIGNES = [
+  { icon:"🚦", t:"Circulation",
+    p:"Départ conseillé avant 8 h. Les samedis de juillet sont classés rouge ou noir dans ce sens : jeter un œil à Bison Futé la veille. Point dur : la rocade de Bordeaux entre 11 h et 15 h." },
+  { icon:"💶", t:"Péages",
+    p:"Compter environ 55–65 € l’aller en classe 1 (A83 + A10 + A62 + A65 + A64). Badge télépéage à portée de main — sinon préparer la CB, pas de monnaie à chercher au péage." },
+  { icon:"⛽", t:"Carburant",
+    p:"Plein la veille. Appoint possible à l’aire de Garlin (A65) ou, moins cher, en sortant à Lourdes. Ne pas viser la réserve en montagne." },
+  { icon:"☕", t:"Pauses",
+    p:"Une vraie pause toutes les 2 h (Ruralies, Garlin…). Boire régulièrement : la clim déshydrate. Si deux conducteurs : relais à Bordeaux puis à Pau." },
+  { icon:"🏕️", t:"Arrivée au camping",
+    p:"Vérifier l’heure d’arrivée sur la confirmation de réservation (souvent 14 h – 19 h). Supermarchés en entrée d’Argelès-Gazost pour les courses du premier soir." },
+  { icon:"🌦️", t:"Météo montagne",
+    p:"Orages fréquents en fin d’après-midi dans les Pyrénées : kways et bâche accessibles sur le dessus du coffre, pas au fond." },
+  { icon:"🆘", t:"Urgences",
+    p:"112 partout, 15 SAMU, 18 pompiers. Sur autoroute : borne orange ou 112 en précisant le sens et le point kilométrique. Enregistrer le numéro du camping dans les contacts." },
+];
+
+const BAGS = [
+  { icon:"📄", t:"Papiers & argent", items:[
+    ["pap-id","Cartes d’identité + permis de conduire"],
+    ["pap-vitale","Cartes vitale + cartes de mutuelle"],
+    ["pap-resa","Confirmation de réservation du camping"],
+    ["pap-cb","CB + un peu d’espèces"],
+    ["pap-badge","Badge télépéage"],
+    ["pap-assur","Attestation d’assurance auto + constat (boîte à gants)"],
+    ["pap-sante","Carnets de santé + ordonnances en cours"],
+  ]},
+  { icon:"⛺", t:"Camping & couchage", items:[
+    ["camp-tente","Tente complète (arceaux, sardines, maillet)"],
+    ["camp-duvets","Duvets / couettes"],
+    ["camp-oreillers","Oreillers"],
+    ["camp-matelas","Matelas + gonfleur"],
+    ["camp-frontales","Lampes frontales + piles de rechange"],
+    ["camp-rallonge","Rallonge élec. + adaptateur prise camping (CEE)"],
+    ["camp-multiprise","Multiprise"],
+    ["camp-table","Table + chaises pliantes"],
+    ["camp-corde","Corde à linge + pinces"],
+    ["camp-lumiere","Lampe d’ambiance / guirlande"],
+  ]},
+  { icon:"👕", t:"Vêtements", items:[
+    ["vet-jour","Tenues légères pour la journée"],
+    ["vet-chaud","Polaires / pulls (soirées fraîches en montagne)"],
+    ["vet-pluie","Kways / vestes imperméables"],
+    ["vet-rando","Chaussures de rando"],
+    ["vet-baskets","Baskets + tongs"],
+    ["vet-maillots","Maillots de bain"],
+    ["vet-tete","Casquettes / chapeaux + lunettes de soleil"],
+    ["vet-pyjamas","Pyjamas chauds"],
+    ["vet-linge","Linge pour la semaine + filet à linge sale + lessive"],
+  ]},
+  { icon:"🧴", t:"Hygiène & pharmacie", items:[
+    ["hyg-trousses","Trousses de toilette"],
+    ["hyg-serviettes","Serviettes (douche + piscine)"],
+    ["hyg-solaire","Crème solaire indice 50 + après-soleil"],
+    ["hyg-moustique","Anti-moustiques"],
+    ["hyg-pharma","Trousse pharmacie (paracétamol, pansements, désinfectant, antihistaminique, tire-tique)"],
+    ["hyg-medic","Médicaments personnels (+ ordonnances)"],
+    ["hyg-gel","Gel hydroalcoolique + mouchoirs"],
+    ["hyg-pq","Papier toilette (secours)"],
+  ]},
+  { icon:"🍳", t:"Cuisine", items:[
+    ["cui-rechaud","Réchaud + cartouches de gaz"],
+    ["cui-feu","Briquet / allumettes"],
+    ["cui-popote","Popote : casserole + poêle"],
+    ["cui-vaisselle","Assiettes, couverts, verres, bols"],
+    ["cui-couteau","Couteau + planche à découper"],
+    ["cui-ouvre","Ouvre-boîte + tire-bouchon"],
+    ["cui-cafe","Café / thé + sucre"],
+    ["cui-epices","Sel, poivre, huile"],
+    ["cui-lavage","Éponge + liquide vaisselle + torchons"],
+    ["cui-glaciere","Glacière + pains de glace"],
+    ["cui-boites","Boîtes hermétiques + alu / film"],
+    ["cui-sacs","Sacs poubelle"],
+  ]},
+  { icon:"🎒", t:"Activités & rando", items:[
+    ["act-sacs","Sacs à dos de rando"],
+    ["act-gourdes","Gourdes / poches à eau"],
+    ["act-batons","Bâtons de marche"],
+    ["act-cartes","Carte IGN + appli rando hors-ligne téléchargée"],
+    ["act-jumelles","Jumelles + appareil photo"],
+    ["act-jeux","Jeux de société + cartes"],
+    ["act-petanque","Boules de pétanque"],
+    ["act-livres","Livres / liseuses"],
+    ["act-lac","Serviettes + jeux pour le lac / la piscine"],
+  ]},
+  { icon:"🚗", t:"Voiture & trajet", items:[
+    ["car-pneus","Pression des pneus + roue de secours vérifiées"],
+    ["car-plein","Plein de carburant (la veille)"],
+    ["car-niveaux","Niveaux OK (lave-glace, huile)"],
+    ["car-secu","Gilets jaunes + triangle accessibles"],
+    ["car-chargeurs","Chargeurs + câbles + batterie externe"],
+    ["car-musique","Musique / podcasts téléchargés"],
+    ["car-eau","Eau + encas dans l’habitacle"],
+    ["car-sacs","Sacs anti « mal des transports »"],
+    ["car-oreiller","Petits oreillers de voyage"],
+  ]},
+];
+
+const TOTAL_ITEMS = STEPS.length + BAGS.reduce((n, c) => n + c.items.length, 0);
+
+/* ---------------------- État partagé ---------------------- */
+
+const LS_KEY = "roadbook:" + TRIP;
+const API = "/api/sync?trip=" + encodeURIComponent(TRIP);
+
+let state = loadLocal();
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") {
+        return { items: parsed.items || {}, resetAt: parsed.resetAt || 0 };
+      }
+    }
+  } catch (e) { /* stockage local indisponible : on vivra en mémoire */ }
+  return { items: {}, resetAt: 0 };
+}
+
+function saveLocal() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) { /* idem */ }
+}
+
+// Même fusion que le serveur : le ts le plus récent gagne, resetAt efface.
+function merge(a, b) {
+  const resetAt = Math.max(a.resetAt || 0, b.resetAt || 0);
+  const items = {};
+  for (const source of [a.items || {}, b.items || {}]) {
+    for (const key in source) {
+      const item = source[key];
+      if (!item || typeof item.ts !== "number" || item.ts <= resetAt) continue;
+      if (!items[key] || item.ts > items[key].ts) items[key] = item;
+    }
+  }
+  return { items, resetAt };
+}
+
+function isDone(id) {
+  const item = state.items[id];
+  return !!(item && item.v);
+}
+
+function toggle(id) {
+  state.items[id] = { v: !isDone(id), ts: Date.now() };
+  saveLocal();
+  renderAll();
+  syncNow();
+}
+
+/* ---------------------- Synchronisation ---------------------- */
+
+const pill = document.getElementById("syncPill");
+let syncing = false, pendingAgain = false, lastOk = 0;
+
+function setStatus(mode) {
+  pill.classList.remove("pill-ok", "pill-off");
+  if (mode === "ok") { pill.classList.add("pill-ok"); lastOk = Date.now(); tickPill(); }
+  else if (mode === "sync") { pill.textContent = "⏳ synchro…"; }
+  else { pill.classList.add("pill-off"); pill.textContent = "📴 hors ligne — coches gardées ici"; }
+}
+
+function tickPill() {
+  if (!pill.classList.contains("pill-ok") || !lastOk) return;
+  const seconds = Math.max(0, Math.round((Date.now() - lastOk) / 1000));
+  pill.textContent = seconds < 3 ? "🟢 synchronisé" : "🟢 synchro il y a " + seconds + " s";
+}
+setInterval(tickPill, 3000);
+
+async function syncNow() {
+  if (syncing) { pendingAgain = true; return; }
+  syncing = true;
+  setStatus("sync");
+  try {
+    const res = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ state }),
+    });
+    if (!res.ok) throw new Error("http " + res.status);
+    const data = await res.json();
+    // Re-fusion avec l'état local : ne perd pas une coche faite pendant la requête.
+    state = merge(data.state || { items: {}, resetAt: 0 }, state);
+    saveLocal();
+    renderAll();
+    setStatus("ok");
+  } catch (e) {
+    setStatus("off");
+  }
+  syncing = false;
+  if (pendingAgain) { pendingAgain = false; syncNow(); }
+}
+
+// Toutes les 12 s quand la page est visible, + au retour au premier plan.
+setInterval(() => { if (document.visibilityState === "visible") syncNow(); }, 12000);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") syncNow();
+});
+window.addEventListener("online", syncNow);
+window.addEventListener("pagehide", () => {
+  try {
+    navigator.sendBeacon(API, new Blob([JSON.stringify({ state })], { type: "application/json" }));
+  } catch (e) { /* tant pis */ }
+});
+pill.addEventListener("click", syncNow);
+
+/* ---------------------- Rendu ---------------------- */
+
+function renderSteps() {
+  const doneCount = STEPS.filter((s) => isDone(s.id)).length;
+  document.getElementById("routeCount").textContent = doneCount + "/" + STEPS.length;
+  document.getElementById("routeCount").className = "badge" + (doneCount === STEPS.length ? " ok" : "");
+  document.getElementById("steps").innerHTML = STEPS.map((s, i) => {
+    const done = isDone(s.id);
+    return '<li class="step' + (done ? " done" : "") + '">' +
+      '<button type="button" class="step-card" data-id="' + s.id + '" aria-pressed="' + done + '">' +
+        '<span class="step-bullet">' + (done ? "✓" : i + 1) + "</span>" +
+        '<span class="step-body">' +
+          '<span class="step-title">' + s.t + "</span>" +
+          '<span class="step-meta">km ' + s.km + " · " + s.h + "</span>" +
+          '<span class="step-note">' + s.note + "</span>" +
+        "</span>" +
+        '<span class="checkbox' + (done ? " on" : "") + '" aria-hidden="true"></span>' +
+      "</button></li>";
+  }).join("");
+}
+
+function renderConsignes() {
+  document.getElementById("consignes").innerHTML = CONSIGNES.map((c) =>
+    '<div class="note-card"><h3>' + c.icon + " " + c.t + "</h3><p>" + c.p + "</p></div>"
+  ).join("");
+}
+
+function renderBags() {
+  let doneTotal = 0, total = 0;
+  const html = BAGS.map((cat) => {
+    const done = cat.items.filter(([id]) => isDone(id)).length;
+    doneTotal += done; total += cat.items.length;
+    return '<div class="cat">' +
+      '<div class="cat-head"><span>' + cat.icon + " " + cat.t + "</span>" +
+      '<span class="badge' + (done === cat.items.length ? " ok" : "") + '">' + done + "/" + cat.items.length + "</span></div>" +
+      '<div class="cat-items">' + cat.items.map(([id, label]) => {
+        const done = isDone(id);
+        return '<button type="button" class="item' + (done ? " done" : "") + '" data-id="' + id + '" aria-pressed="' + done + '">' +
+          '<span class="checkbox' + (done ? " on" : "") + '" aria-hidden="true"></span>' +
+          '<span class="item-label">' + label + "</span></button>";
+      }).join("") + "</div></div>";
+  }).join("");
+  document.getElementById("bags").innerHTML = html;
+  const badge = document.getElementById("bagCount");
+  badge.textContent = doneTotal + "/" + total;
+  badge.className = "badge" + (doneTotal === total ? " ok" : "");
+}
+
+function renderHeader() {
+  const done = STEPS.filter((s) => isDone(s.id)).length +
+    BAGS.reduce((n, c) => n + c.items.filter(([id]) => isDone(id)).length, 0);
+  document.getElementById("headBar").style.width = Math.round((100 * done) / TOTAL_ITEMS) + "%";
+}
+
+function renderAll() {
+  renderSteps();
+  renderBags();
+  renderHeader();
+  renderMarkers();
+}
+
+document.getElementById("steps").addEventListener("click", onToggleClick);
+document.getElementById("bags").addEventListener("click", onToggleClick);
+function onToggleClick(e) {
+  const el = e.target.closest("[data-id]");
+  if (el) toggle(el.dataset.id);
+}
+
+/* ---------------------- Remise à zéro (double appui) ---------------------- */
+
+const resetBtn = document.getElementById("resetBtn");
+const RESET_LABEL = '🗑️ Tout remettre à zéro <span class="reset-sub">(appuyer 2 fois — efface pour tout le monde)</span>';
+let armTimer = null;
+
+resetBtn.addEventListener("click", () => {
+  if (!resetBtn.classList.contains("armed")) {
+    resetBtn.classList.add("armed");
+    resetBtn.innerHTML = '⚠️ Confirmer la remise à zéro <span class="reset-sub">sur tous les téléphones</span>';
+    armTimer = setTimeout(disarmReset, 3500);
+    return;
+  }
+  clearTimeout(armTimer);
+  disarmReset();
+  state = { items: {}, resetAt: Date.now() };
+  saveLocal();
+  renderAll();
+  syncNow();
+});
+
+function disarmReset() {
+  resetBtn.classList.remove("armed");
+  resetBtn.innerHTML = RESET_LABEL;
+}
+
+/* ---------------------- Carte ---------------------- */
+
+let map = null, markersLayer = null;
+
+function initMap() {
+  if (map) return;
+  const container = document.getElementById("map");
+  if (typeof L === "undefined") {
+    container.innerHTML = '<div class="map-fallback">Carte indisponible (pas de connexion pour charger le fond de carte).</div>';
+    return;
+  }
+  map = L.map(container, { scrollWheelZoom: false });
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 17,
+    attribution: "© OpenStreetMap",
+  }).addTo(map);
+  L.polyline(STEPS.map((s) => s.ll), {
+    color: "#2a6f97", weight: 4, opacity: 0.85, dashArray: "1 9", lineCap: "round",
+  }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+  map.fitBounds(L.latLngBounds(STEPS.map((s) => s.ll)).pad(0.09));
+  renderMarkers();
+}
+
+function renderMarkers() {
+  if (!markersLayer) return;
+  markersLayer.clearLayers();
+  STEPS.forEach((s, i) => {
+    const done = isDone(s.id);
+    const icon = L.divIcon({
+      className: "",
+      html: '<div class="mk' + (done ? " mk-done" : "") + '">' + (done ? "✓" : i + 1) + "</div>",
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+    });
+    L.marker(s.ll, { icon }).addTo(markersLayer)
+      .bindPopup("<b>" + s.t + "</b><br>km " + s.km + " · " + s.h + "<br>" + s.note);
+  });
+}
+
+/* ---------------------- Onglets ---------------------- */
+
+document.getElementById("tabs").addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-tab]");
+  if (btn) showTab(btn.dataset.tab);
+});
+
+function showTab(name) {
+  document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll(".tab").forEach((s) => { s.hidden = s.id !== "tab-" + name; });
+  if (name === "carte") {
+    initMap();
+    setTimeout(() => { if (map) map.invalidateSize(); }, 80);
+  }
+}
+
+/* ---------------------- Démarrage ---------------------- */
+
+renderConsignes();
+renderAll();
+syncNow();
+</script>
+</body>
+</html>
