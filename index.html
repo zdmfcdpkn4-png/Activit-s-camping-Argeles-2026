@@ -115,6 +115,24 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .aj input{flex:1;min-height:46px;border:2px solid var(--encre);border-radius:12px;padding:0 12px;font-size:14px;font-family:inherit;background:var(--craie)}
 .aj button{min-height:46px;padding:0 16px;border-radius:12px;background:var(--soleil);font-weight:800}
 
+/* ---- favoris ---- */
+.mbrs{display:flex;flex-wrap:wrap;gap:8px}
+.mbr{display:inline-flex;align-items:center;border:2px solid var(--encre);border-radius:999px;background:var(--craie);overflow:hidden}
+.mbr.actif{background:var(--soleil);box-shadow:2px 2px 0 rgba(35,50,74,.25)}
+.mbr-t{min-height:44px;padding:0 4px 0 12px;font-weight:800;font-size:13px}
+.mbr-x{min-height:44px;padding:0 10px;font-size:11px;opacity:.45}
+.tri{margin-bottom:4px}
+.fv{display:flex;gap:8px;align-items:center;width:100%;text-align:left;min-height:52px;border-bottom:1px dotted #D8DCE5;padding:6px 0}
+.fv:last-child{border-bottom:none}
+.fv-med{width:20px;text-align:center;font-size:15px;flex-shrink:0}
+.fv-e{font-size:20px;flex-shrink:0}
+.fv-b{min-width:0;flex:1}
+.fv-nom{display:block;font-weight:800;font-size:14px}
+.fv-sub{display:block;font-size:11px;color:#5A6A85}
+.fv-n{font-family:var(--mono);font-weight:800;font-size:13px;background:var(--craie);border:2px solid #D8DCE5;border-radius:999px;padding:3px 9px;white-space:nowrap;flex-shrink:0}
+.fv-n.z{color:#8A96AB}
+.fv.mien .fv-n{background:var(--braise);border-color:var(--braise);color:var(--craie)}
+
 /* ---- infos ---- */
 .lien{display:flex;min-height:46px;align-items:center;font-size:14px;border-bottom:1px dotted #D8DCE5;color:var(--encre);text-decoration:none;font-weight:600;gap:8px}
 .lien:last-child{border-bottom:none}
@@ -151,6 +169,7 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:4px;backg
 <nav><div class="n-in">
   <button data-vue="jour" class="actif"><span class="ic">📅</span>Semaine</button>
   <button data-vue="sorties"><span class="ic">🏔️</span>Sorties</button>
+  <button data-vue="favoris"><span class="ic">⭐</span>Favoris</button>
   <button data-vue="missions"><span class="ic">✅</span>Missions</button>
   <button data-vue="infos"><span class="ic">ℹ️</span>Infos</button>
 </div></nav>
@@ -361,6 +380,8 @@ let enLigne = null;
 let timerSync = null;
 const ouverts = {};   // fiches sorties dépliées (local à l'appareil, non synchronisé)
 const wikiImg = {};   // cache des photos Wikipédia
+let moi = "";         // membre qui vote sur CET appareil — mémoire seulement (pas de stockage navigateur)
+let fvTri = "votes";  // tri du classement des favoris : "votes" | "type"
 function chargePhoto(o){
   if(!o.w || wikiImg[o.id] !== undefined) return;
   wikiImg[o.id] = null;
@@ -487,7 +508,7 @@ function vueJour(){
 function vueSorties(){
   const faits = SORTIES.filter(function(o){return val("done:"+o.id,false);}).length;
   let html = '<section class="fiche"><h2>Compteur d’aventures</h2><div class="note">✅ ' + faits + ' / ' + SORTIES.length +
-    ' — 10 points par sortie faite. Touche une fiche pour ouvrir le détail : photo, accès, itinéraire, horaires, points forts.</div></section>';
+    ' — 10 points par sortie faite. Touche une fiche pour ouvrir le détail : photo, accès, itinéraire, horaires, points forts. Vote pour tes envies dans l\'onglet ⭐ Favoris.</div></section>';
   Object.keys(CATS).forEach(function(c){
     html += '<div class="cat-t">' + CATS[c] + '</div>';
     SORTIES.filter(function(o){return o.c===c;}).forEach(function(o){ html += carteSortie(o); });
@@ -516,7 +537,7 @@ function carteSortie(o){
     '<button class="s-open" data-act="det" data-v="' + o.id + '">' +
       '<div class="s-top"><span>' + o.e + '</span><span class="s-nom">' + esc(o.n) + (o.s?" ⭐":"") + '</span>' +
       '<span class="s-hint">' + (open?"replier ▴":"détails ▾") + '</span></div>' +
-      '<div class="s-meta">🚗 ' + o.r + ' · ⏱ ' + o.d + ' · 💶 ' + esc(o.p) + '</div></button>' +
+      '<div class="s-meta">🚗 ' + o.r + ' · ⏱ ' + o.d + ' · 💶 ' + esc(o.p) + (votants(o.id).length ? ' · ❤️ ' + votants(o.id).length : "") + '</div></button>' +
     det +
     '<div class="s-pre">📌 ' + esc(o.pre) + '</div>' +
     '<div class="s-act">' +
@@ -525,6 +546,71 @@ function carteSortie(o){
     '<button class="b-want' + (want?" on":"") + '" data-act="want" data-v="' + o.id + '">' + (want?"⭐ Au programme":"☆ On y va ?") + '</button>' +
     '<button class="b-fait' + (done?" on":"") + '" data-act="done" data-v="' + o.id + '">' + (done?"✓ Fait !":"C’est fait ?") + '</button>' +
     '</div></article>';
+}
+/* ================= FAVORIS ================= */
+const MOJIS = ["🦫","🦅","🐻","🐐","🦊","🐹","🦉","🐺"];
+function membres(){ return val("mb", []); }
+function votants(sid){
+  return membres().filter(function(m){ return val("fav:" + m.id + ":" + sid, false); });
+}
+function slugMembre(n){
+  const s = n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,20);
+  return s || "m" + Date.now();
+}
+function ligneFav(s, med){
+  const vs = votants(s.id), n = vs.length;
+  const mien = moi ? val("fav:" + moi + ":" + s.id, false) : false;
+  const sub = (fvTri==="votes" ? CATS[s.c] + (n ? " · " : "") : "") + vs.map(function(x){ return x.e; }).join(" ");
+  return '<button class="fv' + (mien?" mien":"") + '" data-act="vote" data-v="' + s.id + '">' +
+    '<span class="fv-med">' + med + '</span>' +
+    '<span class="fv-e">' + s.e + '</span>' +
+    '<span class="fv-b"><span class="fv-nom">' + esc(s.n) + '</span>' +
+    (sub ? '<span class="fv-sub">' + sub + '</span>' : "") + '</span>' +
+    '<span class="fv-n' + (n?"":" z") + '">' + (mien?"❤️":"🤍") + " " + n + '</span></button>';
+}
+function vueFavoris(){
+  const mb = membres();
+  if(moi && !mb.some(function(x){ return x.id === moi; })) moi = "";   // membre retiré depuis un autre téléphone
+  const m0 = mb.find(function(x){ return x.id === moi; });
+  const chips = mb.map(function(m){
+    return '<span class="mbr' + (moi===m.id?" actif":"") + '">' +
+      '<button class="mbr-t" data-act="moi" data-v="' + m.id + '">' + m.e + " " + esc(m.n) + '</button>' +
+      '<button class="mbr-x" data-act="mbdel" data-v="' + m.id + '" aria-label="retirer ' + esc(m.n) + '">✕</button></span>';
+  }).join("");
+  let intro;
+  if(!mb.length) intro = '<div class="note">👋 Ajoutez une fois les prénoms de la famille (partagés sur tous les téléphones), puis chacun touche le sien pour voter.</div>';
+  else if(!m0) intro = '<div class="note">👆 Touche ton prénom pour voter — à re-sélectionner après un rechargement, rien n\'est stocké sur l\'appareil.</div>';
+  else intro = '<div class="note">Tu votes en tant que <b>' + m0.e + " " + esc(m0.n) + '</b> : touche une activité pour ❤️ / retirer ton vote.</div>';
+  const tri = '<div class="meteo tri">' +
+    '<button data-act="ftri" data-v="votes" class="' + (fvTri==="votes"?"actif":"") + '">🏆 Par votes</button>' +
+    '<button data-act="ftri" data-v="type" class="' + (fvTri==="type"?"actif":"") + '">🗂️ Par type</button></div>';
+  const nb = function(s){ return votants(s.id).length; };
+  let classement;
+  if(fvTri === "votes"){
+    const meds = ["🥇","🥈","🥉"];
+    let rang = 0;
+    classement = SORTIES.slice()
+      .sort(function(a,b){ return nb(b) - nb(a) || a.n.localeCompare(b.n, "fr"); })
+      .map(function(s){ return ligneFav(s, (nb(s) > 0 && rang < 3) ? meds[rang++] : ""); })
+      .join("");
+  } else {
+    classement = Object.keys(CATS).map(function(c){
+      return '<div class="cat-t">' + CATS[c] + '</div>' +
+        SORTIES.filter(function(s){ return s.c===c; })
+          .sort(function(a,b){ return nb(b) - nb(a) || a.n.localeCompare(b.n, "fr"); })
+          .map(function(s){ return ligneFav(s, ""); }).join("");
+    }).join("");
+  }
+  const totalVotes = mb.reduce(function(t,m){
+    return t + SORTIES.filter(function(s){ return val("fav:" + m.id + ":" + s.id, false); }).length;
+  }, 0);
+  return '<section class="fiche"><h2>👨‍👩‍👧‍👦 Qui vote ?</h2>' +
+    '<div class="mbrs">' + chips + '</div>' +
+    '<div class="aj"><input id="nmb" maxlength="16" placeholder="Prénom à ajouter…"><button data-act="mbadd">+</button></div>' +
+    intro + '</section>' +
+    '<section class="fiche"><h2>⭐ Le classement <span style="text-transform:none;font-weight:600;font-size:12px">(' + totalVotes + ' vote' + (totalVotes>1?"s":"") + ')</span></h2>' +
+    tri + classement +
+    '<div class="note" style="margin-top:10px">1 vote par personne et par activité — le cœur se remplit pour tes votes, les émojis montrent qui a voté. Tout est partagé en direct.</div></section>';
 }
 function vueMissions(){
   const cm = val("cm",[]);
@@ -568,7 +654,7 @@ function vueInfos(){
 let razArme = 0;
 function rendre(){
   const app = document.getElementById("app");
-  app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="missions" ? vueMissions() : vueInfos();
+  app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
   majScore();
 }
 
@@ -586,6 +672,28 @@ document.addEventListener("click", function(ev){
   else if(a==="acc"){ put("acc:"+v, !val("acc:"+v, v==="e")); }
   else if(a==="done"){ const nv = !val("done:"+v,false); put("done:"+v, nv); if(nv) confetti(ev); }
   else if(a==="want"){ put("want:"+v, !val("want:"+v,false)); }
+  else if(a==="moi"){ moi = (moi===v ? "" : v); rendre(); }
+  else if(a==="mbadd"){
+    const inp = document.getElementById("nmb"); const t = (inp.value||"").trim();
+    if(t){
+      const mb = membres(); const id = slugMembre(t);
+      if(!mb.some(function(m){ return m.id===id; })){
+        if(!moi) moi = id;   // premier ajout sur cet appareil = probablement soi-même
+        put("mb", mb.concat([{id:id, n:t, e:MOJIS[mb.length % MOJIS.length]}]));
+      } else { inp.value = ""; rendre(); }
+    }
+  }
+  else if(a==="mbdel"){
+    if(moi===v) moi = "";
+    put("mb", membres().filter(function(m){ return m.id!==v; }));
+  }
+  else if(a==="vote"){
+    if(moi && membres().some(function(m){ return m.id===moi; })){
+      const k = "fav:"+moi+":"+v; const nv = !val(k,false);
+      put(k, nv); if(nv) confetti(ev);
+    }
+  }
+  else if(a==="ftri"){ fvTri = v; rendre(); }
   else if(a==="det"){ ouverts[v] = !ouverts[v];
     if(ouverts[v]){ const o = SORTIES.find(function(x){return x.id===v;}); if(o) chargePhoto(o); }
     rendre(); }

@@ -21,6 +21,7 @@
 - Planning camping transcrit : 26/07 → 01/08 (3 publics). Jours 02 → 08/08 : placeholder.
 - v1.2 : backend porté de Vercel vers Render (`server.js` sert `/` et `/api/sync`).
 - v1.3 : persistance portée d'Upstash Redis vers **PostgreSQL Render** (`DATABASE_URL`, TLS auto pour les URL externes `render.com`, pool `pg` avec gestionnaire d'erreurs) ; contrat API et front inchangés ; `render.yaml` passe à `buildCommand: npm install`.
+- v1.4 : onglet **⭐ Favoris** — liste des membres de la famille partagée (clé `mb`, prénoms ajoutés par la famille elle-même, jamais inventés), votes par membre (clés `fav:<membre>:<sortie>`), classement « Par votes » (podium 🥇🥈🥉, émojis des votants) ou « Par type » (par catégorie), compteur ❤️ reporté sur les fiches Sorties. L'identité du votant (`moi`) reste en mémoire de page — aucun stockage navigateur (invariant respecté) : on retouche son prénom après un rechargement. La RAZ globale efface aussi membres et votes.
 
 ## Backlog (non décidé)
 - Injecter le planning camping semaine 02-08/08 (photo attendue le 01/08).
