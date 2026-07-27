@@ -185,6 +185,39 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .mkstep{width:22px;height:22px;border-radius:50%;background:var(--gave);color:#fff;font-size:11px;font-weight:800;
   display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 
+/* ---- sigle de classement favoris ---- */
+.rk{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:800;
+  background:#EEF2F5;color:#4E5D77;border:1px solid #D8DCE5;vertical-align:middle;white-space:nowrap}
+.rk-pod{background:var(--soleil);border-color:var(--soleil);color:var(--encre);font-size:12px;padding:1px 6px}
+.rk-fiche{margin-left:0;align-self:center;flex-shrink:0}
+
+/* ---- bouton d'ouverture de l'ajout au programme ---- */
+.pj-plus{width:100%;min-height:46px;margin-top:10px;border:2px dashed var(--encre);border-radius:12px;
+  font-weight:800;font-size:13px;background:var(--craie);transition:background .2s,border-color .2s}
+.pj-plus.on{background:var(--encre);color:var(--craie);border-style:solid}
+
+/* ---- défilement & transitions modernes ---- */
+html{scroll-behavior:smooth}
+#prog{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--soleil);
+  border-radius:0 3px 3px 0;transition:width .12s linear;box-shadow:0 0 8px rgba(255,184,0,.7)}
+header{transition:padding .25s ease, box-shadow .25s ease}
+.h-s,.score{transition:opacity .25s ease, max-height .3s ease, margin .25s ease}
+body.defile header{padding-top:6px;padding-bottom:6px;box-shadow:0 6px 22px rgba(35,50,74,.45)}
+body.defile .h-s{opacity:0;max-height:0;overflow:hidden}
+body.defile .h-t{font-size:16px}
+#app.swap{animation:swapIn .3s cubic-bezier(.2,.7,.3,1)}
+@keyframes swapIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.rev{opacity:0;transform:translateY(16px)}
+.rev.vu{opacity:1;transform:none;transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.3,1)}
+nav button .ic{transition:transform .25s cubic-bezier(.3,1.5,.5,1)}
+nav button.actif .ic{transform:translateY(-3px) scale(1.12)}
+nav button.actif::after{animation:onglet .3s cubic-bezier(.2,.7,.3,1)}
+@keyframes onglet{from{width:0;opacity:0}to{width:26px;opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .rev{opacity:1;transform:none}
+}
+
 /* ---- planning cochable & bilan ---- */
 .ca-cb{width:28px;height:28px;border:2px solid var(--encre);border-radius:8px;flex-shrink:0;margin-left:auto;align-self:center;font-size:14px;font-weight:800;background:var(--craie)}
 .ca-cb.on{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
@@ -221,6 +254,7 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:4px;backg
     </div>
     <span class="badge-sync" id="sync">sync…</span>
   </div>
+  <div id="prog"></div>
   <div class="score">
     <span id="niveau">🐹 Marmotte</span>
     <div class="bar"><div class="fill" id="scorefill" style="width:0%"></div></div>
@@ -638,6 +672,7 @@ const ouvertsR = {};  // fiches randos dépliées (idem)
 const wikiImg = {};   // cache des photos Wikipédia
 let moi = "";         // membre qui vote sur CET appareil — mémoire seulement (pas de stockage navigateur)
 let fvTri = "votes";  // tri du classement des favoris : "votes" | "type"
+let ouvertAjoutPJ = false;  // zone d'ajout du programme repliée par défaut (allège la vue)
 function chargePhoto(o){
   if(!o.w || wikiImg[o.id] !== undefined) return;
   wikiImg[o.id] = null;
@@ -812,10 +847,26 @@ function ligneIdee(o, estRando, sup){
   return '<div class="ligne' + (fait?" lg-fait":"") + '">' +
     '<button class="lg-btn" data-act="' + (estRando?"rando":"fiche") + '" data-v="' + o.id + '">' +
       '<span class="chip ' + (estRando?"m-aprem":"m-matin") + '" style="min-width:auto">' + o.e + '</span>' +
-      '<div><b>' + (estRando?"🥾 ":"") + esc(o.n) + '</b> · ' + meta + '</div></button>' +
+      '<div><b>' + (estRando?"🥾 ":"") + esc(o.n) + '</b>' + sigleFav(o.id) + ' · ' + meta + '</div></button>' +
     (sup ? '<button class="lg-x" data-act="pjdel" data-v="' + sup + '" aria-label="retirer">✕</button>' : "") +
     '<button class="ca-cb' + (fait?" on":"") + '" data-act="done" data-v="' + o.id + '" aria-label="marquer réalisée">' + (fait?"✓":"") + '</button>' +
     '</div>';
+}
+/* Classement des favoris : rang 1..N parmi les activités ayant au moins un vote. */
+function classementFav(){
+  const nb = function(x){ return votants(x.id).length; };
+  const r = {};
+  FAVLIST().filter(function(x){ return nb(x) > 0; })
+    .sort(function(a,b){ return nb(b) - nb(a) || a.n.localeCompare(b.n, "fr"); })
+    .forEach(function(x, i){ r[x.id] = {rang:i+1, votes:nb(x)}; });
+  return r;
+}
+function sigleFav(id, cls){
+  const c = classementFav()[id];
+  if(!c) return "";
+  const med = ["🥇","🥈","🥉"][c.rang - 1];
+  return '<span class="rk' + (med ? " rk-pod" : "") + (cls ? " " + cls : "") + '" title="' + c.votes +
+    ' vote' + (c.votes>1?"s":"") + ' de la famille">' + (med || ("#" + c.rang)) + '</span>';
 }
 function trouveIdee(id){
   const o = SORTIES.find(function(x){ return x.id===id; });
@@ -856,12 +907,16 @@ function vueProgramme(){
       return '<option value="' + x.id + '">' + esc(x.n) + '</option>';
     }).join("") + '</optgroup>';
   }).join("");
+  const zone = ouvertAjoutPJ
+    ? '<div class="aj"><select id="selpj" aria-label="ajouter une sortie ou une rando">' +
+        '<option value="">Ajouter une sortie / rando…</option>' + opts + '</select>' +
+        '<button data-act="pjadd">+</button></div>' +
+      '<div class="aj"><input id="npj" maxlength="80" placeholder="Ou une activité à nous…"><button data-act="pjtxt">+</button></div>' +
+      '<div class="note" style="margin-top:10px">La liste ne propose que ce qui n\'est ni déjà suggéré aujourd\'hui ni déjà réalisé. Tout se coche et part dans le 🏆 Bilan.</div>'
+    : "";
   return '<section class="fiche"><h2>🎯 Notre programme du jour <span class="badge">' + items.length + '</span></h2>' + corps +
-    '<div class="aj"><select id="selpj" aria-label="ajouter une sortie ou une rando">' +
-      '<option value="">Ajouter une sortie / rando…</option>' + opts + '</select>' +
-      '<button data-act="pjadd">+</button></div>' +
-    '<div class="aj"><input id="npj" maxlength="80" placeholder="Ou une activité à nous…"><button data-act="pjtxt">+</button></div>' +
-    '<div class="note" style="margin-top:10px">La liste ne propose que ce qui n\'est ni déjà suggéré aujourd\'hui ni déjà réalisé. Tout se coche et part dans le 🏆 Bilan.</div></section>';
+    '<button class="pj-plus' + (ouvertAjoutPJ?" on":"") + '" data-act="pjopen">' +
+      (ouvertAjoutPJ ? "✕ Fermer" : "➕ Ajouter une activité") + '</button>' + zone + '</section>';
 }
 function vueJour(){
   const d = new Date(jourSel + "T12:00:00");
@@ -945,7 +1000,7 @@ function carteSortie(o){
     '<button class="s-open" data-act="det" data-v="' + o.id + '">' +
       '<div class="s-top"><span>' + o.e + '</span><span class="s-nom">' + esc(o.n) + (o.s?" ⭐":"") + '</span>' +
       '<span class="s-hint">' + (open?"replier ▴":"détails ▾") + '</span></div>' +
-      '<div class="s-meta">🚗 ' + o.r + ' · ⏱ ' + o.d + ' · 💶 ' + esc(o.p) + (votants(o.id).length ? ' · ❤️ ' + votants(o.id).length : "") + '</div></button>' +
+      '<div class="s-meta">🚗 ' + o.r + ' · ⏱ ' + o.d + ' · 💶 ' + esc(o.p) + (votants(o.id).length ? ' · ❤️ ' + votants(o.id).length : "") + '</div>' + sigleFav(o.id, "rk-fiche") + '</button>' +
     det +
     '<div class="s-pre">📌 ' + esc(o.pre) + '</div>' +
     '<div class="s-act">' +
@@ -1140,7 +1195,7 @@ function carteRando(r){
     '<button class="s-open" data-act="rdet" data-v="' + r.id + '">' +
       '<div class="s-top"><span>' + r.e + '</span><span class="s-nom">' + esc(r.n) + '</span>' +
       '<span class="s-hint">' + (open?"replier ▴":"détails ▾") + '</span></div>' +
-      '<div class="s-meta">📏 ' + esc(r.km) + ' · ⛰ ' + esc(r.dh) + ' · ⏱ ' + esc(r.t) + ' · 👶 ' + esc(r.age) + (n ? ' · ❤️ ' + n : '') + '</div></button>' +
+      '<div class="s-meta">📏 ' + esc(r.km) + ' · ⛰ ' + esc(r.dh) + ' · ⏱ ' + esc(r.t) + ' · 👶 ' + esc(r.age) + (n ? ' · ❤️ ' + n : '') + '</div>' + sigleFav(r.id, "rk-fiche") + '</button>' +
     det +
     '<div class="s-pre">📌 ' + esc(r.int) + '</div>' +
     '<div class="s-act">' +
@@ -1287,14 +1342,49 @@ function rendre(){
     ? { id: actif.id, v: actif.value, s: (actif.type === "date" ? null : actif.selectionStart), e: (actif.type === "date" ? null : actif.selectionEnd) } : null;
   const valeurs = {};
   ["nm","nmb","npj","selpj"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
+  const change = derniereVue !== vue;
+  derniereVue = vue;
   app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="randos" ? vueRandos() : vue==="bilan" ? vueBilan() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
   for(const id in valeurs){ const el = document.getElementById(id); if(el && !el.value) el.value = valeurs[id]; }
   if(saisie){
     const el = document.getElementById(saisie.id);
     if(el){ el.value = saisie.v; el.focus(); if(saisie.s !== null) try{ el.setSelectionRange(saisie.s, saisie.e); }catch(err){} }
   }
+  animerEntree(change);
   majScore();
 }
+let derniereVue = null;
+/* Animation d'entrée : uniquement au changement d'onglet, jamais sur un
+   simple rafraîchissement de synchro (sinon la page clignoterait). */
+function animerEntree(change){
+  const app = document.getElementById("app");
+  if(!change || vue === "carte") return;
+  app.classList.remove("swap");
+  void app.offsetWidth;
+  app.classList.add("swap");
+  if(!("IntersectionObserver" in window)) return;
+  const cartes = app.querySelectorAll(".fiche, article.sortie");
+  if(!cartes.length) return;
+  const io = new IntersectionObserver(function(entrees){
+    entrees.forEach(function(e){
+      if(e.isIntersecting){ e.target.classList.add("vu"); io.unobserve(e.target); }
+    });
+  }, {rootMargin:"0px 0px -6% 0px"});
+  cartes.forEach(function(c, i){
+    if(i > 24) return;              // au-delà, inutile d'animer
+    c.classList.add("rev");
+    io.observe(c);
+  });
+  // filet de sécurité : rien ne doit rester invisible
+  setTimeout(function(){ cartes.forEach(function(c){ c.classList.add("vu"); }); }, 1200);
+}
+window.addEventListener("scroll", function(){
+  const y = window.scrollY || window.pageYOffset || 0;
+  document.body.classList.toggle("defile", y > 28);
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  const b = document.getElementById("prog");
+  if(b) b.style.width = (h > 8 ? Math.min(100, (y / h) * 100) : 0) + "%";
+}, {passive:true});
 function majNav(){
   document.querySelectorAll("nav button").forEach(function(b){ b.classList.toggle("actif", b.dataset.vue === vue); });
 }
@@ -1347,7 +1437,7 @@ document.addEventListener("keydown", function(ev){
 });
 document.addEventListener("click", function(ev){
   const nb = ev.target.closest("nav button");
-  if(nb){ vue = nb.dataset.vue; majNav(); rendre(); return; }
+  if(nb){ vue = nb.dataset.vue; majNav(); rendre(); window.scrollTo({top:0, behavior:"smooth"}); return; }
   const el = ev.target.closest("[data-act]");
   if(!el) return;
   const a = el.dataset.act, v = el.dataset.v;
@@ -1385,6 +1475,7 @@ document.addEventListener("click", function(ev){
     }
   }
   else if(a==="ftri"){ fvTri = v; rendre(); }
+  else if(a==="pjopen"){ ouvertAjoutPJ = !ouvertAjoutPJ; rendre(); }
   else if(a==="pjadd"){ ajouterAuProgramme(); }
   else if(a==="pjtxt"){ ajouterProgrammeLibre(); }
   else if(a==="pjdel"){
