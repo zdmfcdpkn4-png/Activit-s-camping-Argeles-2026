@@ -108,6 +108,28 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .confetti{position:fixed;font-size:26px;pointer-events:none;animation:vole 1s ease-out forwards;z-index:200}
 @keyframes vole{to{transform:translateY(-90px) rotate(35deg);opacity:0}}
 
+/* ---- fête : gerbe de confettis + bandeau ---- */
+.cfx{position:fixed;pointer-events:none;z-index:290;font-size:22px;will-change:transform,opacity;
+  animation:cfx var(--dur,.9s) cubic-bezier(.2,.7,.4,1) forwards}
+@keyframes cfx{
+  0%{opacity:1;transform:translate(-50%,-50%) rotate(0deg) scale(.5)}
+  70%{opacity:1}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--rot)) scale(1.15)}}
+#toasts{position:fixed;top:calc(10px + env(safe-area-inset-top));left:0;right:0;z-index:300;
+  display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 12px}
+.toast{background:var(--encre);color:var(--craie);border:2px solid var(--soleil);border-radius:14px;
+  padding:9px 16px;max-width:96%;text-align:center;box-shadow:0 6px 22px rgba(35,50,74,.42);
+  animation:toastIn .3s ease}
+.toast b{display:block;font-size:14px;font-weight:800}
+.toast small{display:block;font-size:12px;opacity:.9;margin-top:1px}
+.toast.niv{border-color:var(--braise);background:linear-gradient(135deg,var(--encre),#3B2A4A)}
+.toast.out{animation:toastOut .3s ease forwards}
+@keyframes toastIn{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-14px) scale(.96)}}
+@keyframes boom{0%{filter:none}35%{filter:brightness(1.7) saturate(1.4)}100%{filter:none}}
+.boom{animation:boom .7s ease}
+.mi.vient{animation:pop .45s ease}
+
 /* ---- missions ---- */
 .mi{display:flex;gap:10px;align-items:center;min-height:48px;border-bottom:1px dotted #D8DCE5;font-size:14px}
 .mi:last-child{border-bottom:none}
@@ -206,6 +228,7 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:4px;backg
   </div>
 </header>
 
+<div id="toasts" aria-live="polite"></div>
 <main id="app"></main>
 
 <div id="carte" hidden>
@@ -672,14 +695,17 @@ const MISSLIEN = [
   {i:10, ids:["marche"]}
 ];
 function autoMissions(cible, estLibelle){
+  const nouvelles = [];
   MISSLIEN.forEach(function(l){
     if(val("md:"+l.i, false)) return;
     const ok = estLibelle ? (l.ca && l.ca.test(cible)) : (l.ids && l.ids.indexOf(cible) > -1);
     if(ok){
       ST.state["md:"+l.i] = {v:true, t:Date.now()};
       if(!val("dt:md:"+l.i, "")) ST.state["dt:md:"+l.i] = {v: dateDe(), t:Date.now()};
+      nouvelles.push(MISSIONS[l.i]);
     }
   });
+  return nouvelles;
 }
 function put(k,v){ ST.state[k] = {v:v, t:Date.now()}; rendre(); planifSync(); }
 /* Coche une activité : horodate la réalisation à la date du jour (corrigeable
@@ -688,7 +714,13 @@ function coche(k, nv, dateDef, lien, lienEstLibelle){
   ST.state[k] = {v:nv, t:Date.now()};
   if(nv){
     if(!val("dt:"+k, "")) ST.state["dt:"+k] = {v: dateDef || dateDe(), t:Date.now()};
-    if(lien) autoMissions(lien, !!lienEstLibelle);
+    if(lien){
+      const gagnees = autoMissions(lien, !!lienEstLibelle);
+      // le bandeau arrive après celui de l'activité, pour ne pas se chevaucher
+      gagnees.forEach(function(m, i){
+        setTimeout(function(){ feteMission(null, esc(m), true); }, 500 + i*450);
+      });
+    }
   } else {
     ST.state["dt:"+k] = {v:"", t:Date.now()};
   }
@@ -733,11 +765,19 @@ function score(){
   (val("cm",[])).forEach(function(m){ if(m.done) s += 2; });
   return s;
 }
+let dernierNiveau = null;
 function majScore(){
   const s = score();
   const niveaux = [[0,"🐹 Marmotte"],[30,"🐐 Isard"],[80,"🦅 Vautour"],[150,"🐻 Ours des Pyrénées"]];
   let n = niveaux[0], max = 160;
   niveaux.forEach(function(x){ if(s >= x[0]) n = x; });
+  if(dernierNiveau !== null && n[1] !== dernierNiveau){
+    setTimeout(function(){
+      fete(null, ["🏆","🎊","✨","🎉"], 22);
+      toast("🏆 Nouveau niveau : " + n[1], "la famille grimpe — " + s + " points", "niv", 3400);
+    }, 320);
+  }
+  dernierNiveau = n[1];
   document.getElementById("niveau").textContent = n[1];
   document.getElementById("scoretxt").textContent = s + " pt";
   document.getElementById("scorefill").style.width = Math.min(100, Math.round(s/max*100)) + "%";
@@ -1314,12 +1354,17 @@ document.addEventListener("click", function(ev){
   if(a==="jour"){ jourSel = v; rendre(); }
   else if(a==="met"){ put("met:"+jourSel, val("met:"+jourSel,"")===v ? "" : v); }
   else if(a==="acc"){ put("acc:"+v, !val("acc:"+v, v==="e" || v==="s")); }
-  else if(a==="done"){ const nv = !val("done:"+v,false); coche("done:"+v, nv, null, v, false); if(nv) confetti(ev); }
+  else if(a==="done"){
+    const nv = !val("done:"+v,false);
+    const t = trouveIdee(v);
+    coche("done:"+v, nv, null, v, false);
+    if(nv){ fete(ev, ["🎉","⛰️","☀️","✨","🥾"], 16); toast("🎉 " + (t ? esc(t.o.n) : "C\'est fait !"), "+10 pts au compteur famille"); pulseScore(); }
+  }
   else if(a==="ca"){
     const nv = !val(v,false);
     const info = catalogueCA()[v];
     coche(v, nv, v.split(":")[1], info ? info.lb : null, true);
-    if(nv) confetti(ev);
+    if(nv){ fete(ev, ["🎉","🏕️","✨"], 12); toast("✅ " + (info ? esc(info.lb) : "Activité réalisée"), "ajoutée au 🏆 Bilan du jour"); pulseScore(); }
   }
   else if(a==="dt"){ put("dt:"+v, el.value || ""); }
   else if(a==="dtcm"){
@@ -1336,7 +1381,7 @@ document.addEventListener("click", function(ev){
   else if(a==="vote"){
     if(moi && membres().some(function(m){ return m.id===moi; })){
       const k = "fav:"+moi+":"+v; const nv = !val(k,false);
-      put(k, nv); if(nv) confetti(ev);
+      put(k, nv); if(nv) fete(ev, ["❤️","✨","⭐"], 10);
     }
   }
   else if(a==="ftri"){ fvTri = v; rendre(); }
@@ -1370,8 +1415,17 @@ document.addEventListener("click", function(ev){
   else if(a==="det"){ ouverts[v] = !ouverts[v];
     if(ouverts[v]){ const o = SORTIES.find(function(x){return x.id===v;}); if(o) chargePhoto(o); }
     rendre(); }
-  else if(a==="md"){ coche("md:"+v, !val("md:"+v,false)); }
-  else if(a==="cm"){ const cm = val("cm",[]).map(function(m){ return m.id===v ? {id:m.id,txt:m.txt,done:!m.done,dt:(m.done?"":(m.dt||dateDe()))} : m; }); put("cm", cm); }
+  else if(a==="md"){
+    const nv = !val("md:"+v,false);
+    coche("md:"+v, nv);
+    if(nv) feteMission(ev, esc(MISSIONS[v]), false);
+  }
+  else if(a==="cm"){
+    const avant = val("cm",[]).find(function(m){ return m.id===v; });
+    const cm = val("cm",[]).map(function(m){ return m.id===v ? {id:m.id,txt:m.txt,done:!m.done,dt:(m.done?"":(m.dt||dateDe()))} : m; });
+    put("cm", cm);
+    if(avant && !avant.done) feteMission(ev, esc(avant.txt), false);
+  }
   else if(a==="add"){ ajouterMission(); }
   else if(a==="raz"){
     const now = Date.now();
@@ -1379,13 +1433,48 @@ document.addEventListener("click", function(ev){
     else { razArme = now; el.textContent = "Sûr ? Réappuyer pour confirmer"; setTimeout(function(){ el.textContent = "Tout remettre à zéro (appuyer 2×)"; }, 4000); }
   }
 });
-function confetti(ev){
-  ["🎉","⛰️","☀️"].forEach(function(c,i){
-    const s = document.createElement("span");
-    s.className = "confetti"; s.textContent = c;
-    s.style.left = (ev.clientX - 10 + i*18) + "px"; s.style.top = (ev.clientY - 10) + "px";
-    document.body.appendChild(s); setTimeout(function(){ s.remove(); }, 1000);
-  });
+/* Gerbe de confettis autour du point touché. */
+function fete(ev, emojis, nb){
+  const x = (ev && ev.clientX) || window.innerWidth/2;
+  const y = (ev && ev.clientY) || 120;
+  const lot = emojis || ["🎉","✨","⭐"];
+  for(let i=0; i<(nb||14); i++){
+    const p = document.createElement("span");
+    p.className = "cfx";
+    p.textContent = lot[i % lot.length];
+    const ang = (Math.PI * 2 * i) / (nb||14) + Math.random()*0.5;
+    const dist = 70 + Math.random()*70;
+    p.style.left = x + "px";
+    p.style.top = y + "px";
+    p.style.setProperty("--dx", Math.cos(ang)*dist + "px");
+    p.style.setProperty("--dy", (Math.sin(ang)*dist - 30) + "px");
+    p.style.setProperty("--rot", Math.round(-180 + Math.random()*360) + "deg");
+    p.style.setProperty("--dur", (0.75 + Math.random()*0.5) + "s");
+    p.style.fontSize = (16 + Math.round(Math.random()*12)) + "px";
+    document.body.appendChild(p);
+    setTimeout(function(){ p.remove(); }, 1400);
+  }
+}
+/* Bandeau de félicitations, court et non bloquant. */
+function toast(titre, sous, cl, ms){
+  const zone = document.getElementById("toasts");
+  const t = document.createElement("div");
+  t.className = "toast" + (cl ? " " + cl : "");
+  t.innerHTML = "<b>" + titre + "</b>" + (sous ? "<small>" + sous + "</small>" : "");
+  zone.appendChild(t);
+  setTimeout(function(){ t.classList.add("out"); setTimeout(function(){ t.remove(); }, 320); }, ms || 2600);
+}
+function pulseScore(){
+  const b = document.getElementById("scorefill");
+  if(!b) return;
+  b.classList.remove("boom");
+  void b.offsetWidth;   // relance l'animation même en rafale
+  b.classList.add("boom");
+}
+function feteMission(ev, texte, auto){
+  fete(ev, ["🎉","🏅","✨","⭐","🎊"], 16);
+  toast((auto ? "🏅 Mission débloquée !" : "🎉 Mission accomplie !"), texte + " · +2 pts");
+  pulseScore();
 }
 
 /* ================= DÉMARRAGE ================= */
