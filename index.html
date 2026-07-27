@@ -55,7 +55,9 @@ main{max-width:760px;margin:0 auto;padding:14px}
 
 /* ---- chips horaires ---- */
 .ligne{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px dotted #D8DCE5;font-size:14px}
-.lg-btn{width:100%;text-align:left;cursor:pointer;min-height:44px}
+.lg-btn{display:flex;gap:8px;align-items:flex-start;flex:1;min-width:0;text-align:left;cursor:pointer;min-height:44px;background:none;border:0;padding:0}
+.aj select{flex:1;min-width:0;min-height:46px;border:2px solid var(--encre);border-radius:12px;padding:0 10px;font-size:14px;font-family:inherit;background:var(--craie);color:var(--encre)}
+.lg-x{flex-shrink:0;min-width:34px;min-height:34px;align-self:center;font-size:13px;opacity:.45}
 .ligne:last-child{border-bottom:none}
 .chip{font-family:var(--mono);font-size:12px;font-weight:700;padding:3px 7px;border-radius:8px;min-width:52px;text-align:center;transform:rotate(-1deg)}
 .m-matin{background:var(--soleil);color:var(--encre)}
@@ -645,6 +647,9 @@ function catalogueCA(){
   }
   DAYS.forEach(function(d){
     soireesDe(d).forEach(function(it){ cat[cleCA(d,"s",it)] = {date:d, g:"s", h:it[0], lb:it[1]}; });
+    (val("pj:"+d, [])).forEach(function(it){
+      if(it.x) cat[cleCA(d,"p",["--",it.x])] = {date:d, g:"p", h:"—", lb:it.x};
+    });
   });
   return cat;
 }
@@ -760,6 +765,64 @@ function lignes(arr, pref){
       '</div>';
   }).join("");
 }
+/* Ligne d'idée ou d'activité ajoutée : zone tactile vers la fiche + case « réalisée ». */
+function ligneIdee(o, estRando, sup){
+  const fait = val("done:"+o.id, false);
+  const meta = estRando ? (esc(o.t) + " · " + esc(o.dh)) : (o.r + " · " + esc(o.p));
+  return '<div class="ligne' + (fait?" lg-fait":"") + '">' +
+    '<button class="lg-btn" data-act="' + (estRando?"rando":"fiche") + '" data-v="' + o.id + '">' +
+      '<span class="chip ' + (estRando?"m-aprem":"m-matin") + '" style="min-width:auto">' + o.e + '</span>' +
+      '<div><b>' + (estRando?"🥾 ":"") + esc(o.n) + '</b> · ' + meta + '</div></button>' +
+    (sup ? '<button class="lg-x" data-act="pjdel" data-v="' + sup + '" aria-label="retirer">✕</button>' : "") +
+    '<button class="ca-cb' + (fait?" on":"") + '" data-act="done" data-v="' + o.id + '" aria-label="marquer réalisée">' + (fait?"✓":"") + '</button>' +
+    '</div>';
+}
+function trouveIdee(id){
+  const o = SORTIES.find(function(x){ return x.id===id; });
+  if(o) return {o:o, rando:false};
+  const r = RANDOS.find(function(x){ return x.id===id; });
+  return r ? {o:r, rando:true} : null;
+}
+/* Programme composé par la famille pour un jour : clé partagée pj:<date>. */
+function progJour(d){ return val("pj:"+d, []); }
+function vueProgramme(){
+  const items = progJour(jourSel);
+  const M = METEO[val("met:"+jourSel,"")];
+  const dejaPropose = {};
+  if(M) M.ids.forEach(function(id){ dejaPropose[id] = 1; });
+  items.forEach(function(it){ if(it.i) dejaPropose[it.i] = 1; });
+  let corps = items.map(function(it, k){
+    if(it.i){
+      const t = trouveIdee(it.i);
+      return t ? ligneIdee(t.o, t.rando, it.i) : "";
+    }
+    const cle = cleCA(jourSel, "p", ["--", it.x]);
+    const fait = val(cle, false);
+    return '<div class="ligne' + (fait?" lg-fait":"") + '">' +
+      '<span class="chip m-soir" style="min-width:auto">📝</span><div>' + esc(it.x) + '</div>' +
+      '<button class="lg-x" data-act="pjdel" data-v="' + it.id + '" aria-label="retirer">✕</button>' +
+      '<button class="ca-cb' + (fait?" on":"") + '" data-act="ca" data-v="' + cle + '" aria-label="marquer réalisée">' + (fait?"✓":"") + '</button>' +
+      '</div>';
+  }).join("");
+  if(!corps) corps = '<div class="note">Rien d\'ajouté pour ce jour : choisis une sortie ou une rando dans la liste, ou écris ton idée.</div>';
+  const dispo = SORTIES.map(function(o){ return {id:o.id, n:o.e + " " + o.n, g:CATS[o.c]}; })
+    .concat(RANDOS.filter(function(r){ return !SORTIES.some(function(o){ return o.id===r.id; }); })
+      .map(function(r){ return {id:r.id, n:r.e + " " + r.n, g:"🥾 Randos"}; }))
+    .filter(function(x){ return !dejaPropose[x.id] && !val("done:"+x.id, false); });
+  const groupes = {};
+  dispo.forEach(function(x){ (groupes[x.g] = groupes[x.g] || []).push(x); });
+  const opts = Object.keys(groupes).map(function(g){
+    return '<optgroup label="' + g + '">' + groupes[g].map(function(x){
+      return '<option value="' + x.id + '">' + esc(x.n) + '</option>';
+    }).join("") + '</optgroup>';
+  }).join("");
+  return '<section class="fiche"><h2>🎯 Notre programme du jour <span class="badge">' + items.length + '</span></h2>' + corps +
+    '<div class="aj"><select id="selpj" aria-label="ajouter une sortie ou une rando">' +
+      '<option value="">Ajouter une sortie / rando…</option>' + opts + '</select>' +
+      '<button data-act="pjadd">+</button></div>' +
+    '<div class="aj"><input id="npj" maxlength="80" placeholder="Ou une activité à nous…"><button data-act="pjtxt">+</button></div>' +
+    '<div class="note" style="margin-top:10px">La liste ne propose que ce qui n\'est ni déjà suggéré aujourd\'hui ni déjà réalisé. Tout se coche et part dans le 🏆 Bilan.</div></section>';
+}
 function vueJour(){
   const d = new Date(jourSel + "T12:00:00");
   const pills = DAYS.map(function(iso){
@@ -778,13 +841,10 @@ function vueJour(){
     const M = METEO[met];
     const restants = M.ids.filter(function(id){ return !val("done:"+id, false); });
     plan = '<div class="note">💡 ' + M.tip + '</div>' + (restants.length ? restants.map(function(id){
-      const o = SORTIES.find(function(x){return x.id===id;});
-      if(o) return '<button class="ligne lg-btn" data-act="fiche" data-v="' + o.id + '"><span class="chip m-matin" style="min-width:auto">' + o.e + '</span><div><b>' + esc(o.n) + '</b> · ' + o.r + ' · ' + esc(o.p) + '</div></button>';
-      const r = RANDOS.find(function(x){return x.id===id;});
-      if(!r) return "";
-      return '<button class="ligne lg-btn" data-act="rando" data-v="' + r.id + '"><span class="chip m-aprem" style="min-width:auto">' + r.e + '</span><div><b>🥾 ' + esc(r.n) + '</b> · ' + esc(r.t) + ' · ' + esc(r.dh) + '</div></button>';
+      const t = trouveIdee(id);
+      return t ? ligneIdee(t.o, t.rando) : "";
     }).join("") : '<div class="note">🎉 Toutes les idées de ce créneau sont déjà faites — direction l\'onglet 🏆 Bilan !</div>') +
-      '<div class="note" style="margin-top:8px">👆 Touche une idée pour ouvrir sa fiche (🥾 = rando, détails et tracé dans l\'onglet Randos).</div>';
+      '<div class="note" style="margin-top:8px">👆 Touche une idée pour ouvrir sa fiche · ✅ coche-la quand c\'est fait (🥾 = rando).</div>';
   } else {
     plan = '<div class="note">Choisis la météo du jour ci-dessus → le QG propose le bon plan (partagé avec toute la famille).</div>';
   }
@@ -809,7 +869,7 @@ function vueJour(){
   const note = NOTES[jourSel] ? '<div class="note">' + NOTES[jourSel] + '</div>' : "";
   return '<div class="jours">' + pills + '</div>' + note +
     '<section class="fiche"><h2>Aujourd\'hui on fait quoi ? <span style="text-transform:none;font-weight:600;font-size:12px">(' + JSEM[d.getDay()] + " " + d.getDate() + ')</span></h2>' +
-    '<div class="meteo">' + meteoBtns + '</div>' + plan + '</section>' +
+    '<div class="meteo">' + meteoBtns + '</div>' + plan + '</section>' + vueProgramme() +
     '<section class="fiche"><h2>🏕️ Animations camping <span class="extra">toujours en extra ✨</span></h2>' + bloc +
     '<div class="note" style="margin-top:10px">Rappels : rien pour personne entre 12h30 et 16h (piscine !) · présence à l\'heure de début exigée · l\'appli Yelloh! fait foi.</div></section>';
 }
@@ -1063,7 +1123,7 @@ function vueRandos(){
 }
 
 /* ================= BILAN ================= */
-const TYPB = {S:{e:"🏔️",t:"Sorties"},R:{e:"🥾",t:"Randos"},C:{e:"🏕️",t:"Animations camping"},N:{e:"🌙",t:"Soirées"},M:{e:"✅",t:"Missions"}};
+const TYPB = {S:{e:"🏔️",t:"Sorties"},R:{e:"🥾",t:"Randos"},C:{e:"🏕️",t:"Animations camping"},N:{e:"🌙",t:"Soirées"},P:{e:"📝",t:"Ajoutées au programme"},M:{e:"✅",t:"Missions"}};
 function realisations(){
   const out = [], vus = {};
   SORTIES.forEach(function(o){
@@ -1078,8 +1138,9 @@ function realisations(){
   for(const k in cat){
     if(!val(k,false)) continue;
     const c = cat[k];
-    const noms = {e:"🧒 Enfants", a:"🎧 Ados", x:"🍹 Adultes", s:"🌙 Soirée"};
-    out.push({k:k, ty:(c.g==="s"?"N":"C"), e:(c.g==="s"?"🌙":"🏕️"), n:c.lb, sous:c.h+" · "+noms[c.g], pts:0, prevu:c.date});
+    const noms = {e:"🧒 Enfants", a:"🎧 Ados", x:"🍹 Adultes", s:"🌙 Soirée", p:"📝 Ajoutée par la famille"};
+    const ty = c.g==="s" ? "N" : (c.g==="p" ? "P" : "C");
+    out.push({k:k, ty:ty, e:TYPB[ty].e, n:c.lb, sous:(c.g==="p" ? noms.p : c.h+" · "+noms[c.g]), pts:0, prevu:c.date});
   }
   MISSIONS.forEach(function(m,i){
     const k = "md:"+i;
@@ -1182,10 +1243,10 @@ function rendre(){
   // La synchro périodique re-rend la vue : sans ça, elle effaçait le champ
   // d'ajout (mission / membre) en pleine frappe et fermait le clavier.
   const actif = document.activeElement;
-  const saisie = (actif && actif.tagName === "INPUT" && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id.indexOf("dt-") === 0))
+  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id.indexOf("dt-") === 0))
     ? { id: actif.id, v: actif.value, s: (actif.type === "date" ? null : actif.selectionStart), e: (actif.type === "date" ? null : actif.selectionEnd) } : null;
   const valeurs = {};
-  ["nm","nmb"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
+  ["nm","nmb","npj","selpj"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
   app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="randos" ? vueRandos() : vue==="bilan" ? vueBilan() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
   for(const id in valeurs){ const el = document.getElementById(id); if(el && !el.value) el.value = valeurs[id]; }
   if(saisie){
@@ -1204,6 +1265,20 @@ function ajouterMission(){
   const t = (inp.value||"").trim(); if(!t) return;
   inp.value = "";
   put("cm", val("cm",[]).concat([{id:"c"+Date.now(),txt:t,done:false}]));
+}
+function ajouterAuProgramme(){
+  const sel = document.getElementById("selpj"); if(!sel) return;
+  const id = sel.value; if(!id) return;
+  sel.value = "";
+  const liste = progJour(jourSel);
+  if(liste.some(function(it){ return it.i === id; })) { rendre(); return; }
+  put("pj:"+jourSel, liste.concat([{i:id}]));
+}
+function ajouterProgrammeLibre(){
+  const inp = document.getElementById("npj"); if(!inp) return;
+  const t = (inp.value||"").trim(); if(!t) return;
+  inp.value = "";
+  put("pj:"+jourSel, progJour(jourSel).concat([{x:t, id:"p"+Date.now()}]));
 }
 function ajouterMembre(){
   const inp = document.getElementById("nmb"); if(!inp) return;
@@ -1228,6 +1303,7 @@ document.addEventListener("keydown", function(ev){
   if(ev.key !== "Enter") return;
   if(ev.target && ev.target.id === "nm"){ ev.preventDefault(); ajouterMission(); }
   else if(ev.target && ev.target.id === "nmb"){ ev.preventDefault(); ajouterMembre(); }
+  else if(ev.target && ev.target.id === "npj"){ ev.preventDefault(); ajouterProgrammeLibre(); }
 });
 document.addEventListener("click", function(ev){
   const nb = ev.target.closest("nav button");
@@ -1264,6 +1340,11 @@ document.addEventListener("click", function(ev){
     }
   }
   else if(a==="ftri"){ fvTri = v; rendre(); }
+  else if(a==="pjadd"){ ajouterAuProgramme(); }
+  else if(a==="pjtxt"){ ajouterProgrammeLibre(); }
+  else if(a==="pjdel"){
+    put("pj:"+jourSel, progJour(jourSel).filter(function(it){ return (it.i||it.id) !== v; }));
+  }
   else if(a==="fiche"){
     vue = "sorties"; ouverts[v] = true;
     const o = SORTIES.find(function(x){ return x.id===v; }); if(o) chargePhoto(o);
