@@ -161,6 +161,18 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .mkstep{width:22px;height:22px;border-radius:50%;background:var(--gave);color:#fff;font-size:11px;font-weight:800;
   display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 
+/* ---- planning cochable & bilan ---- */
+.ca-cb{width:28px;height:28px;border:2px solid var(--encre);border-radius:8px;flex-shrink:0;margin-left:auto;align-self:center;font-size:14px;font-weight:800;background:var(--craie)}
+.ca-cb.on{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
+.lg-fait > div{opacity:.55;text-decoration:line-through}
+.badge{display:inline-block;background:#EEF2F5;color:#4E5D77;border:1px solid #D8DCE5;border-radius:999px;
+  padding:2px 10px;font-size:11px;font-weight:800;text-transform:none;letter-spacing:0;vertical-align:middle}
+.badge.ok{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
+.bl{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px dotted #D8DCE5}
+.bl:last-child{border-bottom:none}
+.bl .fv-b{cursor:pointer}
+.dt-in{flex-shrink:0;min-height:40px;border:2px solid #D8DCE5;border-radius:10px;padding:0 8px;font-family:var(--mono);font-size:11px;background:var(--craie);color:var(--encre)}
+
 /* ---- infos ---- */
 .lien{display:flex;min-height:46px;align-items:center;font-size:14px;border-bottom:1px dotted #D8DCE5;color:var(--encre);text-decoration:none;font-weight:600;gap:8px}
 .lien:last-child{border-bottom:none}
@@ -169,8 +181,8 @@ main{max-width:760px;margin:0 auto;padding:14px}
 /* ---- barre d'onglets ---- */
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--craie);border-top:2px solid var(--encre);z-index:60;padding-bottom:env(safe-area-inset-bottom)}
 .n-in{max-width:760px;margin:0 auto;display:flex}
-nav button{flex:1;min-height:64px;font-size:10px;font-weight:700;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;color:#5A6A85}
-nav button .ic{font-size:19px}
+nav button{flex:1;min-height:64px;font-size:9px;font-weight:700;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;color:#5A6A85}
+nav button .ic{font-size:18px}
 nav button.actif{color:var(--encre)}
 nav button.actif .ic{transform:translateY(-2px)}
 nav button.actif::after{content:"";width:26px;height:4px;border-radius:4px;background:var(--soleil)}
@@ -213,6 +225,7 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:4px;backg
   <button data-vue="sorties"><span class="ic">🏔️</span>Sorties</button>
   <button data-vue="carte"><span class="ic">🗺️</span>Carte</button>
   <button data-vue="randos"><span class="ic">🥾</span>Randos</button>
+  <button data-vue="bilan"><span class="ic">🏆</span>Bilan</button>
   <button data-vue="favoris"><span class="ic">⭐</span>Favoris</button>
   <button data-vue="missions"><span class="ic">✅</span>Missions</button>
   <button data-vue="infos"><span class="ic">ℹ️</span>Infos</button>
@@ -616,7 +629,67 @@ function defJour(){
   const d = new Date(); const iso = d.toISOString().slice(0,10);
   return DAYS.includes(iso) ? iso : DAYS[0];
 }
+function soireesDe(d){
+  return [["21:15","Mini disco — 15 min, grande scène (tous les soirs)"]].concat(SOIREES[d] || [])
+    .sort(function(a,b){ return a[0].localeCompare(b[0]); });
+}
+// Clé stable d'une activité du planning : ca:<date>:<public>:<heure>:<slug du libellé>
+// (résiste aux insertions dans les listes, contrairement à un index).
+function cleCA(date, g, item){ return "ca:" + date + ":" + g + ":" + item[0] + ":" + slugMembre(item[1]); }
+function catalogueCA(){
+  const cat = {};
+  for(const d in CAMP){
+    ["e","a","x"].forEach(function(g){
+      (CAMP[d][g]||[]).forEach(function(it){ cat[cleCA(d,g,it)] = {date:d, g:g, h:it[0], lb:it[1]}; });
+    });
+  }
+  DAYS.forEach(function(d){
+    soireesDe(d).forEach(function(it){ cat[cleCA(d,"s",it)] = {date:d, g:"s", h:it[0], lb:it[1]}; });
+  });
+  return cat;
+}
+function dateDe(t){
+  const d = new Date(t || Date.now());
+  const p = function(x){ return (x<10?"0":"") + x; };
+  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+}
+/* Missions validées automatiquement quand l'activité liée est cochée (jamais dé-cochées automatiquement). */
+const MISSLIEN = [
+  {i:0, ca:/padel/i},
+  {i:1, ca:/tir à l/i},
+  {i:2, ids:["arrieulat","balandrau"]},
+  {i:3, ids:["hautacam","rd-hautacam"]},
+  {i:4, ids:["parapente"]},
+  {i:5, ca:/créa|création|peinture|modelage|dessin|aquarellum|nail art|dot painting/i},
+  {i:6, ca:/marque-page|gratter/i},
+  {i:8, ids:["gavarnie","pontespagne","picdumidi"]},
+  {i:9, ids:["donjon","soulor","rd-soum"]},
+  {i:10, ids:["marche"]}
+];
+function autoMissions(cible, estLibelle){
+  MISSLIEN.forEach(function(l){
+    if(val("md:"+l.i, false)) return;
+    const ok = estLibelle ? (l.ca && l.ca.test(cible)) : (l.ids && l.ids.indexOf(cible) > -1);
+    if(ok){
+      ST.state["md:"+l.i] = {v:true, t:Date.now()};
+      if(!val("dt:md:"+l.i, "")) ST.state["dt:md:"+l.i] = {v: dateDe(), t:Date.now()};
+    }
+  });
+}
 function put(k,v){ ST.state[k] = {v:v, t:Date.now()}; rendre(); planifSync(); }
+/* Coche une activité : horodate la réalisation à la date du jour (corrigeable
+   ensuite dans l'onglet Bilan) et valide les missions associées. */
+function coche(k, nv, dateDef, lien, lienEstLibelle){
+  ST.state[k] = {v:nv, t:Date.now()};
+  if(nv){
+    if(!val("dt:"+k, "")) ST.state["dt:"+k] = {v: dateDef || dateDe(), t:Date.now()};
+    if(lien) autoMissions(lien, !!lienEstLibelle);
+  } else {
+    ST.state["dt:"+k] = {v:"", t:Date.now()};
+  }
+  rendre(); planifSync();
+}
+function dateFaite(k){ return val("dt:"+k, ""); }
 function val(k,def){ const e = ST.state[k]; return (e && (e.t||0) >= (ST.resetAt||0)) ? e.v : def; }
 function fusion(remote){
   if(!remote || typeof remote !== "object") return;
@@ -672,7 +745,7 @@ function chip(h){
   const cl = H < 13 ? "m-matin" : (H < 19 ? "m-aprem" : "m-soir");
   return '<span class="chip ' + cl + '">' + h + '</span>';
 }
-function lignes(arr){
+function lignes(arr, pref){
   if(!arr.length) return '<div class="ligne" style="opacity:.55">— rien d\'affiché —</div>';
   return arr.map(function(a){
     const fl = a[2]||"";
@@ -680,7 +753,11 @@ function lignes(arr){
     if(fl.indexOf("*")>-1) extra += " ⭐";
     if(fl.indexOf("F")>-1) extra += ' <b style="color:var(--braise)">EN FAMILLE</b>';
     if(fl.indexOf("I")>-1) extra += ' <b style="color:var(--gave)">SUR INSCRIPTION</b>';
-    return '<div class="ligne">' + chip(a[0]) + '<div>' + esc(a[1]) + extra + '</div></div>';
+    const k = pref ? cleCA(pref.d, pref.g, a) : null;
+    const fait = k ? val(k, false) : false;
+    return '<div class="ligne' + (fait?" lg-fait":"") + '">' + chip(a[0]) + '<div>' + esc(a[1]) + extra + '</div>' +
+      (k ? '<button class="ca-cb' + (fait?" on":"") + '" data-act="ca" data-v="' + k + '" aria-label="marquer réalisée">' + (fait?"✓":"") + '</button>' : "") +
+      '</div>';
   }).join("");
 }
 function vueJour(){
@@ -699,13 +776,15 @@ function vueJour(){
   let plan = "";
   if(met){
     const M = METEO[met];
-    plan = '<div class="note">💡 ' + M.tip + '</div>' + M.ids.map(function(id){
+    const restants = M.ids.filter(function(id){ return !val("done:"+id, false); });
+    plan = '<div class="note">💡 ' + M.tip + '</div>' + (restants.length ? restants.map(function(id){
       const o = SORTIES.find(function(x){return x.id===id;});
       if(o) return '<button class="ligne lg-btn" data-act="fiche" data-v="' + o.id + '"><span class="chip m-matin" style="min-width:auto">' + o.e + '</span><div><b>' + esc(o.n) + '</b> · ' + o.r + ' · ' + esc(o.p) + '</div></button>';
       const r = RANDOS.find(function(x){return x.id===id;});
       if(!r) return "";
       return '<button class="ligne lg-btn" data-act="rando" data-v="' + r.id + '"><span class="chip m-aprem" style="min-width:auto">' + r.e + '</span><div><b>🥾 ' + esc(r.n) + '</b> · ' + esc(r.t) + ' · ' + esc(r.dh) + '</div></button>';
-    }).join("") + '<div class="note" style="margin-top:8px">👆 Touche une idée pour ouvrir sa fiche (🥾 = rando, détails et tracé dans l\'onglet Randos).</div>';
+    }).join("") : '<div class="note">🎉 Toutes les idées de ce créneau sont déjà faites — direction l\'onglet 🏆 Bilan !</div>') +
+      '<div class="note" style="margin-top:8px">👆 Touche une idée pour ouvrir sa fiche (🥾 = rando, détails et tracé dans l\'onglet Randos).</div>';
   } else {
     plan = '<div class="note">Choisis la météo du jour ci-dessus → le QG propose le bon plan (partagé avec toute la famille).</div>';
   }
@@ -717,16 +796,16 @@ function vueJour(){
       const open = val("acc:"+g, g==="e");
       return '<button class="pub" data-act="acc" data-v="' + g + '">' + noms[i] +
         '<span class="n">' + camp[g].length + ' activité' + (camp[g].length>1?"s":"") + ' ' + (open?"▾":"▸") + '</span></button>' +
-        (open ? lignes(camp[g]) : "");
+        (open ? lignes(camp[g], {d:jourSel, g:g}) : "");
     }).join("");
   } else {
     bloc = '<div class="note">📸 Programme de la semaine 2 pas encore affiché — photographie le panneau samedi et envoie-le à Claude pour mettre le QG à jour.</div>';
   }
-  const soir = [["21:15","Mini disco — 15 min, grande scène (tous les soirs)"]].concat(SOIREES[jourSel] || []).sort(function(a,b){ return a[0].localeCompare(b[0]); });
+  const soir = soireesDe(jourSel);
   const openS = val("acc:s", true);
   bloc += '<button class="pub" data-act="acc" data-v="s">🌙 Soirées' +
     '<span class="n">' + soir.length + ' rendez-vous ' + (openS?"▾":"▸") + '</span></button>' +
-    (openS ? lignes(soir) : "");
+    (openS ? lignes(soir, {d:jourSel, g:"s"}) : "");
   const note = NOTES[jourSel] ? '<div class="note">' + NOTES[jourSel] + '</div>' : "";
   return '<div class="jours">' + pills + '</div>' + note +
     '<section class="fiche"><h2>Aujourd\'hui on fait quoi ? <span style="text-transform:none;font-weight:600;font-size:12px">(' + JSEM[d.getDay()] + " " + d.getDate() + ')</span></h2>' +
@@ -983,6 +1062,76 @@ function vueRandos(){
   return html;
 }
 
+/* ================= BILAN ================= */
+const TYPB = {S:{e:"🏔️",t:"Sorties"},R:{e:"🥾",t:"Randos"},C:{e:"🏕️",t:"Animations camping"},N:{e:"🌙",t:"Soirées"},M:{e:"✅",t:"Missions"}};
+function realisations(){
+  const out = [], vus = {};
+  SORTIES.forEach(function(o){
+    const k = "done:"+o.id;
+    if(val(k,false)){ vus[o.id]=1; out.push({k:k, ty:"S", e:o.e, n:o.n, sous:CATS[o.c], pts:10, aller:{a:"fiche", v:o.id}}); }
+  });
+  RANDOS.forEach(function(r){
+    const k = "done:"+r.id;
+    if(val(k,false) && !vus[r.id]){ vus[r.id]=1; out.push({k:k, ty:"R", e:r.e, n:r.n, sous:esc(r.t)+" · "+esc(r.dh), pts:10, aller:{a:"rando", v:r.id}}); }
+  });
+  const cat = catalogueCA();
+  for(const k in cat){
+    if(!val(k,false)) continue;
+    const c = cat[k];
+    const noms = {e:"🧒 Enfants", a:"🎧 Ados", x:"🍹 Adultes", s:"🌙 Soirée"};
+    out.push({k:k, ty:(c.g==="s"?"N":"C"), e:(c.g==="s"?"🌙":"🏕️"), n:c.lb, sous:c.h+" · "+noms[c.g], pts:0, prevu:c.date});
+  }
+  MISSIONS.forEach(function(m,i){
+    const k = "md:"+i;
+    if(val(k,false)) out.push({k:k, ty:"M", e:"✅", n:m, sous:"mission famille", pts:2});
+  });
+  (val("cm",[])).forEach(function(m){
+    if(m.done) out.push({k:null, cm:m.id, ty:"M", e:"✅", n:m.txt, sous:"mission ajoutée", pts:2, d:m.dt||""});
+  });
+  return out.map(function(r){
+    if(r.d === undefined) r.d = dateFaite(r.k) || r.prevu || "";
+    return r;
+  });
+}
+function ligneBilan(r, idx){
+  const id = "dt-" + (r.k ? slugMembre(r.k) : "cm" + r.cm) + "-" + idx;
+  const clic = r.aller ? ' data-act="' + r.aller.a + '" data-v="' + r.aller.v + '"' : "";
+  return '<div class="bl">' +
+    '<span class="fv-e"' + clic + '>' + r.e + '</span>' +
+    '<span class="fv-b"' + clic + '><span class="fv-nom">' + esc(r.n) + '</span>' +
+      '<span class="fv-sub">' + r.sous + (r.pts ? " · +" + r.pts + " pt" : "") + '</span></span>' +
+    '<input class="dt-in" id="' + id + '" type="date" value="' + (r.d||"") + '" min="' + DAYS[0] + '" max="' + DAYS[DAYS.length-1] + '"' +
+      (r.cm ? ' data-act="dtcm" data-v="' + r.cm + '"' : ' data-act="dt" data-v="' + r.k + '"') + ' aria-label="corriger la date">' +
+    '</div>';
+}
+function vueBilan(){
+  const R = realisations();
+  if(!R.length){
+    return '<section class="fiche"><h2>🏆 Bilan du séjour</h2>' +
+      '<div class="note">Rien de coché pour l\'instant. Marque une activité comme réalisée depuis le planning (vue Semaine), une fiche Sortie ou Rando : elle apparaîtra ici, datée du jour, et sa mission éventuelle se cochera toute seule.</div></section>';
+  }
+  const parJour = {};
+  R.forEach(function(r){ const d = r.d || "sans-date"; (parJour[d] = parJour[d] || []).push(r); });
+  const jours = Object.keys(parJour).sort();
+  let idx = 0, html = "";
+  const totalPts = R.reduce(function(t,r){ return t + r.pts; }, 0);
+  html += '<section class="fiche"><h2>🏆 Bilan du séjour <span class="badge">' + R.length + '</span></h2>' +
+    '<div class="note">' + R.length + ' activité' + (R.length>1?"s":"") + ' réalisée' + (R.length>1?"s":"") + ' sur ' + jours.length + ' jour' + (jours.length>1?"s":"") + ' · ' + totalPts + ' points cumulés.<br>📅 La date est celle du jour où tu as coché — touche-la pour la corriger si besoin.</div></section>';
+  jours.forEach(function(d){
+    const items = parJour[d].sort(function(a,b){ return a.ty.localeCompare(b.ty) || a.n.localeCompare(b.n,"fr"); });
+    let titre;
+    if(d === "sans-date") titre = "📌 Sans date";
+    else { const dd = new Date(d + "T12:00:00"); titre = JSEM[dd.getDay()] + " " + dd.getDate() + " " + ["janv","févr","mars","avr","mai","juin","juil","août","sept","oct","nov","déc"][dd.getMonth()]; }
+    const pts = items.reduce(function(t,r){ return t + r.pts; }, 0);
+    let corps = "", ty = "";
+    items.forEach(function(r){
+      if(r.ty !== ty){ ty = r.ty; corps += '<div class="cat-t" style="margin:12px 4px 2px">' + TYPB[ty].e + " " + TYPB[ty].t + '</div>'; }
+      corps += ligneBilan(r, idx++);
+    });
+    html += '<section class="fiche"><h2>' + titre + ' <span class="badge' + (pts?" ok":"") + '">' + items.length + (pts ? " · " + pts + " pt" : "") + '</span></h2>' + corps + '</section>';
+  });
+  return html;
+}
 function vueMissions(){
   const cm = val("cm",[]);
   let li = MISSIONS.map(function(m,i){
@@ -1033,15 +1182,15 @@ function rendre(){
   // La synchro périodique re-rend la vue : sans ça, elle effaçait le champ
   // d'ajout (mission / membre) en pleine frappe et fermait le clavier.
   const actif = document.activeElement;
-  const saisie = (actif && (actif.id === "nm" || actif.id === "nmb"))
-    ? { id: actif.id, v: actif.value, s: actif.selectionStart, e: actif.selectionEnd } : null;
+  const saisie = (actif && actif.tagName === "INPUT" && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id.indexOf("dt-") === 0))
+    ? { id: actif.id, v: actif.value, s: (actif.type === "date" ? null : actif.selectionStart), e: (actif.type === "date" ? null : actif.selectionEnd) } : null;
   const valeurs = {};
   ["nm","nmb"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
-  app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="randos" ? vueRandos() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
+  app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="randos" ? vueRandos() : vue==="bilan" ? vueBilan() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
   for(const id in valeurs){ const el = document.getElementById(id); if(el && !el.value) el.value = valeurs[id]; }
   if(saisie){
     const el = document.getElementById(saisie.id);
-    if(el){ el.value = saisie.v; el.focus(); try{ el.setSelectionRange(saisie.s, saisie.e); }catch(err){} }
+    if(el){ el.value = saisie.v; el.focus(); if(saisie.s !== null) try{ el.setSelectionRange(saisie.s, saisie.e); }catch(err){} }
   }
   majScore();
 }
@@ -1066,6 +1215,15 @@ function ajouterMembre(){
     put("mb", mb.concat([{id:id, n:t, e:MOJIS[mb.length % MOJIS.length]}]));
   } else { rendre(); }
 }
+document.addEventListener("change", function(ev){
+  const el = ev.target;
+  if(!el || !el.dataset) return;
+  if(el.dataset.act === "dt") put("dt:" + el.dataset.v, el.value || "");
+  else if(el.dataset.act === "dtcm"){
+    const cm = val("cm",[]).map(function(m){ return m.id===el.dataset.v ? {id:m.id,txt:m.txt,done:m.done,dt:el.value||""} : m; });
+    put("cm", cm);
+  }
+});
 document.addEventListener("keydown", function(ev){
   if(ev.key !== "Enter") return;
   if(ev.target && ev.target.id === "nm"){ ev.preventDefault(); ajouterMission(); }
@@ -1080,7 +1238,18 @@ document.addEventListener("click", function(ev){
   if(a==="jour"){ jourSel = v; rendre(); }
   else if(a==="met"){ put("met:"+jourSel, val("met:"+jourSel,"")===v ? "" : v); }
   else if(a==="acc"){ put("acc:"+v, !val("acc:"+v, v==="e" || v==="s")); }
-  else if(a==="done"){ const nv = !val("done:"+v,false); put("done:"+v, nv); if(nv) confetti(ev); }
+  else if(a==="done"){ const nv = !val("done:"+v,false); coche("done:"+v, nv, null, v, false); if(nv) confetti(ev); }
+  else if(a==="ca"){
+    const nv = !val(v,false);
+    const info = catalogueCA()[v];
+    coche(v, nv, v.split(":")[1], info ? info.lb : null, true);
+    if(nv) confetti(ev);
+  }
+  else if(a==="dt"){ put("dt:"+v, el.value || ""); }
+  else if(a==="dtcm"){
+    const cm = val("cm",[]).map(function(m){ return m.id===v ? {id:m.id,txt:m.txt,done:m.done,dt:el.value||""} : m; });
+    put("cm", cm);
+  }
   else if(a==="want"){ put("want:"+v, !val("want:"+v,false)); }
   else if(a==="moi"){ moi = (moi===v ? "" : v); rendre(); }
   else if(a==="mbadd"){ ajouterMembre(); }
@@ -1120,8 +1289,8 @@ document.addEventListener("click", function(ev){
   else if(a==="det"){ ouverts[v] = !ouverts[v];
     if(ouverts[v]){ const o = SORTIES.find(function(x){return x.id===v;}); if(o) chargePhoto(o); }
     rendre(); }
-  else if(a==="md"){ put("md:"+v, !val("md:"+v,false)); }
-  else if(a==="cm"){ const cm = val("cm",[]).map(function(m){ return m.id===v ? {id:m.id,txt:m.txt,done:!m.done} : m; }); put("cm", cm); }
+  else if(a==="md"){ coche("md:"+v, !val("md:"+v,false)); }
+  else if(a==="cm"){ const cm = val("cm",[]).map(function(m){ return m.id===v ? {id:m.id,txt:m.txt,done:!m.done,dt:(m.done?"":(m.dt||dateDe()))} : m; }); put("cm", cm); }
   else if(a==="add"){ ajouterMission(); }
   else if(a==="raz"){
     const now = Date.now();
