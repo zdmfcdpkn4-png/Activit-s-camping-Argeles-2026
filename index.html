@@ -566,6 +566,34 @@ null,   // retirée le 02/08 — souvenir fait main, doublon de la mission créa
 "🦅 Sortie : voir voler les rapaces (Donjon des Aigles ou vautours du Soulor)",
 "🧺 Sortie : goûter le gâteau à la broche au marché du mardi"
 ];
+/* Missions ajoutées par la famille : elles sont saisies sans emoji. On en déduit une icône
+   à l'affichage seulement — le libellé enregistré dans l'état partagé n'est jamais modifié
+   (sinon l'icône se figerait dans le texte et se dédoublerait au prochain rendu).
+   Ordre = du plus précis au plus général ; premier motif trouvé, première icône. */
+const ICOMISS = [
+  [/parapente|vol libre|deltaplane/i, "🪂"],
+  [/luge|toboggan|dévaler/i, "🛷"],
+  [/rapace|aigle|vautour|marmotte|animalier|isard|animaux/i, "🦅"],
+  [/march(é|e du)|gâteau|goûter|glace|crêpe|restaurant|resto|déjeuner|pique-nique/i, "🧺"],
+  [/photo|selfie|filmer/i, "📸"],
+  [/créa|création|atelier|peinture|peindre|dessin|bricolage|modelage|coloriage|fabriquer/i, "🎨"],
+  [/piscine|baignade|nager|natation|toboggan aquatique|water/i, "🏊"],
+  [/rando|randonn|boucle|sentier|balade|marche|à pied|crête|sommet|refuge/i, "🥾"],
+  [/sortie|cirque|lac |cascade|grotte|pic |col |château|abbaye|musée|visite|village|pont/i, "⛰️"],
+  [/sport|tournoi|match|padel|tennis|foot|basket|volley|ping|vélo|tir à l|pétanque|jeu/i, "🏸"]
+];
+function icoMission(txt){
+  const t = (txt || "").trim();
+  if(!t) return "⭐";
+  // déjà une icône saisie par la famille : on ne la double pas
+  try { if(/^\p{Extended_Pictographic}/u.test(t)) return ""; } catch(e){ if(/^[^\w\s"'(«]/.test(t)) return ""; }
+  for(let i = 0; i < ICOMISS.length; i++){ if(ICOMISS[i][0].test(t)) return ICOMISS[i][1]; }
+  return "⭐";
+}
+function libMission(txt){
+  const ic = icoMission(txt);
+  return (ic ? ic + " " : "") + (txt || "");
+}
 
 /* Randonnées famille — vérifiées en ligne le 26/07/2026, Gavarnie le 02/08 (sources : lien de chaque fiche).
    g:"ville" = départ à pied d'Argelès · g:"auto" = voiture ≤ 1 h.
@@ -1281,7 +1309,7 @@ function realisations(){
     if(m && val(k,false)) out.push({k:k, ty:"M", e:"✅", n:m, sous:"mission famille", pts:2});
   });
   (val("cm",[])).forEach(function(m){
-    if(m.done) out.push({k:null, cm:m.id, ty:"M", e:"✅", n:m.txt, sous:"mission ajoutée", pts:2, d:m.dt||""});
+    if(m.done) out.push({k:null, cm:m.id, ty:"M", e:"✅", n:libMission(m.txt), sous:"mission ajoutée", pts:2, d:m.dt||""});
   });
   return out.map(function(r){
     if(r.d === undefined) r.d = dateFaite(r.k) || r.prevu || "";
@@ -1335,7 +1363,7 @@ function vueMissions(){
     return '<div class="mi' + (done?" done":"") + '"><button class="cb" data-act="md" data-v="' + i + '">' + (done?"✓":"") + '</button><span>' + esc(m) + '</span></div>';
   }).join("");
   li += cm.map(function(m){
-    return '<div class="mi' + (m.done?" done":"") + '"><button class="cb" data-act="cm" data-v="' + m.id + '">' + (m.done?"✓":"") + '</button><span>' + esc(m.txt) + '</span></div>';
+    return '<div class="mi' + (m.done?" done":"") + '"><button class="cb" data-act="cm" data-v="' + m.id + '">' + (m.done?"✓":"") + '</button><span>' + esc(libMission(m.txt)) + '</span></div>';
   }).join("");
   return '<section class="fiche"><h2>✅ Missions de la famille</h2>' + li +
     '<div class="aj"><input id="nm" maxlength="90" placeholder="Ajouter une mission…"><button data-act="add">+</button></div>' +
@@ -1556,7 +1584,7 @@ document.addEventListener("click", function(ev){
     const avant = val("cm",[]).find(function(m){ return m.id===v; });
     const cm = val("cm",[]).map(function(m){ return m.id===v ? {id:m.id,txt:m.txt,done:!m.done,dt:(m.done?"":(m.dt||dateDe()))} : m; });
     put("cm", cm);
-    if(avant && !avant.done) feteMission(ev, esc(avant.txt), false);
+    if(avant && !avant.done) feteMission(ev, esc(libMission(avant.txt)), false);
   }
   else if(a==="add"){ ajouterMission(); }
   else if(a==="raz"){
