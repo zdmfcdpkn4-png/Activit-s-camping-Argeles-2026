@@ -17,5 +17,5 @@ Appli familiale partagée : planning des animations du camping (toujours **en ex
 - Sans backend joignable, l'appli fonctionne en local d'appareil (bandeau « hors ligne »).
 
 ## Données embarquées
-- Planning camping 25/07 → 01/08 transcrit des photos du panneau (26/07). Semaine 2 : à injecter dès la photo (samedi 01/08).
+- Planning camping 26/07 → 07/08 transcrit des photos du panneau (semaine 1 le 26/07, semaine 2 le 01/08) — 219 activités pour les 3 publics, plus les soirées. Le vendredi 07/08 n'avait pas d'affiche de soirée sur le panneau : marqué **[à vérifier]** plutôt que deviné.
 - Sorties issues du guide `guide-famille-argeles-2026.md` — prix vérifiés le 26/07/2026, mentions **[à vérifier]** conservées volontairement.

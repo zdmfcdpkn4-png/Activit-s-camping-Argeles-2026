@@ -297,7 +297,8 @@ const TRIP = "sejour-0ec605493225600cc47dd828ee8281fc";   // même convention qu
 const API  = "/api/sync";
 
 /* ================= DONNÉES ================= */
-/* Planning camping — relevé sur le panneau (photos des 26/07). e=enfants 5-12, a=ados, x=adultes.
+/* Planning camping — relevé sur le panneau : semaine 1 (26/07 → 01/08) photos du 26/07,
+   semaine 2 (01/08 → 07/08) photos du 01/08. e=enfants 5-12, a=ados, x=adultes.
    Drapeaux : * = temps fort, F = en famille, I = sur inscription */
 const CAMP = {
 "2026-07-26":{e:[["10:00","Créa bracelets"],["11:00","Football 5-12 ans"],["17:00","Jeux en bois"],["18:00","Flash games"]],
@@ -319,25 +320,51 @@ a:[["11:00","La chasse aux stars"],["15:00","Jeux piscine chrono"],["16:30","Oly
 x:[["10:00","Cuisses-abdos-fessiers"],["10:00","Footing trail"],["11:00","Zumba"],["11:00","Tchoukball"],["16:30","Olympiades pour tous","F"],["18:00","Tir à l'arc (+8 ans)","I"],["18:15","Défis des animateurs"]]},
 "2026-08-01":{e:[["10:00","Peinture Aquarellum"],["11:00","Basket"],["17:00","Tournoi De Blocks"],["18:00","Création d'un marque-page"]],
 a:[["17:00","Water-polo"],["18:00","Tournoi baby-foot"],["20:30","Soirée blind test","*"]],
-x:[["11:00","Aquagym"],["11:00","Ping-pong"],["17:00","Football"]]}
+x:[["11:00","Aquagym"],["11:00","Ping-pong"],["17:00","Football"]]},
+"2026-08-02":{e:[["10:00","Graffiti"],["11:00","Football 5-12 ans"],["17:00","Jeux en bois"],["18:00","Flash games"]],
+a:[],x:[["17:00","Volley (multisport)"]]},
+"2026-08-03":{e:[["10:00","Accueil en bonbons"],["10:30","Jeux avec Yellito"],["10:30","Tirage au sort Parc animalier","*"],["11:00","Loup-garou (+8 ans)"],["11:00","Création pochette souvenir"],["12:00","Mini-disco piscine"],["16:00","Tournoi de ping-pong (+9 ans)"],["16:00","Origami"],["17:30","Chasse au trésor"]],
+a:[["11:00","Top départ"],["16:00","Initiation padel"],["18:00","Biathlon carabine laser"],["19:00","Réunion ados"],["20:30","Loup-garou","*"]],
+x:[["10:00","Circuit training"],["10:30","Tchoukball"],["11:00","Pilates postural"],["11:00","Basket"],["16:00","Water-polo"],["17:00","Volley"],["18:00","Initiation cocktail (bar)"],["18:15","Blind test (+18)"],["20:30","Concours de pétanque","*"]]},
+"2026-08-04":{e:[["10:00","Grand jeu Zootopie"],["11:00","Concours Kapla"],["11:00","Créa tour de magie"],["16:00","Créa carte pop-up"],["16:00","Jeux musicaux piscine en famille","F"],["17:30","Nail art"],["17:30","Mini-golf"]],
+a:[["15:00","Jeux musicaux piscine"],["16:00","Tournoi FIFA"],["17:00","Football"],["20:30","Soirée pizza party","*"]],
+x:[["09:30","Footing"],["11:00","Biathlon laser (ados + adultes)"],["16:00","Initiation padel"],["17:00","Football"],["18:15","Défi fléchettes"],["20:30","Tournoi padel nocturne","*"]]},
+"2026-08-05":{e:[["10:00","Sortie encadrée Parc animalier (10h-12h)","*"],["10:00","Dessin kawaï"],["10:30","Modelage"],["12:00","Mini-disco piscine"],["16:00","Balle au prisonnier"],["16:00","Bricolage jeu de la grenouille"],["17:30","Tournoi de puzzle en famille","F"],["17:30","Fléchettes (+10 ans)"]],
+a:[["11:00","Basket"],["15:00","Balle au prisonnier"],["17:30","Volley"],["20:30","Ado Pool Party (piscine)","*"]],
+x:[["10:00","Cours de yoga"],["10:00","Palet breton"],["11:00","Aquagym"],["11:00","Tournoi Mario / FIFA"],["16:00","Jeux défis piscine"],["16:30","Ping-pong"],["17:00","Spikeball (ados-adultes)"],["18:00","Rugby touché"],["18:15","Défis des animateurs"]]},
+"2026-08-06":{e:[["10:00","Just Dance"],["10:00","Le savant fou"],["10:30","Tournoi Mario Kart (+7 ans)"],["11:30","Tournoi babyfoot"],["11:30","Stickers fenêtre"],["16:00","Créa squishy papier"],["16:00","Grand jeu aquatique (piscine)"],["17:30","Course d'orientation One Piece (+9 ans)"],["18:00","Objectif danse K-pop"]],
+a:[["11:00","Mölkky"],["15:00","Jeux musicaux piscine"],["16:30","Undercover"],["17:00","Tournoi de foot"],["20:30","Cache-cache géant et padel-tennis","*"]],
+x:[["10:00","Balade pédestre"],["11:00","Aquagym"],["11:00","Volley (11h-12h30)"],["16:00","Water-polo"],["17:00","Tournoi de foot (17h-19h)"],["18:15","Défi carabine laser (bar)"],["20:30","Tournoi de ping-pong","*"]]},
+"2026-08-07":{e:[["10:00","Basket en famille (city stade)","F"],["10:00","Créa festive"],["11:30","Escape game sensoriel"],["12:00","Mini-disco piscine"],["16:30","Olympiades pour tous (city stade)","F"],["18:00","Parade animée","*"],["18:30","Happy end en bonbons"]],
+a:[["11:00","La chasse aux stars"],["15:00","Jeux piscine chrono"],["16:30","Olympiades pour tous"],["18:00","Parade"],["20:30","Zombie attaque / foot","*"]],
+x:[["10:00","Cuisses-abdos-fessiers"],["10:00","Footing trail"],["11:00","Zumba"],["11:00","Tchoukball"],["16:30","Olympiades pour tous","F"],["18:15","Défis des animateurs"]]}
 };
 const NOTES = {
 "2026-07-27":"⭐ 10h30 au Yelloh Park : tirage au sort pour la sortie Parc animalier — soyez-y !",
 "2026-07-28":"🧺 Marché d'Argelès-Gazost le matin (gâteau à la broche, fromages d'Azun).",
 "2026-07-29":"🦊 10h-12h : sortie encadrée au Parc animalier (5-12 ans, tirés au sort). Tir à l'arc +8 ans à 18h (inscription). 🪂 16h : baptême de parapente au col de Couraduque — RDV au parking de l'atterrissage avant Aucun (fiche dans Sorties).",
 "2026-07-31":"👨‍👩‍👧‍👦 Journée famille au camping : foot 10h, olympiades 16h30, parade 18h. Tir à l'arc +8 ans à 18h.",
-"2026-08-01":"🔁 Nouveau programme affiché aujourd'hui → prends-le en photo pour mettre le QG à jour !",
-"2026-08-04":"🧺 Marché d'Argelès-Gazost le matin.",
+"2026-08-02":"🎪 21h : show de bienvenue de la semaine 2 (présentation du camping et des prestataires — c'est là qu'on réserve les activités extérieures).",
+"2026-08-03":"⭐ 10h30 au Yelloh Park : tirage au sort pour la sortie Parc animalier de mercredi — soyez-y !",
+"2026-08-04":"🧺 Marché d'Argelès-Gazost le matin (gâteau à la broche, fromages d'Azun).",
+"2026-08-05":"🦊 10h-12h : sortie encadrée au Parc animalier (5-12 ans, tirés au sort lundi).",
+"2026-08-07":"👨‍👩‍👧‍👦 Journée famille au camping : basket 10h, olympiades 16h30, parade 18h. Soirée du vendredi non affichée sur le panneau [à vérifier].",
 "2026-08-08":"🧳 Jour du départ — check-list rangement et route du retour."
 };
-/* Soirées — relevées sur l'appli Yelloh (captures du 26/07). Mini-disco quotidienne ajoutée côté rendu (21h15, tous les soirs). */
+/* Soirées — semaine 1 relevée sur l'appli Yelloh (captures du 26/07), semaine 2 sur les affiches
+   « Soirées / Show time » du panneau (photo du 01/08). Mini-disco quotidienne ajoutée côté rendu (21h15). */
 const SOIREES = {
 "2026-07-27":[["21:30","Bal mousse — 1 h 30"]],
 "2026-07-28":[["21:30","Spectacle Hits Rock — 1 h 30, grande scène"]],
 "2026-07-29":[["20:00","Soirée Happy/Duo — 2 h, restaurant Le Brasero"],["21:30","Fête du Sud-Ouest — 1 h 30, scène"]],
 "2026-07-30":[["21:30","Spectacle Spectacul'Art — 1 h 30, grande scène"]],
 "2026-07-31":[["21:30","Spectacle Tom et Johnny — 1 h 30, grande scène"]],
-"2026-08-01":[["21:30","Samedi tout est permis — 1 h 30, grande scène"]]
+"2026-08-01":[["21:30","Samedi tout est permis — jeux et chansons, grande scène"]],
+"2026-08-02":[["21:00","Show de bienvenue — présentation du camping et des prestataires, medley des spectacles de la semaine"]],
+"2026-08-03":[["21:30","Soirée mousse — grande scène"]],
+"2026-08-04":[["21:30","Music-Hall Party (Prod2Be)"]],
+"2026-08-05":[["21:30","Soirée dansante"]],
+"2026-08-06":[["21:30","Dance Factory"]]
 };
 const DAYS = ["2026-07-26","2026-07-27","2026-07-28","2026-07-29","2026-07-30","2026-07-31","2026-08-01","2026-08-02","2026-08-03","2026-08-04","2026-08-05","2026-08-06","2026-08-07","2026-08-08"];
 const JSEM = ["dim","lun","mar","mer","jeu","ven","sam"];
@@ -525,7 +552,7 @@ canicule:{ic:"🥵",t:"Canicule",tip:"Altitude le matin, eau de 12h à 16h, sort
 /* Missions famille — mix sport / créa / sorties, tiré du planning du camping et des fiches (26/07) */
 const MISSIONS = [
 "🏸 Sport : participer à une initiation padel du camping",
-"🎯 Sport : tenter le tir à l'arc (+8 ans — mer. & ven. 18 h, sur inscription)",
+"🎯 Sport : tenter le tir à l'arc (+8 ans, sur inscription — pas affiché en semaine 2, [à vérifier])",
 "🥾 Sport : boucler l'Arrieulat ou le Balandrau à pied",
 "🛷 Sport : dévaler la Mountain Luge du Hautacam",
 "🪂 Sortie : le baptême de parapente (mer. 29, 16 h — baskets !)",
@@ -954,7 +981,7 @@ function vueJour(){
         (open ? lignes(camp[g], {d:jourSel, g:g}) : "");
     }).join("");
   } else {
-    bloc = '<div class="note">📸 Programme de la semaine 2 pas encore affiché — photographie le panneau samedi et envoie-le à Claude pour mettre le QG à jour.</div>';
+    bloc = '<div class="note">🧳 Jour du départ — le panneau affiche ce samedi le programme de la semaine suivante, non repris ici.</div>';
   }
   const soir = soireesDe(jourSel);
   const openS = val("acc:s", true);
