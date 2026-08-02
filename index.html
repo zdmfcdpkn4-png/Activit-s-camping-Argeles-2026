@@ -135,6 +135,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .mi:last-child{border-bottom:none}
 .mi button.cb{width:30px;height:30px;border:2px solid var(--encre);border-radius:9px;flex-shrink:0;font-size:16px;font-weight:800}
 .mi.done{opacity:.55;text-decoration:line-through}
+.mi-lie{display:block;font-size:11px;color:var(--sapin);font-weight:700;text-decoration:none}
 .mi.done button.cb{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
 .aj{display:flex;gap:8px;margin-top:10px}
 .aj input{flex:1;min-height:46px;border:2px solid var(--encre);border-radius:12px;padding:0 12px;font-size:14px;font-family:inherit;background:var(--craie)}
@@ -580,6 +581,7 @@ const ICOMISS = [
   [/piscine|baignade|nager|natation|toboggan aquatique|water/i, "🏊"],
   [/rando|randonn|boucle|sentier|balade|marche|à pied|crête|sommet|refuge/i, "🥾"],
   [/sortie|cirque|lac |cascade|grotte|pic |col |château|abbaye|musée|visite|village|pont/i, "⛰️"],
+  [/chasse|trésor|escape game|olympiade|grand jeu|m(o|ö)lk|loup-garou|quiz|blind test|karaok|disco|parade|spectacle|soirée|bal |danse/i, "🎉"],
   [/sport|tournoi|match|padel|tennis|foot|basket|volley|ping|vélo|tir à l|pétanque|jeu/i, "🏸"]
 ];
 function icoMission(txt){
@@ -593,6 +595,24 @@ function icoMission(txt){
 function libMission(txt){
   const ic = icoMission(txt);
   return (ic ? ic + " " : "") + (txt || "");
+}
+/* Libellés uniques du planning camping (3 publics), pour le menu d'ajout de mission.
+   Dédoublonnés : « Aquagym » revient tous les jours, une seule entrée suffit — la mission
+   se valide dès qu'une occurrence est cochée, quel que soit le jour. */
+let _mcamp = null;
+function MISSCAMP(){
+  if(_mcamp) return _mcamp;
+  const vus = {}, out = [];
+  for(const d in CAMP){
+    ["e","a","x"].forEach(function(g){
+      (CAMP[d][g] || []).forEach(function(it){
+        if(vus[it[1]]) return;
+        vus[it[1]] = 1; out.push(it[1]);
+      });
+    });
+  }
+  _mcamp = out.sort(function(a,b){ return a.localeCompare(b, "fr"); });
+  return _mcamp;
 }
 
 /* Randonnées famille — vérifiées en ligne le 26/07/2026, Gavarnie le 02/08 (sources : lien de chaque fiche).
@@ -809,6 +829,22 @@ function autoMissions(cible, estLibelle){
   });
   return nouvelles;
 }
+/* Missions perso créées depuis le menu déroulant : elles portent le lien vers l'élément
+   choisi (`lien` = id de sortie/rando, ou libellé d'activité du planning si `lienLb`).
+   Même règle que les missions d'origine : validées automatiquement, jamais dé-cochées.
+   Écrit dans ST.state directement — l'appelant (coche) déclenche rendu et synchro. */
+function autoMissionsPerso(cible, estLibelle){
+  const cm = val("cm", []);
+  const nouvelles = [];
+  const maj = cm.map(function(m){
+    if(m.done || !m.lien) return m;
+    if(!!m.lienLb !== !!estLibelle || m.lien !== cible) return m;
+    nouvelles.push(m.txt);
+    return {id:m.id, txt:m.txt, done:true, dt:(m.dt || dateDe()), lien:m.lien, lienLb:m.lienLb};
+  });
+  if(nouvelles.length) ST.state["cm"] = {v:maj, t:Date.now()};
+  return nouvelles;
+}
 function put(k,v){ ST.state[k] = {v:v, t:Date.now()}; rendre(); planifSync(); }
 /* Coche une activité : horodate la réalisation à la date du jour (corrigeable
    ensuite dans l'onglet Bilan) et valide les missions associées. */
@@ -817,7 +853,8 @@ function coche(k, nv, dateDef, lien, lienEstLibelle){
   if(nv){
     if(!val("dt:"+k, "")) ST.state["dt:"+k] = {v: dateDef || dateDe(), t:Date.now()};
     if(lien){
-      const gagnees = autoMissions(lien, !!lienEstLibelle);
+      const gagnees = autoMissions(lien, !!lienEstLibelle)
+        .concat(autoMissionsPerso(lien, !!lienEstLibelle).map(libMission));
       // le bandeau arrive après celui de l'activité, pour ne pas se chevaucher
       gagnees.forEach(function(m, i){
         setTimeout(function(){ feteMission(null, esc(m), true); }, 500 + i*450);
@@ -1355,6 +1392,30 @@ function vueBilan(){
   });
   return html;
 }
+/* Menu d'ajout de mission : sorties, randos et activités du planning.
+   Valeur d'option encodée (i<id> / c<index>) plutôt que le libellé brut — esc() n'échappe
+   pas les guillemets, et les libellés en contiennent (« Créa : c'est l'heure… »). */
+function optionsMission(){
+  const dejaLie = {};
+  val("cm", []).forEach(function(m){ if(m.lien) dejaLie[(m.lienLb?"c":"i") + m.lien] = 1; });
+  const groupes = {};
+  const ajoute = function(g, v, n){ (groupes[g] = groupes[g] || []).push('<option value="' + v + '">' + esc(n) + '</option>'); };
+  SORTIES.forEach(function(o){
+    if(dejaLie["i"+o.id]) return;
+    ajoute(CATS[o.c], "i" + o.id, o.e + " " + o.n);
+  });
+  RANDOS.forEach(function(r){
+    if(dejaLie["i"+r.id] || SORTIES.some(function(o){ return o.id===r.id; })) return;
+    ajoute("🥾 Randos", "i" + r.id, r.e + " " + r.n);
+  });
+  MISSCAMP().forEach(function(lb, i){
+    if(dejaLie["c"+lb]) return;
+    ajoute("🏕️ Activités du camping", "c" + i, lb);
+  });
+  return Object.keys(groupes).map(function(g){
+    return '<optgroup label="' + esc(g) + '">' + groupes[g].join("") + '</optgroup>';
+  }).join("");
+}
 function vueMissions(){
   const cm = val("cm",[]);
   let li = MISSIONS.map(function(m,i){
@@ -1363,11 +1424,15 @@ function vueMissions(){
     return '<div class="mi' + (done?" done":"") + '"><button class="cb" data-act="md" data-v="' + i + '">' + (done?"✓":"") + '</button><span>' + esc(m) + '</span></div>';
   }).join("");
   li += cm.map(function(m){
-    return '<div class="mi' + (m.done?" done":"") + '"><button class="cb" data-act="cm" data-v="' + m.id + '">' + (m.done?"✓":"") + '</button><span>' + esc(libMission(m.txt)) + '</span></div>';
+    return '<div class="mi' + (m.done?" done":"") + '"><button class="cb" data-act="cm" data-v="' + m.id + '">' + (m.done?"✓":"") + '</button>' +
+      '<span>' + esc(libMission(m.txt)) + (m.lien ? '<small class="mi-lie">se coche toute seule</small>' : "") + '</span></div>';
   }).join("");
   return '<section class="fiche"><h2>✅ Missions de la famille</h2>' + li +
-    '<div class="aj"><input id="nm" maxlength="90" placeholder="Ajouter une mission…"><button data-act="add">+</button></div>' +
-    '<div class="note" style="margin-top:10px">2 points par mission accomplie — cochée sur un téléphone, cochée pour tous.</div></section>';
+    '<div class="aj"><select id="selm" aria-label="choisir une sortie, une rando ou une animation">' +
+      '<option value="">Choisir dans les sorties, randos, planning…</option>' + optionsMission() + '</select>' +
+      '<button data-act="maddsel">+</button></div>' +
+    '<div class="aj"><input id="nm" maxlength="90" placeholder="Ou une mission à nous…"><button data-act="add">+</button></div>' +
+    '<div class="note" style="margin-top:10px">2 points par mission accomplie — cochée sur un téléphone, cochée pour tous.<br>Une mission choisie dans la liste se coche toute seule dès que l\'activité est marquée réalisée.</div></section>';
 }
 function vueInfos(){
   const L = [
@@ -1406,10 +1471,10 @@ function rendre(){
   // La synchro périodique re-rend la vue : sans ça, elle effaçait le champ
   // d'ajout (mission / membre) en pleine frappe et fermait le clavier.
   const actif = document.activeElement;
-  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id.indexOf("dt-") === 0))
+  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id === "selm" || actif.id.indexOf("dt-") === 0))
     ? { id: actif.id, v: actif.value, s: (actif.type === "date" ? null : actif.selectionStart), e: (actif.type === "date" ? null : actif.selectionEnd) } : null;
   const valeurs = {};
-  ["nm","nmb","npj","selpj"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
+  ["nm","nmb","npj","selpj","selm"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
   const change = derniereVue !== vue;
   derniereVue = vue;
   app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="randos" ? vueRandos() : vue==="bilan" ? vueBilan() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
@@ -1464,6 +1529,33 @@ function ajouterMission(){
   inp.value = "";
   put("cm", val("cm",[]).concat([{id:"c"+Date.now(),txt:t,done:false}]));
 }
+/* Mission créée depuis le menu : on garde le lien vers l'élément choisi pour
+   qu'elle se coche seule quand l'activité est marquée réalisée. */
+function ajouterMissionListe(){
+  const sel = document.getElementById("selm"); if(!sel) return;
+  const v = sel.value; if(!v) return;
+  const cle = v.slice(1);
+  let mission = null;
+  if(v.charAt(0) === "i"){
+    const t = trouveIdee(cle);
+    if(!t) return;
+    mission = {id:"c"+Date.now(), txt:t.o.e + " " + t.o.n, done:false, lien:cle, lienLb:false};
+  } else {
+    const lb = MISSCAMP()[parseInt(cle, 10)];
+    if(!lb) return;
+    mission = {id:"c"+Date.now(), txt:lb, done:false, lien:lb, lienLb:true};
+  }
+  sel.value = "";
+  // déjà réalisée ? la mission naît cochée, sans quoi elle attendrait une 2e réalisation
+  if(estDejaFait(mission)){ mission.done = true; mission.dt = dateDe(); }
+  put("cm", val("cm",[]).concat([mission]));
+}
+function estDejaFait(m){
+  if(!m.lienLb) return val("done:"+m.lien, false);
+  const cat = catalogueCA();
+  for(const k in cat){ if(cat[k].lb === m.lien && val(k, false)) return true; }
+  return false;
+}
 function ajouterAuProgramme(){
   const sel = document.getElementById("selpj"); if(!sel) return;
   const id = sel.value; if(!id) return;
@@ -1493,7 +1585,7 @@ document.addEventListener("change", function(ev){
   if(!el || !el.dataset) return;
   if(el.dataset.act === "dt") put("dt:" + el.dataset.v, el.value || "");
   else if(el.dataset.act === "dtcm"){
-    const cm = val("cm",[]).map(function(m){ return m.id===el.dataset.v ? {id:m.id,txt:m.txt,done:m.done,dt:el.value||""} : m; });
+    const cm = val("cm",[]).map(function(m){ return m.id===el.dataset.v ? Object.assign({}, m, {dt:el.value||""}) : m; });
     put("cm", cm);
   }
 });
@@ -1526,7 +1618,7 @@ document.addEventListener("click", function(ev){
   }
   else if(a==="dt"){ put("dt:"+v, el.value || ""); }
   else if(a==="dtcm"){
-    const cm = val("cm",[]).map(function(m){ return m.id===v ? {id:m.id,txt:m.txt,done:m.done,dt:el.value||""} : m; });
+    const cm = val("cm",[]).map(function(m){ return m.id===v ? Object.assign({}, m, {dt:el.value||""}) : m; });
     put("cm", cm);
   }
   else if(a==="want"){ put("want:"+v, !val("want:"+v,false)); }
@@ -1582,11 +1674,12 @@ document.addEventListener("click", function(ev){
   }
   else if(a==="cm"){
     const avant = val("cm",[]).find(function(m){ return m.id===v; });
-    const cm = val("cm",[]).map(function(m){ return m.id===v ? {id:m.id,txt:m.txt,done:!m.done,dt:(m.done?"":(m.dt||dateDe()))} : m; });
+    const cm = val("cm",[]).map(function(m){ return m.id===v ? Object.assign({}, m, {done:!m.done, dt:(m.done?"":(m.dt||dateDe()))}) : m; });
     put("cm", cm);
     if(avant && !avant.done) feteMission(ev, esc(libMission(avant.txt)), false);
   }
   else if(a==="add"){ ajouterMission(); }
+  else if(a==="maddsel"){ ajouterMissionListe(); }
   else if(a==="raz"){
     const now = Date.now();
     if(now - razArme < 4000){ ST = {state:{}, resetAt:now}; razArme = 0; rendre(); planifSync(); }
