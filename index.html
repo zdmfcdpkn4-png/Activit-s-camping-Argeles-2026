@@ -146,6 +146,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .js-nom{width:100%;min-height:40px;border:2px solid transparent;border-radius:10px;padding:0 6px;font-size:14px;
   font-family:inherit;font-weight:600;color:inherit;background:transparent}
 .js-nom:focus{border-color:var(--encre);background:var(--craie);outline:none}
+.bl-nom{font-weight:700;font-size:14px;min-height:34px;padding:0 4px}
 .js-p{width:40px;min-height:44px;border:2px solid var(--encre);border-radius:10px;font-weight:800;font-size:17px;flex-shrink:0;line-height:1}
 .js-p[disabled]{opacity:.3}
 .mi.done button.cb{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
@@ -849,6 +850,11 @@ function catalogueCA(){
     soireesDe(d).forEach(function(it){ cat[cleCA(d,"s",it)] = {date:d, g:"s", h:it[0], lb:it[1]}; });
     (val("pj:"+d, [])).forEach(function(it){
       if(it.x) cat[cleCA(d,"p",["--",it.x])] = {date:d, g:"p", h:"—", lb:it.x};
+      // jeu de société : la clé porte l'id, pas le libellé — renommer ne perd donc pas la coche
+      else if(it.j){
+        const j = jeux().filter(function(x){ return x.id === it.j; })[0];
+        if(j) cat[cleCA(d,"p",["--",it.j])] = {date:d, g:"p", h:"—", lb:"🎲 " + j.n, jeu:it.j};
+      }
     });
   });
   return cat;
@@ -1060,6 +1066,20 @@ function vueProgramme(){
       const t = trouveIdee(it.i);
       return t ? ligneIdee(t.o, t.rando, it.i) : "";
     }
+    if(it.j){
+      // jeu de société : nom modifiable ici comme dans l'onglet Missions
+      const j = jeux().filter(function(x){ return x.id === it.j; })[0];
+      if(!j) return "";
+      const cleJ = cleCA(jourSel, "p", ["--", it.j]);
+      const faitJ = val(cleJ, false);
+      return '<div class="ligne js-l' + (faitJ?" lg-fait":"") + '">' +
+        '<span class="chip m-soir" style="min-width:auto">🎲</span>' +
+        '<div class="js-b"><input class="js-nom" id="jsn-pj-' + j.id + '" data-act="jsnom" data-v="' + j.id +
+          '" maxlength="40" value="' + escA(j.n) + '" aria-label="nom du jeu"></div>' +
+        '<button class="lg-x" data-act="pjdel" data-v="' + it.j + '" aria-label="retirer">✕</button>' +
+        '<button class="ca-cb' + (faitJ?" on":"") + '" data-act="ca" data-v="' + cleJ + '" aria-label="marquer réalisée">' + (faitJ?"✓":"") + '</button>' +
+        '</div>';
+    }
     const cle = cleCA(jourSel, "p", ["--", it.x]);
     const fait = val(cle, false);
     return '<div class="ligne' + (fait?" lg-fait":"") + '">' +
@@ -1070,14 +1090,15 @@ function vueProgramme(){
   }).join("");
   if(!corps) corps = '<div class="note">Rien d\'ajouté pour ce jour : choisis une sortie ou une rando dans la liste, ou écris ton idée.</div>';
   const dejaPose = {};
-  items.forEach(function(it){ if(it.x) dejaPose[it.x] = 1; });
+  const dejaJeu = {};
+  items.forEach(function(it){ if(it.x) dejaPose[it.x] = 1; else if(it.j) dejaJeu[it.j] = 1; });
   const dispo = SORTIES.map(function(o){ return {id:o.id, n:o.e + " " + o.n, g:CATS[o.c]}; })
     .concat(RANDOS.filter(function(r){ return !SORTIES.some(function(o){ return o.id===r.id; }); })
       .map(function(r){ return {id:r.id, n:r.e + " " + r.n, g:"🥾 Randos"}; }))
     .filter(function(x){ return !dejaPropose[x.id] && !val("done:"+x.id, false); })
     // les jeux de société enregistrés : ajoutés au jour comme une activité libre
     // (préfixe « jeu: » — un id de sortie peut commencer par j, cf. jardinbains)
-    .concat(jeux().filter(function(j){ return !dejaPose["🎲 " + j.n]; })
+    .concat(jeux().filter(function(j){ return !dejaJeu[j.id] && !dejaPose["🎲 " + j.n]; })
       .map(function(j){ return {id:"jeu:" + j.id, n:"🎲 " + j.n, g:"🎲 Jeux de société"}; }));
   const groupes = {};
   dispo.forEach(function(x){ (groupes[x.g] = groupes[x.g] || []).push(x); });
@@ -1091,6 +1112,7 @@ function vueProgramme(){
         '<option value="">Ajouter une sortie / rando…</option>' + opts + '</select>' +
         '<button data-act="pjadd">+</button></div>' +
       '<div class="aj"><input id="npj" maxlength="80" placeholder="Ou une activité à nous…"><button data-act="pjtxt">+</button></div>' +
+      '<div class="aj"><input id="njp" maxlength="40" placeholder="🎲 Un jeu de société joué…"><button data-act="pjjeu">+</button></div>' +
       '<div class="note" style="margin-top:10px">La liste ne propose que ce qui n\'est ni déjà suggéré aujourd\'hui ni déjà réalisé. Tout se coche et part dans le 🏆 Bilan.</div>'
     : "";
   return '<section class="fiche"><h2>🎯 Notre programme du jour <span class="badge">' + items.length + '</span></h2>' + corps +
@@ -1414,7 +1436,8 @@ function realisations(){
     const c = cat[k];
     const noms = {e:"🧒 Enfants", a:"🎧 Ados", x:"🍹 Adultes", s:"🌙 Soirée", p:"📝 Ajoutée par la famille"};
     const ty = c.g==="s" ? "N" : (c.g==="p" ? "P" : "C");
-    out.push({k:k, ty:ty, e:TYPB[ty].e, n:c.lb, sous:(c.g==="p" ? noms.p : c.h+" · "+noms[c.g]), pts:0, prevu:c.date});
+    out.push({k:k, ty:ty, e:(c.jeu ? "🎲" : TYPB[ty].e), n:c.lb, jeu:c.jeu || null,
+      sous:(c.jeu ? "🎲 Jeu de société" : (c.g==="p" ? noms.p : c.h+" · "+noms[c.g])), pts:0, prevu:c.date});
   }
   MISSIONS.forEach(function(m,i){
     const k = "md:"+i;
@@ -1433,7 +1456,10 @@ function ligneBilan(r, idx){
   const clic = r.aller ? ' data-act="' + r.aller.a + '" data-v="' + r.aller.v + '"' : "";
   return '<div class="bl">' +
     '<span class="fv-e"' + clic + '>' + r.e + '</span>' +
-    '<span class="fv-b"' + clic + '><span class="fv-nom">' + esc(r.n) + '</span>' +
+    '<span class="fv-b"' + clic + '>' + (r.jeu
+      ? '<input class="js-nom bl-nom" id="jsn-bl-' + r.jeu + '-' + idx + '" data-act="jsnom" data-v="' + r.jeu +
+        '" maxlength="40" value="' + escA(String(r.n).replace(/^🎲\s*/, "")) + '" aria-label="nom du jeu">'
+      : '<span class="fv-nom">' + esc(r.n) + '</span>') +
       '<span class="fv-sub">' + r.sous + (r.pts ? " · +" + r.pts + " pt" : "") + '</span></span>' +
     '<input class="dt-in" id="' + id + '" type="date" value="' + (r.d||"") + '" min="' + DAYS[0] + '" max="' + DAYS[DAYS.length-1] + '"' +
       (r.cm ? ' data-act="dtcm" data-v="' + r.cm + '"' : ' data-act="dt" data-v="' + r.k + '"') + ' aria-label="corriger la date">' +
@@ -1578,10 +1604,10 @@ function rendre(){
   // La synchro périodique re-rend la vue : sans ça, elle effaçait le champ
   // d'ajout (mission / membre) en pleine frappe et fermait le clavier.
   const actif = document.activeElement;
-  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id === "selm" || actif.id === "njs" || actif.id.indexOf("dt-") === 0 || actif.id.indexOf("jsn-") === 0))
+  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id === "selm" || actif.id === "njs" || actif.id === "njp" || actif.id.indexOf("dt-") === 0 || actif.id.indexOf("jsn-") === 0))
     ? { id: actif.id, v: actif.value, s: (actif.type === "date" ? null : actif.selectionStart), e: (actif.type === "date" ? null : actif.selectionEnd) } : null;
   const valeurs = {};
-  ["nm","nmb","npj","selpj","selm","njs"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
+  ["nm","nmb","npj","selpj","selm","njs","njp"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
   const change = derniereVue !== vue;
   derniereVue = vue;
   app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="randos" ? vueRandos() : vue==="bilan" ? vueBilan() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
@@ -1727,15 +1753,30 @@ function ajouterAuProgramme(){
   sel.value = "";
   const liste = progJour(jourSel);
   if(id.indexOf("jeu:") === 0){
-    const j = jeux().filter(function(x){ return x.id === id.slice(4); })[0];
-    if(!j){ rendre(); return; }
-    const txt = "🎲 " + j.n;
-    if(liste.some(function(it){ return it.x === txt; })) { rendre(); return; }
-    put("pj:"+jourSel, liste.concat([{x:txt, id:"p" + Date.now()}]));
+    const gid = id.slice(4);
+    if(!jeux().some(function(x){ return x.id === gid; })){ rendre(); return; }
+    if(liste.some(function(it){ return it.j === gid; })) { rendre(); return; }
+    put("pj:"+jourSel, liste.concat([{j:gid}]));
     return;
   }
   if(liste.some(function(it){ return it.i === id; })) { rendre(); return; }
   put("pj:"+jourSel, liste.concat([{i:id}]));
+}
+/* Depuis le planning : enregistre le jeu (ou lui ajoute une partie s'il existe déjà)
+   et le pose sur la journée dans la foulée. */
+function ajouterJeuAuJour(){
+  const inp = document.getElementById("njp"); if(!inp) return;
+  const t = (inp.value||"").trim(); if(!t) return;
+  inp.value = "";
+  const l = jeux().map(function(j){ return {id:j.id, n:j.n, p:j.p}; });
+  let ex = l.filter(function(j){ return j.n.toLowerCase() === t.toLowerCase(); })[0];
+  if(ex) ex.p = (ex.p || 0) + 1;
+  else { ex = {id:"j" + Date.now(), n:t, p:1}; l.push(ex); }
+  const liste = progJour(jourSel);
+  if(!liste.some(function(it){ return it.j === ex.id; })){
+    ST.state["pj:"+jourSel] = {v: liste.concat([{j:ex.id}]), t:Date.now()};
+  }
+  majJeux(l);
 }
 function ajouterProgrammeLibre(){
   const inp = document.getElementById("npj"); if(!inp) return;
@@ -1769,6 +1810,7 @@ document.addEventListener("keydown", function(ev){
   else if(ev.target && ev.target.id === "nmb"){ ev.preventDefault(); ajouterMembre(); }
   else if(ev.target && ev.target.id === "npj"){ ev.preventDefault(); ajouterProgrammeLibre(); }
   else if(ev.target && ev.target.id === "njs"){ ev.preventDefault(); ajouterJeu(); }
+  else if(ev.target && ev.target.id === "njp"){ ev.preventDefault(); ajouterJeuAuJour(); }
   else if(ev.target && ev.target.dataset && ev.target.dataset.act === "jsnom"){ ev.preventDefault(); ev.target.blur(); }
 });
 document.addEventListener("click", function(ev){
@@ -1815,7 +1857,7 @@ document.addEventListener("click", function(ev){
   else if(a==="pjadd"){ ajouterAuProgramme(); }
   else if(a==="pjtxt"){ ajouterProgrammeLibre(); }
   else if(a==="pjdel"){
-    put("pj:"+jourSel, progJour(jourSel).filter(function(it){ return (it.i||it.id) !== v; }));
+    put("pj:"+jourSel, progJour(jourSel).filter(function(it){ return (it.i||it.j||it.id) !== v; }));
   }
   else if(a==="fiche"){
     vue = "sorties"; ouverts[v] = true;
@@ -1861,6 +1903,7 @@ document.addEventListener("click", function(ev){
   else if(a==="jsmoins"){ partieDePlus(v, -1); }
   else if(a==="jsdel"){ retirerJeu(v); }
   else if(a==="jsimport"){ importerJeux(); }
+  else if(a==="pjjeu"){ ajouterJeuAuJour(); }
   else if(a==="raz"){
     const now = Date.now();
     if(now - razArme < 4000){ ST = {state:{}, resetAt:now}; razArme = 0; rendre(); planifSync(); }
