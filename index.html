@@ -550,22 +550,25 @@ canicule:{ic:"🥵",t:"Canicule",tip:"Altitude le matin, eau de 12h à 16h, sort
 };
 
 /* Missions famille — mix sport / créa / sorties, tiré du planning du camping et des fiches (26/07) */
+/* L'index d'une mission EST sa clé partagée (`md:<i>`) : ne jamais réindexer ce tableau.
+   Une mission retirée devient `null` — sa case disparaît partout, et les coches déjà
+   faites par la famille restent attachées aux bonnes missions. */
 const MISSIONS = [
 "🏸 Sport : participer à une initiation padel du camping",
-"🎯 Sport : tenter le tir à l'arc (+8 ans, sur inscription — pas affiché en semaine 2, [à vérifier])",
+null,   // retirée le 02/08 — tir à l'arc, absent du planning de la semaine 2
 "🥾 Sport : boucler l'Arrieulat ou le Balandrau à pied",
 "🛷 Sport : dévaler la Mountain Luge du Hautacam",
 "🪂 Sortie : le baptême de parapente (mer. 29, 16 h — baskets !)",
 "🎨 Créa : faire une création au Yelloh Park (bracelets, modelage, Aquarellum…)",
-"🖌️ Créa : ramener un souvenir fait main (marque-page, dessin à gratter…)",
+null,   // retirée le 02/08 — souvenir fait main, doublon de la mission créa ci-dessus
 "📸 Créa : réussir la plus belle photo de marmotte du séjour",
 "⛰️ Sortie : cocher un grand site (Gavarnie, Pont d'Espagne ou Pic du Midi)",
 "🦅 Sortie : voir voler les rapaces (Donjon des Aigles ou vautours du Soulor)",
 "🧺 Sortie : goûter le gâteau à la broche au marché du mardi"
 ];
 
-/* Randonnées famille — vérifiées en ligne le 26/07/2026 (sources : lien de chaque fiche).
-   g:"ville" = départ à pied d'Argelès · g:"auto" = voiture ≤ 40 min.
+/* Randonnées famille — vérifiées en ligne le 26/07/2026, Gavarnie le 02/08 (sources : lien de chaque fiche).
+   g:"ville" = départ à pied d'Argelès · g:"auto" = voiture ≤ 1 h.
    Étapes : [titre, détail, [lat,lng] indicatif pour le schéma et la grande carte]. */
 const RANDOS = [
 {id:"arrieulat",c:"H",g:"ville",e:"🚶",n:"Boucle de l’Arrieulat",dep:"Angle de la bibliothèque municipale (à pied)",km:"5,8 km (variante longue 10,3 km)",dh:"+150 m env. (longue +322 m)",t:"2 h (longue ~3 h)",age:"dès 5 ans",
@@ -683,7 +686,18 @@ pts:[["Départ","Parking du lac, côté golf.",[43.0975,-0.08]],
 ["La tourbière","Zone humide classée Natura 2000 à mi-parcours, platelage en bois.",[43.091,-0.087]],
 ["Rive nord","Plages, aires de jeux, baignade surveillée en juillet-août.",[43.099,-0.084]],
 ["Retour","Fin de boucle au parking — glace au bord du lac.",[43.0975,-0.08]]],
-lien:"https://www.cirkwi.com/fr/circuit/98433-tour-du-lac-de-lourdes",liensrc:"Cirkwi",gm:"Lac de Lourdes"}
+lien:"https://www.cirkwi.com/fr/circuit/98433-tour-du-lac-de-lourdes",liensrc:"Cirkwi",gm:"Lac de Lourdes"},
+/* Ajoutée le 02/08 — partage son id avec la fiche Sortie « gavarnie » (une seule coche, un seul vote,
+   pas de repère en double sur la carte), comme arrieulat et balandrau. */
+{id:"gavarnie",c:"H",g:"auto",e:"🏔️",n:"Cirque de Gavarnie : l’hôtellerie du Cirque",dep:"Village de Gavarnie (50 min de route ou ligne LIO 965)",km:"8-9 km A/R",dh:"+220 m (1 350 → 1 570 m)",t:"2 h 30 à 3 h 30 A/R",age:"dès 4-5 ans",
+int:"La marche famille emblématique des Pyrénées : sentier large le long du gave jusqu’à la terrasse de l’hôtellerie, face aux 1 500 m de parois et à la Grande Cascade — 423 m, la plus haute de France métropolitaine.",
+pts:[["Départ — village de Gavarnie","Parking payant à l’entrée du village (~7 €/jour). Traverser le village en suivant « le Cirque ». Ânes et chevaux se louent ici pour les petites jambes.",[42.7345,-0.0083]],
+["La plaine du gave","Chemin large et roulant entre prairies et chevaux en liberté : le cirque grandit devant soi. Poussette tout-terrain possible sur cette première partie.",[42.725,-0.008]],
+["Entrée du cirque","La vallée se resserre, le sentier passe en sous-bois puis longe le torrent.",[42.713,-0.0085]],
+["Hôtellerie du Cirque (1 570 m)","Le but de la balade, 1 h à 1 h 15 de marche : terrasse au pied de la muraille, face à la Grande Cascade.",[42.7015,-0.009]],
+["Option grands marcheurs","Prolongement raide et caillouteux jusqu’au pied de la cascade : +200 m, ~45 min de montée et 35 min de descente [à vérifier selon l’enneigement].",[42.695,-0.0092]],
+["Retour","Même sentier, ou le large chemin empierré parallèle, encore plus simple.",[42.722,-0.0082]]],
+lien:"https://rando.valleesdegavarnie.com/trek/27122-Le-cirque-de-Gavarnie-par-le-chemin-principal",liensrc:"Rando Vallées de Gavarnie",gm:"Gavarnie village"}
 ];
 const FAVCATS = Object.assign({}, CATS, {H:"🥾 Randos"});
 function FAVLIST(){ return SORTIES.concat(RANDOS.filter(function(r){ return !SORTIES.some(function(s){ return s.id===r.id; }); })); }
@@ -746,12 +760,10 @@ function dateDe(t){
 /* Missions validées automatiquement quand l'activité liée est cochée (jamais dé-cochées automatiquement). */
 const MISSLIEN = [
   {i:0, ca:/padel/i},
-  {i:1, ca:/tir à l/i},
   {i:2, ids:["arrieulat","balandrau"]},
   {i:3, ids:["hautacam","rd-hautacam"]},
   {i:4, ids:["parapente"]},
-  {i:5, ca:/créa|création|peinture|modelage|dessin|aquarellum|nail art|dot painting/i},
-  {i:6, ca:/marque-page|gratter/i},
+  {i:5, ca:/créa|création|peinture|modelage|dessin|aquarellum|nail art|dot painting|marque-page|gratter/i},
   {i:8, ids:["gavarnie","pontespagne","picdumidi"]},
   {i:9, ids:["donjon","soulor","rd-soum"]},
   {i:10, ids:["marche"]}
@@ -823,7 +835,7 @@ function score(){
   SORTIES.forEach(function(o){ if(val("done:"+o.id,false)) faits[o.id] = 1; });
   RANDOS.forEach(function(r){ if(val("done:"+r.id,false)) faits[r.id] = 1; });
   s += 10 * Object.keys(faits).length;
-  MISSIONS.forEach(function(_,i){ if(val("md:"+i,false)) s += 2; });
+  MISSIONS.forEach(function(m,i){ if(m && val("md:"+i,false)) s += 2; });
   (val("cm",[])).forEach(function(m){ if(m.done) s += 2; });
   return s;
 }
@@ -1266,7 +1278,7 @@ function realisations(){
   }
   MISSIONS.forEach(function(m,i){
     const k = "md:"+i;
-    if(val(k,false)) out.push({k:k, ty:"M", e:"✅", n:m, sous:"mission famille", pts:2});
+    if(m && val(k,false)) out.push({k:k, ty:"M", e:"✅", n:m, sous:"mission famille", pts:2});
   });
   (val("cm",[])).forEach(function(m){
     if(m.done) out.push({k:null, cm:m.id, ty:"M", e:"✅", n:m.txt, sous:"mission ajoutée", pts:2, d:m.dt||""});
@@ -1318,6 +1330,7 @@ function vueBilan(){
 function vueMissions(){
   const cm = val("cm",[]);
   let li = MISSIONS.map(function(m,i){
+    if(!m) return "";                                  // mission retirée : index conservé, case masquée
     const done = val("md:"+i,false);
     return '<div class="mi' + (done?" done":"") + '"><button class="cb" data-act="md" data-v="' + i + '">' + (done?"✓":"") + '</button><span>' + esc(m) + '</span></div>';
   }).join("");
@@ -1534,6 +1547,7 @@ document.addEventListener("click", function(ev){
     if(ouverts[v]){ const o = SORTIES.find(function(x){return x.id===v;}); if(o) chargePhoto(o); }
     rendre(); }
   else if(a==="md"){
+    if(!MISSIONS[v]) return;                           // garde-fou : mission retirée
     const nv = !val("md:"+v,false);
     coche("md:"+v, nv);
     if(nv) feteMission(ev, esc(MISSIONS[v]), false);
