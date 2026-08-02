@@ -136,6 +136,12 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .mi button.cb{width:30px;height:30px;border:2px solid var(--encre);border-radius:9px;flex-shrink:0;font-size:16px;font-weight:800}
 .mi.done{opacity:.55;text-decoration:line-through}
 .mi-lie{display:block;font-size:11px;color:var(--sapin);font-weight:700;text-decoration:none}
+.jsc{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px}
+.jsc>span:first-child{flex:0 0 auto;white-space:nowrap}
+.jsb{flex:1;height:9px;border:2px solid var(--encre);border-radius:9px;overflow:hidden;background:var(--craie)}
+.jsb i{display:block;height:100%;background:var(--sapin);transition:width .5s ease}
+.js-n{display:block;font-size:11px;opacity:.65}
+.js-p{min-width:44px;height:36px;border:2px solid var(--encre);border-radius:10px;font-weight:800;font-size:13px;flex-shrink:0}
 .mi.done button.cb{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
 .aj{display:flex;gap:8px;margin-top:10px}
 .aj input{flex:1;min-height:46px;border:2px solid var(--encre);border-radius:12px;padding:0 12px;font-size:14px;font-family:inherit;background:var(--craie)}
@@ -565,7 +571,9 @@ null,   // retirée le 02/08 — souvenir fait main, doublon de la mission créa
 "📸 Créa : réussir la plus belle photo de marmotte du séjour",
 "⛰️ Sortie : cocher un grand site (Gavarnie, Pont d'Espagne ou Pic du Midi)",
 "🦅 Sortie : voir voler les rapaces (Donjon des Aigles ou vautours du Soulor)",
-"🧺 Sortie : goûter le gâteau à la broche au marché du mardi"
+"🧺 Sortie : goûter le gâteau à la broche au marché du mardi",
+"🎲 Jeux : découvrir 10 jeux de société différents",
+"🎲 Jeux : jouer 20 parties de jeux de société"
 ];
 /* Missions ajoutées par la famille : elles sont saisies sans emoji. On en déduit une icône
    à l'affichage seulement — le libellé enregistré dans l'état partagé n'est jamais modifié
@@ -599,6 +607,13 @@ function libMission(txt){
 /* Libellés uniques du planning camping (3 publics), pour le menu d'ajout de mission.
    Dédoublonnés : « Aquagym » revient tous les jours, une seule entrée suffit — la mission
    se valide dès qu'une occurrence est cochée, quel que soit le jour. */
+/* Jeux de société — clé partagée js = [{id, n:nom, p:nombre de parties}].
+   Deux missions à seuil s'y adossent : md:11 (10 jeux différents) et md:12 (20 parties).
+   Le compteur est calculé à la volée, jamais stocké : une seule source de vérité. */
+function jeux(){ return val("js", []); }
+function jeuxDiff(){ return jeux().length; }
+function jeuxParties(){ return jeux().reduce(function(t,j){ return t + (j.p || 0); }, 0); }
+const JSEUILS = {11:{f:jeuxDiff, n:10, lb:"jeux différents"}, 12:{f:jeuxParties, n:20, lb:"parties jouées"}};
 let _mcamp = null;
 function MISSCAMP(){
   if(_mcamp) return _mcamp;
@@ -845,6 +860,19 @@ function autoMissionsPerso(cible, estLibelle){
   if(nouvelles.length) ST.state["cm"] = {v:maj, t:Date.now()};
   return nouvelles;
 }
+/* Missions à seuil : validées dès que le compteur atteint la cible, jamais dé-cochées
+   ensuite (rejouer moins ne retire pas un objectif atteint). */
+function autoMissionsJeux(){
+  const nouvelles = [];
+  for(const i in JSEUILS){
+    if(val("md:"+i, false)) continue;
+    if(JSEUILS[i].f() < JSEUILS[i].n) continue;
+    ST.state["md:"+i] = {v:true, t:Date.now()};
+    if(!val("dt:md:"+i, "")) ST.state["dt:md:"+i] = {v: dateDe(), t:Date.now()};
+    nouvelles.push(MISSIONS[i]);
+  }
+  return nouvelles;
+}
 function put(k,v){ ST.state[k] = {v:v, t:Date.now()}; rendre(); planifSync(); }
 /* Coche une activité : horodate la réalisation à la date du jour (corrigeable
    ensuite dans l'onglet Bilan) et valide les missions associées. */
@@ -1000,10 +1028,16 @@ function vueProgramme(){
       '</div>';
   }).join("");
   if(!corps) corps = '<div class="note">Rien d\'ajouté pour ce jour : choisis une sortie ou une rando dans la liste, ou écris ton idée.</div>';
+  const dejaPose = {};
+  items.forEach(function(it){ if(it.x) dejaPose[it.x] = 1; });
   const dispo = SORTIES.map(function(o){ return {id:o.id, n:o.e + " " + o.n, g:CATS[o.c]}; })
     .concat(RANDOS.filter(function(r){ return !SORTIES.some(function(o){ return o.id===r.id; }); })
       .map(function(r){ return {id:r.id, n:r.e + " " + r.n, g:"🥾 Randos"}; }))
-    .filter(function(x){ return !dejaPropose[x.id] && !val("done:"+x.id, false); });
+    .filter(function(x){ return !dejaPropose[x.id] && !val("done:"+x.id, false); })
+    // les jeux de société enregistrés : ajoutés au jour comme une activité libre
+    // (préfixe « jeu: » — un id de sortie peut commencer par j, cf. jardinbains)
+    .concat(jeux().filter(function(j){ return !dejaPose["🎲 " + j.n]; })
+      .map(function(j){ return {id:"jeu:" + j.id, n:"🎲 " + j.n, g:"🎲 Jeux de société"}; }));
   const groupes = {};
   dispo.forEach(function(x){ (groupes[x.g] = groupes[x.g] || []).push(x); });
   const opts = Object.keys(groupes).map(function(g){
@@ -1416,12 +1450,35 @@ function optionsMission(){
     return '<optgroup label="' + esc(g) + '">' + groupes[g].join("") + '</optgroup>';
   }).join("");
 }
+/* Bloc de suivi des jeux de société, sous les missions : c'est lui qui alimente
+   les compteurs de md:11 et md:12. */
+function vueJeux(){
+  const l = jeux();
+  const jauge = function(i){
+    const s = JSEUILS[i], v = s.f(), pc = Math.min(100, Math.round(v * 100 / s.n));
+    return '<div class="jsc"><span><b>' + v + ' / ' + s.n + '</b> ' + s.lb + '</span>' +
+      '<span class="jsb"><i style="width:' + pc + '%"></i></span></div>';
+  };
+  const li = l.map(function(j){
+    return '<div class="ligne"><span class="chip m-soir" style="min-width:auto">🎲</span>' +
+      '<div>' + esc(j.n) + '<small class="js-n">' + j.p + ' partie' + (j.p>1?"s":"") + '</small></div>' +
+      '<button class="js-p" data-act="jsplus" data-v="' + j.id + '">+1</button>' +
+      '<button class="lg-x" data-act="jsdel" data-v="' + j.id + '" aria-label="retirer">✕</button></div>';
+  }).join("");
+  return '<section class="fiche"><h2>🎲 Jeux de société <span class="badge' +
+      (jeuxDiff() >= 10 && jeuxParties() >= 20 ? " ok" : "") + '">' + jeuxDiff() + ' · ' + jeuxParties() + '</span></h2>' +
+    jauge(11) + jauge(12) +
+    (li || '<div class="note">Rien de joué pour l\'instant. Tape le nom d\'un jeu : il compte pour un jeu différent et une première partie.</div>') +
+    '<div class="aj"><input id="njs" maxlength="40" placeholder="Nom du jeu…"><button data-act="jsadd">+</button></div>' +
+    '<div class="note" style="margin-top:10px">Même jeu rejoué ? Retape son nom ou touche <b>+1</b> : une partie de plus, pas un jeu de plus.</div></section>';
+}
 function vueMissions(){
   const cm = val("cm",[]);
   let li = MISSIONS.map(function(m,i){
     if(!m) return "";                                  // mission retirée : index conservé, case masquée
     const done = val("md:"+i,false);
-    return '<div class="mi' + (done?" done":"") + '"><button class="cb" data-act="md" data-v="' + i + '">' + (done?"✓":"") + '</button><span>' + esc(m) + '</span></div>';
+    const cpt = JSEUILS[i] ? ' <span class="badge' + (done?" ok":"") + '">' + JSEUILS[i].f() + '/' + JSEUILS[i].n + '</span>' : "";
+    return '<div class="mi' + (done?" done":"") + '"><button class="cb" data-act="md" data-v="' + i + '">' + (done?"✓":"") + '</button><span>' + esc(m) + cpt + '</span></div>';
   }).join("");
   li += cm.map(function(m){
     return '<div class="mi' + (m.done?" done":"") + '"><button class="cb" data-act="cm" data-v="' + m.id + '">' + (m.done?"✓":"") + '</button>' +
@@ -1432,7 +1489,8 @@ function vueMissions(){
       '<option value="">Choisir dans les sorties, randos, planning…</option>' + optionsMission() + '</select>' +
       '<button data-act="maddsel">+</button></div>' +
     '<div class="aj"><input id="nm" maxlength="90" placeholder="Ou une mission à nous…"><button data-act="add">+</button></div>' +
-    '<div class="note" style="margin-top:10px">2 points par mission accomplie — cochée sur un téléphone, cochée pour tous.<br>Une mission choisie dans la liste se coche toute seule dès que l\'activité est marquée réalisée.</div></section>';
+    '<div class="note" style="margin-top:10px">2 points par mission accomplie — cochée sur un téléphone, cochée pour tous.<br>Une mission choisie dans la liste se coche toute seule dès que l\'activité est marquée réalisée.</div></section>' +
+    vueJeux();
 }
 function vueInfos(){
   const L = [
@@ -1471,10 +1529,10 @@ function rendre(){
   // La synchro périodique re-rend la vue : sans ça, elle effaçait le champ
   // d'ajout (mission / membre) en pleine frappe et fermait le clavier.
   const actif = document.activeElement;
-  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id === "selm" || actif.id.indexOf("dt-") === 0))
+  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id === "selm" || actif.id === "njs" || actif.id.indexOf("dt-") === 0))
     ? { id: actif.id, v: actif.value, s: (actif.type === "date" ? null : actif.selectionStart), e: (actif.type === "date" ? null : actif.selectionEnd) } : null;
   const valeurs = {};
-  ["nm","nmb","npj","selpj","selm"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
+  ["nm","nmb","npj","selpj","selm","njs"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
   const change = derniereVue !== vue;
   derniereVue = vue;
   app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="randos" ? vueRandos() : vue==="bilan" ? vueBilan() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
@@ -1531,6 +1589,32 @@ function ajouterMission(){
 }
 /* Mission créée depuis le menu : on garde le lien vers l'élément choisi pour
    qu'elle se coche seule quand l'activité est marquée réalisée. */
+/* Écrit la liste des jeux et déclenche les missions à seuil dans la foulée. */
+function majJeux(l){
+  ST.state["js"] = {v:l, t:Date.now()};
+  const gagnees = autoMissionsJeux();
+  rendre(); planifSync();
+  gagnees.forEach(function(m, i){
+    setTimeout(function(){ feteMission(null, esc(m), true); }, 350 + i*450);
+  });
+}
+function ajouterJeu(){
+  const inp = document.getElementById("njs"); if(!inp) return;
+  const t = (inp.value||"").trim(); if(!t) return;
+  inp.value = "";
+  const l = jeux().map(function(j){ return {id:j.id, n:j.n, p:j.p}; });
+  // même nom = même jeu : une partie de plus, pas un jeu de plus
+  const ex = l.filter(function(j){ return j.n.toLowerCase() === t.toLowerCase(); })[0];
+  if(ex) ex.p = (ex.p || 0) + 1;
+  else l.push({id:"j" + Date.now(), n:t, p:1});
+  majJeux(l);
+}
+function partieDePlus(id){
+  majJeux(jeux().map(function(j){ return j.id === id ? {id:j.id, n:j.n, p:(j.p||0) + 1} : j; }));
+}
+function retirerJeu(id){
+  majJeux(jeux().filter(function(j){ return j.id !== id; }));
+}
 function ajouterMissionListe(){
   const sel = document.getElementById("selm"); if(!sel) return;
   const v = sel.value; if(!v) return;
@@ -1561,6 +1645,14 @@ function ajouterAuProgramme(){
   const id = sel.value; if(!id) return;
   sel.value = "";
   const liste = progJour(jourSel);
+  if(id.indexOf("jeu:") === 0){
+    const j = jeux().filter(function(x){ return x.id === id.slice(4); })[0];
+    if(!j){ rendre(); return; }
+    const txt = "🎲 " + j.n;
+    if(liste.some(function(it){ return it.x === txt; })) { rendre(); return; }
+    put("pj:"+jourSel, liste.concat([{x:txt, id:"p" + Date.now()}]));
+    return;
+  }
   if(liste.some(function(it){ return it.i === id; })) { rendre(); return; }
   put("pj:"+jourSel, liste.concat([{i:id}]));
 }
@@ -1594,6 +1686,7 @@ document.addEventListener("keydown", function(ev){
   if(ev.target && ev.target.id === "nm"){ ev.preventDefault(); ajouterMission(); }
   else if(ev.target && ev.target.id === "nmb"){ ev.preventDefault(); ajouterMembre(); }
   else if(ev.target && ev.target.id === "npj"){ ev.preventDefault(); ajouterProgrammeLibre(); }
+  else if(ev.target && ev.target.id === "njs"){ ev.preventDefault(); ajouterJeu(); }
 });
 document.addEventListener("click", function(ev){
   const nb = ev.target.closest("nav button");
@@ -1680,6 +1773,9 @@ document.addEventListener("click", function(ev){
   }
   else if(a==="add"){ ajouterMission(); }
   else if(a==="maddsel"){ ajouterMissionListe(); }
+  else if(a==="jsadd"){ ajouterJeu(); }
+  else if(a==="jsplus"){ partieDePlus(v); }
+  else if(a==="jsdel"){ retirerJeu(v); }
   else if(a==="raz"){
     const now = Date.now();
     if(now - razArme < 4000){ ST = {state:{}, resetAt:now}; razArme = 0; rendre(); planifSync(); }
