@@ -614,6 +614,38 @@ function jeux(){ return val("js", []); }
 function jeuxDiff(){ return jeux().length; }
 function jeuxParties(){ return jeux().reduce(function(t,j){ return t + (j.p || 0); }, 0); }
 const JSEUILS = {11:{f:jeuxDiff, n:10, lb:"jeux différents"}, 12:{f:jeuxParties, n:20, lb:"parties jouées"}};
+/* Reprise des jeux déjà cochés avant l'arrivée du compteur. Motif volontairement étroit :
+   mieux vaut en oublier deux (l'ajout manuel reste là) que compter une partie de piscine.
+   Écarte donc « Jeux musicaux piscine », « Grand jeu aquatique », « Jeux en ligne »… */
+const JEUXMOTIF = /loup-garou|kapla|jeux en bois|puzzle|undercover|m(o|ö)lk|jeux? de soci|jeux? de cartes/i;
+function nomJeu(lb){
+  return String(lb).replace(/^[^\p{L}\p{N}]+/u, "")   // emoji ou puce en tête
+    .replace(/\s*\([^)]*\)\s*$/, "")                  // « (+8 ans) », « (piscine) »
+    .replace(/\s+en famille$/i, "").trim();
+}
+/* Jeux repérables dans ce qui est déjà coché, groupés par nom : une partie par jour
+   (le même jeu coché chez les enfants et chez les ados le même soir = une seule partie). */
+function jeuxDejaCoches(){
+  const cat = catalogueCA();
+  const vus = {}, par = {};
+  for(const k in cat){
+    const c = cat[k];
+    if(!val(k, false)) continue;
+    const brut = String(c.lb);
+    if(!JEUXMOTIF.test(brut) && brut.indexOf("🎲") !== 0) continue;
+    const n = nomJeu(brut);
+    if(!n) continue;
+    const cle = n.toLowerCase() + "|" + c.date;
+    if(vus[cle]) continue;
+    vus[cle] = 1;
+    par[n.toLowerCase()] = par[n.toLowerCase()] || {n:n, p:0};
+    par[n.toLowerCase()].p++;
+  }
+  const dejaLa = {};
+  jeux().forEach(function(j){ dejaLa[j.n.toLowerCase()] = 1; });
+  return Object.keys(par).filter(function(k){ return !dejaLa[k]; }).map(function(k){ return par[k]; })
+    .sort(function(a,b){ return a.n.localeCompare(b.n, "fr"); });
+}
 let _mcamp = null;
 function MISSCAMP(){
   if(_mcamp) return _mcamp;
@@ -1454,6 +1486,7 @@ function optionsMission(){
    les compteurs de md:11 et md:12. */
 function vueJeux(){
   const l = jeux();
+  const rep = jeuxDejaCoches();
   const jauge = function(i){
     const s = JSEUILS[i], v = s.f(), pc = Math.min(100, Math.round(v * 100 / s.n));
     return '<div class="jsc"><span><b>' + v + ' / ' + s.n + '</b> ' + s.lb + '</span>' +
@@ -1470,6 +1503,8 @@ function vueJeux(){
     jauge(11) + jauge(12) +
     (li || '<div class="note">Rien de joué pour l\'instant. Tape le nom d\'un jeu : il compte pour un jeu différent et une première partie.</div>') +
     '<div class="aj"><input id="njs" maxlength="40" placeholder="Nom du jeu…"><button data-act="jsadd">+</button></div>' +
+    (rep.length ? '<button class="pj-plus" data-act="jsimport">↻ Reprendre ' + rep.length + ' jeu' + (rep.length>1?"x":"") +
+        ' déjà coché' + (rep.length>1?"s":"") + ' (' + rep.map(function(j){ return esc(j.n); }).join(", ") + ')</button>' : "") +
     '<div class="note" style="margin-top:10px">Même jeu rejoué ? Retape son nom ou touche <b>+1</b> : une partie de plus, pas un jeu de plus.</div></section>';
 }
 function vueMissions(){
@@ -1608,6 +1643,16 @@ function ajouterJeu(){
   if(ex) ex.p = (ex.p || 0) + 1;
   else l.push({id:"j" + Date.now(), n:t, p:1});
   majJeux(l);
+}
+function importerJeux(){
+  const rep = jeuxDejaCoches();
+  if(!rep.length) return;
+  const l = jeux().map(function(j){ return {id:j.id, n:j.n, p:j.p}; });
+  rep.forEach(function(j, i){ l.push({id:"j" + Date.now() + "-" + i, n:j.n, p:j.p}); });
+  const parties = rep.reduce(function(t, j){ return t + j.p; }, 0);
+  majJeux(l);
+  toast("🎲 " + rep.length + " jeu" + (rep.length>1?"x":"") + " repris",
+    parties + " partie" + (parties>1?"s":"") + " comptée" + (parties>1?"s":"") + " d'après le planning déjà coché");
 }
 function partieDePlus(id){
   majJeux(jeux().map(function(j){ return j.id === id ? {id:j.id, n:j.n, p:(j.p||0) + 1} : j; }));
@@ -1776,6 +1821,7 @@ document.addEventListener("click", function(ev){
   else if(a==="jsadd"){ ajouterJeu(); }
   else if(a==="jsplus"){ partieDePlus(v); }
   else if(a==="jsdel"){ retirerJeu(v); }
+  else if(a==="jsimport"){ importerJeux(); }
   else if(a==="raz"){
     const now = Date.now();
     if(now - razArme < 4000){ ST = {state:{}, resetAt:now}; razArme = 0; rendre(); planifSync(); }
