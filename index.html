@@ -127,8 +127,39 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .meteo button{flex:1;min-width:72px;min-height:48px;border:2px solid var(--encre);border-radius:var(--r2);background:var(--craie);font-size:12px;font-weight:700;padding:6px}
 .meteo button.actif{background:var(--gave);color:var(--craie)}
 
+/* ---- barre de recherche et filtres ----
+   Collante sous l'en-tête : --h-entete est tenue à jour en JS parce que l'en-tête se
+   compacte au défilement — une valeur figée laisserait un trou ou un recouvrement. */
+.filtres{position:sticky;top:var(--h-entete,84px);z-index:40;background:var(--papier);
+  margin:0 -14px;padding:6px 14px 4px;border-bottom:2px solid var(--trait)}
+.f-rech{display:flex;gap:8px;align-items:center}
+.f-rech input{flex:1;min-width:0;min-height:44px;border:2px solid var(--encre);border-radius:var(--r2);
+  padding:0 12px;font-size:14px;font-family:inherit;background:var(--craie);color:inherit}
+.f-rech input::-webkit-search-cancel-button{display:none}
+.f-rech .f-x{min-height:44px;min-width:44px;border:2px solid var(--trait);border-radius:var(--r2);
+  background:var(--craie);font-size:15px;font-weight:800;color:var(--texte-2)}
+.fchips{display:flex;gap:6px;overflow-x:auto;padding:6px 0 0;-webkit-overflow-scrolling:touch}
+.fchip{flex:0 0 auto;min-height:44px;padding:0 13px;border:2px solid var(--trait);border-radius:var(--rp);
+  background:var(--craie);font-size:12px;font-weight:700;white-space:nowrap;color:var(--texte-2)}
+.fchip.on{background:var(--encre);border-color:var(--encre);color:var(--craie)}
+.fsep{flex:0 0 auto;width:2px;margin:8px 3px;background:var(--trait);border-radius:var(--rp)}
+/* Le compteur vit dans la ligne de recherche et non sur une ligne à lui : la barre est
+   collante, chaque pixel qu'elle occupe est pris à la lecture. */
+.f-cpt{flex:0 0 auto;font-family:var(--mono);font-size:12px;font-weight:800;color:var(--texte-3);white-space:nowrap}
+.f-cpt b{color:var(--encre)}
+.f-vide{text-align:center;padding:26px 14px}
+.f-vide p{font-size:14px;margin:8px 0 12px;color:var(--texte-2)}
+
 /* ---- sorties ---- */
 .cat-t{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--texte-3);margin:18px 4px 6px}
+/* Liseré de catégorie : la même couleur que le repère sur la carte et que la légende. */
+.sortie.cat{border-left:7px solid var(--cat)}
+.cat-t.cat{border-left:5px solid var(--cat);padding-left:8px;color:var(--cat)}
+/* Vignette de la carte repliée : le dégradé de catégorie existant, en 46 px.
+   Du rythme visuel sans une seule requête réseau. */
+.s-vig{flex:0 0 auto;width:46px;height:46px;border:2px solid var(--encre);border-radius:var(--r1);
+  display:flex;align-items:center;justify-content:center;font-size:22px}
+.s-corps{flex:1;min-width:0}
 .sortie{background:var(--craie);border:2px solid var(--encre);border-radius:var(--r3);box-shadow:var(--om1);padding:12px;margin:10px 0}
 .sortie.fait{opacity:.62;background:var(--surface-fait)}
 .s-top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
@@ -142,7 +173,8 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .b-fait.on{background:var(--sapin);color:var(--craie)}
 .b-want{border:2px solid var(--soleil);color:var(--or-fonce)}
 .b-want.on{background:var(--soleil);color:var(--encre)}
-.s-open{display:block;width:100%;text-align:left;min-height:44px}
+.s-open{display:flex;gap:10px;align-items:center;width:100%;text-align:left;min-height:44px}
+.s-meta{display:block}
 .s-hint{margin-left:auto;font-size:12px;font-weight:700;color:var(--texte-3);white-space:nowrap}
 .s-det{margin-top:10px;border-top:2px dashed var(--trait);padding-top:10px}
 .s-photo{width:100%;height:150px;object-fit:cover;border:2px solid var(--encre);border-radius:var(--r1);display:block;background:var(--eau)}
@@ -1303,13 +1335,95 @@ function vueJour(){
     '<section class="fiche"><h2>🏕️ Animations camping <span class="extra">toujours en extra ✨</span></h2>' + bloc +
     '<div class="note" style="margin-top:10px">Rappels : rien pour personne entre 12h30 et 16h (piscine !) · présence à l\'heure de début exigée · l\'appli Yelloh! fait foi.</div></section>';
 }
+/* ================= RECHERCHE & FILTRES =================
+   État local à la page — comme `moi`, `fvTri` ou `dateJeu`. Filtrer est un geste
+   personnel : rien à faire remonter dans l'état partagé de la famille. */
+const FILTRE = {sorties:{q:"", cat:{}, crit:{}}, randos:{q:"", cat:{}, crit:{}}};
+/* Les durées et trajets sont du texte libre saisi au fil des versions (« 1h20 »,
+   « 50-55 min », « ½ j », « à pied »…). On en tire des minutes pour un seuil grossier ;
+   les valeurs de chaque fiche sont vérifiées une à une par la suite de tests. */
+function enMinutes(txt){
+  const s = String(txt).toLowerCase().replace(/\[.*?\]/g, "");
+  if(/à pied|plat/.test(s)) return 0;
+  const h = s.match(/(\d+)\s*h(?:\s*(\d+))?/);
+  if(h) return parseInt(h[1],10)*60 + (h[2] ? parseInt(h[2],10) : 0);
+  const m = s.match(/(\d+)\s*min/);
+  if(m) return parseInt(m[1],10);
+  if(/½/.test(s)) return 240;
+  if(/journ/.test(s)) return 480;
+  const n = s.match(/(\d+)/);
+  return n ? parseInt(n[1],10) : 999;
+}
+function enMetres(dh){
+  const s = String(dh).toLowerCase();
+  if(/plat/.test(s)) return 0;
+  const m = s.match(/(\d+)/);
+  return m ? parseInt(m[1],10) : 999;
+}
+/* « Bétharram » se trouve en tapant « betharram » : on compare sans accents ni casse. */
+function sansAccent(t){ return String(t).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,""); }
+/* Critères de chaque onglet : libellé de la pastille + prédicat. */
+const CRITERES = {
+  sorties:[
+    {k:"todo", lb:"⬜ Pas encore faite", f:function(o){ return !val("done:"+o.id, false); }},
+    {k:"aime", lb:"❤️ Votée", f:function(o){ return votants(o.id).length > 0; }},
+    {k:"court", lb:"⏱ Moins de 2 h", f:function(o){ return enMinutes(o.d) < 120; }},
+    {k:"pres", lb:"🚗 À 15 min max", f:function(o){ return enMinutes(o.r) <= 15; }}
+  ],
+  randos:[
+    {k:"todo", lb:"⬜ Pas encore faite", f:function(r){ return !val("done:"+r.id, false); }},
+    {k:"aime", lb:"❤️ Votée", f:function(r){ return votants(r.id).length > 0; }},
+    {k:"court", lb:"⏱ Moins de 2 h", f:function(r){ return enMinutes(r.t) < 120; }},
+    {k:"douce", lb:"⛰️ Peu de dénivelé", f:function(r){ return enMetres(r.dh) <= 200; }}
+  ]
+};
+const GRPRANDO = {ville:"🏘️ Depuis Argelès", auto:"🚗 En voiture"};
+function passeFiltre(o, cle, texte){
+  const f = FILTRE[cle];
+  const cats = Object.keys(f.cat).filter(function(k){ return f.cat[k]; });
+  if(cats.length && cats.indexOf(cle==="randos" ? o.g : o.c) < 0) return false;
+  if(!CRITERES[cle].every(function(c){ return !f.crit[c.k] || c.f(o); })) return false;
+  if(f.q && sansAccent(texte).indexOf(sansAccent(f.q)) < 0) return false;
+  return true;
+}
+function barreFiltres(cle, groupes, nb, total){
+  const f = FILTRE[cle];
+  const actifs = Object.keys(f.cat).filter(function(k){ return f.cat[k]; }).length +
+    Object.keys(f.crit).filter(function(k){ return f.crit[k]; }).length + (f.q ? 1 : 0);
+  const chips = Object.keys(groupes).map(function(k){
+      return '<button class="fchip' + (f.cat[k]?" on":"") + '" data-act="fcat" data-v="' + k +
+        '" aria-pressed="' + (f.cat[k]?"true":"false") + '">' + groupes[k] + '</button>';
+    }).join("") + '<span class="fsep"></span>' +
+    CRITERES[cle].map(function(c){
+      return '<button class="fchip' + (f.crit[c.k]?" on":"") + '" data-act="fcrit" data-v="' + c.k +
+        '" aria-pressed="' + (f.crit[c.k]?"true":"false") + '">' + c.lb + '</button>';
+    }).join("");
+  return '<div class="filtres">' +
+    '<div class="f-rech"><input id="rech" type="search" enterkeyhint="search" maxlength="40"' +
+      ' placeholder="Chercher un nom, un point fort…" value="' + escA(f.q) + '" aria-label="Chercher">' +
+      '<span class="f-cpt" role="status"><b>' + nb + '</b>/' + total + '</span>' +
+      (actifs ? '<button class="f-x" data-act="fraz" aria-label="Effacer les ' + actifs + ' filtres actifs">✕</button>' : "") +
+    '</div><div class="fchips">' + chips + '</div></div>';
+}
+function rienTrouve(){
+  return '<div class="f-vide"><div style="font-size:34px">🔍</div>' +
+    '<p>Rien ne correspond à cette recherche.</p>' +
+    '<button class="pj-plus" data-act="fraz" style="max-width:280px;margin:0 auto">✕ Effacer les filtres</button></div>';
+}
 function vueSorties(){
   const faits = SORTIES.filter(function(o){return val("done:"+o.id,false);}).length;
+  const liste = SORTIES.filter(function(o){
+    return passeFiltre(o, "sorties", o.n + " " + o.pf.join(" ") + " " + o.ds + " " + o.pre);
+  });
   let html = '<section class="fiche"><h2>Compteur d’aventures</h2><div class="note">✅ ' + faits + ' / ' + SORTIES.length +
     ' — 10 points par sortie faite. Touche une fiche pour ouvrir le détail : photo, accès, itinéraire, horaires, points forts. Vote pour tes envies dans l\'onglet ⭐ Favoris.</div></section>';
+  html += barreFiltres("sorties", CATS, liste.length, SORTIES.length);
+  if(!liste.length) return html + rienTrouve();
   Object.keys(CATS).forEach(function(c){
-    html += '<div class="cat-t">' + CATS[c] + '</div>';
-    SORTIES.filter(function(o){return o.c===c;}).forEach(function(o){ html += carteSortie(o); });
+    const dedans = liste.filter(function(o){return o.c===c;});
+    if(!dedans.length) return;
+    html += '<div class="cat-t cat" style="--cat:' + catCouleur(c) + '">' + CATS[c] + '</div>';
+    dedans.forEach(function(o){ html += carteSortie(o); });
   });
   return html;
 }
@@ -1331,11 +1445,14 @@ function carteSortie(o){
       ((typeof img === "string") ? '<div style="font-size:10px;color:var(--texte-4);margin-top:4px">Photo : Wikimédia, chargée en ligne</div>' : "") +
       '</div>';
   }
-  return '<article id="s-' + o.id + '" class="sortie' + (done?" fait":"") + '">' +
+  return '<article id="s-' + o.id + '" class="sortie cat' + (done?" fait":"") + '" style="--cat:' + catCouleur(o.c) + '">' +
     '<button class="s-open" data-act="det" data-v="' + o.id + '">' +
-      '<div class="s-top"><span>' + o.e + '</span><span class="s-nom">' + esc(o.n) + (o.s?" ⭐":"") + '</span>' +
-      '<span class="s-hint">' + (open?"replier ▴":"détails ▾") + '</span></div>' +
-      '<div class="s-meta">🚗 ' + o.r + ' · ⏱ ' + o.d + ' · 💶 ' + esc(o.p) + (votants(o.id).length ? ' · ❤️ ' + votants(o.id).length : "") + '</div>' + sigleFav(o.id, "rk-fiche") + '</button>' +
+      '<span class="s-vig bn-' + o.c + '">' + o.e + '</span>' +
+      '<span class="s-corps">' +
+        '<span class="s-top"><span class="s-nom">' + esc(o.n) + (o.s?" ⭐":"") + '</span>' +
+        '<span class="s-hint">' + (open?"replier ▴":"détails ▾") + '</span></span>' +
+        '<span class="s-meta">🚗 ' + o.r + ' · ⏱ ' + o.d + ' · 💶 ' + esc(o.p) + (votants(o.id).length ? ' · ❤️ ' + votants(o.id).length : "") + '</span>' +
+      '</span>' + sigleFav(o.id, "rk-fiche") + '</button>' +
     det +
     '<div class="s-pre">📌 ' + esc(o.pre) + '</div>' +
     '<div class="s-act">' +
@@ -1559,10 +1676,18 @@ function vueRandos(){
   const faites = RANDOS.filter(function(r){ return val("done:"+r.id,false); }).length;
   let html = '<section class="fiche"><h2>🥾 Randos famille <span class="badge' + (faites===RANDOS.length?" ok":"") + '">' + faites + "/" + RANDOS.length + '</span></h2>' +
     '<div class="note">Sélection ≤ 500 m de D+ et ≤ demi-journée, vérifiée en ligne le 26/07/2026 (source liée sur chaque fiche) — <b>[à vérifier]</b> = non recoupé. Réflexes : départ matinal, eau, kways, chaussures fermées ; 10 points par rando faite, votes ❤️ dans l’onglet Favoris.</div></section>';
-  html += '<div class="cat-t">🏘️ À pied depuis Argelès</div>';
-  RANDOS.filter(function(r){ return r.g==="ville"; }).forEach(function(r){ html += carteRando(r); });
-  html += '<div class="cat-t">🚗 En voiture (≤ 40 min)</div>';
-  RANDOS.filter(function(r){ return r.g==="auto"; }).forEach(function(r){ html += carteRando(r); });
+  const liste = RANDOS.filter(function(r){
+    return passeFiltre(r, "randos", r.n + " " + r.int + " " + r.dep);
+  });
+  html += barreFiltres("randos", GRPRANDO, liste.length, RANDOS.length);
+  if(!liste.length) return html + rienTrouve();
+  const titres = {ville:"🏘️ À pied depuis Argelès", auto:"🚗 En voiture (≤ 1 h)"};
+  ["ville","auto"].forEach(function(g){
+    const dedans = liste.filter(function(r){ return r.g===g; });
+    if(!dedans.length) return;
+    html += '<div class="cat-t">' + titres[g] + '</div>';
+    dedans.forEach(function(r){ html += carteRando(r); });
+  });
   return html;
 }
 
@@ -1781,7 +1906,7 @@ function rendre(){
   // La synchro périodique re-rend la vue : sans ça, elle effaçait le champ
   // d'ajout (mission / membre) en pleine frappe et fermait le clavier.
   const actif = document.activeElement;
-  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id === "selm" || actif.id === "njs" || actif.id === "njp" || actif.id === "seljs" || actif.id === "djs" || actif.id.indexOf("dt-") === 0 || actif.id.indexOf("jsn-") === 0))
+  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id === "selm" || actif.id === "njs" || actif.id === "njp" || actif.id === "seljs" || actif.id === "djs" || actif.id === "rech" || actif.id.indexOf("dt-") === 0 || actif.id.indexOf("jsn-") === 0))
     ? { id: actif.id, v: actif.value, s: (actif.type === "date" ? null : actif.selectionStart), e: (actif.type === "date" ? null : actif.selectionEnd) } : null;
   const valeurs = {};
   ["nm","nmb","npj","selpj","selm","njs","njp","seljs"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
@@ -1855,11 +1980,24 @@ window.addEventListener("scroll", function(){
   const h = document.documentElement.scrollHeight - window.innerHeight;
   const b = document.getElementById("prog");
   if(b) b.style.width = (h > 8 ? Math.min(100, (y / h) * 100) : 0) + "%";
+  majHauteurEntete();
+  setTimeout(majHauteurEntete, 300);   // l'en-tête met .25 s à se compacter
   // Les listes de sorties et de randos font plusieurs écrans : au-delà de 600 px,
   // remonter ne doit pas obliger à changer d'onglet.
   const ht = document.getElementById("haut");
   if(ht) ht.hidden = y < 600;
 }, {passive:true});
+/* La barre de filtres est collante sous l'en-tête, qui se compacte au défilement :
+   sa hauteur est publiée en variable CSS plutôt que figée, sinon on aurait tantôt un
+   trou tantôt un recouvrement. */
+let hEntete = 0;
+function majHauteurEntete(){
+  const e = document.querySelector("header");
+  if(!e) return;
+  const h = e.offsetHeight;
+  if(h !== hEntete){ hEntete = h; document.documentElement.style.setProperty("--h-entete", h + "px"); }
+}
+window.addEventListener("resize", majHauteurEntete, {passive:true});
 function majNav(){
   document.querySelectorAll("nav button").forEach(function(b){
     const actif = b.dataset.vue === vue;
@@ -2029,6 +2167,12 @@ function ajouterMembre(){
     put("mb", mb.concat([{id:id, n:t, e:MOJIS[mb.length % MOJIS.length]}]));
   } else { rendre(); }
 }
+/* La recherche filtre à la frappe. `rendre()` préserve la valeur, le focus et le curseur
+   du champ #rech (cf. sa liste de saisies) : sans ça, la synchro périodique viderait la
+   recherche en cours et fermerait le clavier — le bug corrigé en v1.7.1 sur les missions. */
+document.addEventListener("input", function(ev){
+  if(ev.target && ev.target.id === "rech" && FILTRE[vue]){ FILTRE[vue].q = ev.target.value || ""; rendre(); }
+});
 document.addEventListener("change", function(ev){
   const el = ev.target;
   if(!el || !el.dataset) return;
@@ -2090,6 +2234,9 @@ document.addEventListener("click", function(ev){
     }
   }
   else if(a==="ftri"){ fvTri = v; rendre(); }
+  else if(a==="fcat"){ const f = FILTRE[vue]; f.cat[v] = !f.cat[v]; rendre(); }
+  else if(a==="fcrit"){ const f = FILTRE[vue]; f.crit[v] = !f.crit[v]; rendre(); }
+  else if(a==="fraz"){ FILTRE[vue] = {q:"", cat:{}, crit:{}}; rendre(); }
   else if(a==="pjopen"){ ouvertAjoutPJ = !ouvertAjoutPJ; rendre(); }
   else if(a==="pjadd"){ ajouterAuProgramme(); }
   else if(a==="pjtxt"){ ajouterProgrammeLibre(); }
@@ -2203,6 +2350,7 @@ function feteMission(ev, texte, auto){
 /* ================= DÉMARRAGE ================= */
 poseLegende();
 majNav();
+majHauteurEntete();
 majReveil();      // arme le bandeau de réveil : il ne s'affichera qu'au bout de 4 s
 rendre();
 sync();
