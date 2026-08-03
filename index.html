@@ -487,6 +487,36 @@ nav button .ic{font-size:18px}
 nav button.actif{color:var(--encre)}
 nav button.actif .ic{transform:translateY(-2px)}
 nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0);background:var(--soleil)}
+/* ---- impression ----
+   Le Bilan est le souvenir du séjour, et le programme d'une journée s'affiche bien
+   dans le mobil-home. Tout ce qui sert à naviguer disparaît ; les liens se déplient
+   en note pour rester lisibles sur papier. */
+@media print{
+  @page{margin:14mm}
+  html,body{background:#FFFFFF;color:#000000;font-size:11pt;line-height:1.35}
+  body{padding:0}
+  body::before,#prog,#haut,nav,#toasts,#reveil,.filtres,.meteo,.aj,.pj-plus,.danger,
+  .s-act,.lg-x,.js-p,.mbr-x,#carte,.score .bar,.tri,.cfx{display:none!important}
+  .dt-in::-webkit-calendar-picker-indicator{display:none}
+  header{position:static;box-shadow:none;background:#FFFFFF;color:#000000;background-image:none;
+    border-bottom:2px solid #000000;padding:0 0 6px}
+  .badge-sync,.prochain{display:none}
+  main{max-width:none;padding:0}
+  .fiche{break-inside:avoid;page-break-inside:avoid;border:1px solid #999999;box-shadow:none;
+    border-radius:0;margin:0 0 8mm;padding:5mm}
+  #app>section.fiche:first-of-type::before{display:none}
+  .fiche>h2{break-after:avoid;page-break-after:avoid}
+  .cat-t{position:static;background:none;break-after:avoid;page-break-after:avoid}
+  .grille{display:block}
+  .ligne,.bl,.mi,.fv{break-inside:avoid;page-break-inside:avoid}
+  .note{background:none;border:1px solid #CCCCCC}
+  .chip{border:1px solid #000000;background:none!important;color:#000000!important}
+  .ca-cb,.mi button.cb{border:1px solid #000000;background:none}
+  .dt-in{border:none;padding:0}
+  /* Les liens ne se touchent pas sur papier : on écrit leur adresse. */
+  .s-det a[href^="http"]::after,.lien[href^="http"]::after{content:" (" attr(href) ")";font-size:8pt;color:#555555;word-break:break-all}
+}
+
 /* ---- mode nuit ----
    Automatique : il suit le réglage du téléphone. Pas de bouton — l'invariant « aucun
    stockage navigateur » interdit de mémoriser un choix, et le ranger dans l'état
