@@ -353,8 +353,26 @@ main{max-width:760px;margin:0 auto;padding:14px}
   font-weight:800;font-size:13px;background:var(--craie);transition:background .2s,border-color .2s}
 .pj-plus.on{background:var(--encre);color:var(--craie);border-style:solid}
 
+/* ---- matière ----
+   Grain de papier : un bruit fractal en SVG inline (aucune requête, ~300 octets) posé
+   en voile fixe. C'est lui qui donne au « papier crème » sa matière — jusqu'ici, un
+   aplat parfaitement lisse. Sous l'en-tête et la barre d'onglets, au-dessus du reste. */
+body::before{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='.05'/%3E%3C/svg%3E")}
+
 /* ---- défilement & transitions modernes ---- */
 html{scroll-behavior:smooth}
+/* Cocher barre le texte en fondu plutôt que d'un coup. */
+.ligne>div,.mi,.bl,.fv{transition:opacity .25s ease}
+.ca-cb,.mi button.cb,.b-fait,.b-want{transition:background-color .2s ease,border-color .2s ease,color .2s ease}
+/* Pastille du jour : petit ressort à la sélection. */
+.jour{transition:transform .25s cubic-bezier(.3,1.5,.5,1),background-color .2s ease}
+.jour.actif{transform:translateY(-2px) scale(1.04)}
+/* Transition de vue native quand le navigateur la propose. Le fondu #app.swap reste
+   le repli, et rien ne se déclenche en animations réduites. */
+@media (prefers-reduced-motion:no-preference){
+  ::view-transition-old(root),::view-transition-new(root){animation-duration:.28s}
+}
 #prog{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--soleil);
   border-radius:0 var(--r0) var(--r0) 0;transition:width .12s linear;box-shadow:0 0 8px rgba(255,184,0,.7)}
 header{transition:padding .25s ease, box-shadow .25s ease}
@@ -504,6 +522,8 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
   .mk{background:#FFFFFF}
   .mkstep{border-color:#FFFFFF}
   #map{border-color:var(--trait)}
+  /* Le grain de papier n'a pas de sens sur fond sombre : il y lit comme du bruit. */
+  body::before{display:none}
 }
 </style>
 </head>
@@ -2177,13 +2197,27 @@ function cascadeOuverture(){
 }
 /* Animation d'entrée : uniquement au changement d'onglet, jamais sur un
    simple rafraîchissement de synchro (sinon la page clignoterait). */
+/* Transition de vue native, seulement là où l'appelant n'a pas besoin du DOM tout de
+   suite : le changement d'onglet. Ailleurs — ouverture d'une fiche suivie d'un
+   scrollIntoView, tests — `rendre()` doit rester synchrone, et l'est. */
+let transitionEnCours = false;
+function avecTransition(f){
+  const reduit = window.matchMedia && window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+  if(reduit || !document.startViewTransition){ f(); return; }
+  transitionEnCours = true;
+  const t = document.startViewTransition(f);
+  const fin = function(){ transitionEnCours = false; };
+  if(t && t.finished && t.finished.then) t.finished.then(fin, fin); else fin();
+}
 function animerEntree(change){
   const app = document.getElementById("app");
   if(!ouvertureFaite){ ouvertureFaite = true; cascadeOuverture(); return; }
   if(!change || vue === "carte") return;
-  app.classList.remove("swap");
-  void app.offsetWidth;
-  app.classList.add("swap");
+  if(!transitionEnCours){          // la transition native fait déjà le fondu
+    app.classList.remove("swap");
+    void app.offsetWidth;
+    app.classList.add("swap");
+  }
   if(!("IntersectionObserver" in window)) return;
   const cartes = app.querySelectorAll(".fiche, article.sortie");
   if(!cartes.length) return;
@@ -2425,7 +2459,7 @@ document.addEventListener("keydown", function(ev){
 });
 document.addEventListener("click", function(ev){
   const nb = ev.target.closest("nav button");
-  if(nb){ vue = nb.dataset.vue; majNav(); rendre(); window.scrollTo({top:0, behavior:"smooth"}); return; }
+  if(nb){ vue = nb.dataset.vue; majNav(); avecTransition(rendre); window.scrollTo({top:0, behavior:"smooth"}); return; }
   const el = ev.target.closest("[data-act]");
   if(!el) return;
   const a = el.dataset.act, v = el.dataset.v;
