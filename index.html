@@ -143,7 +143,9 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .mi button.cb{width:30px;height:30px;border:2px solid var(--encre);border-radius:9px;flex-shrink:0;font-size:16px;font-weight:800}
 .mi.done{opacity:.55;text-decoration:line-through}
 .mi-lie{display:block;font-size:11px;color:var(--sapin);font-weight:700;text-decoration:none}
-.jsc{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:13px}
+.jsc{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px}
+.jsc-ok{opacity:.75}
+.jsc-ok .jsb i{background:var(--soleil)}
 .jsc>span:first-child{flex:0 0 auto;white-space:nowrap}
 .jsb{flex:1;height:9px;border:2px solid var(--encre);border-radius:9px;overflow:hidden;background:var(--craie)}
 .jsb i{display:block;height:100%;background:var(--sapin);transition:width .5s ease}
@@ -666,13 +668,6 @@ const JSEUILS = {
   13:{f:jeuxDiff, n:20, lb:"jeux différents", c:"d"},
   14:{f:jeuxParties, n:30, lb:"parties jouées", c:"p"},
 };
-/* Palier en cours d'un compteur : le premier non atteint, sinon le dernier. */
-function jalonCourant(c){
-  const idx = Object.keys(JSEUILS).filter(function(i){ return JSEUILS[i].c === c; })
-    .sort(function(a,b){ return JSEUILS[a].n - JSEUILS[b].n; });
-  for(let k = 0; k < idx.length; k++){ if(JSEUILS[idx[k]].f() < JSEUILS[idx[k]].n) return idx[k]; }
-  return idx[idx.length - 1];
-}
 /* Reprise des jeux déjà cochés avant l'arrivée du compteur. Motif volontairement étroit :
    mieux vaut en oublier deux (l'ajout manuel reste là) que compter une partie de piscine.
    Écarte donc « Jeux musicaux piscine », « Grand jeu aquatique », « Jeux en ligne »… */
@@ -1578,11 +1573,16 @@ function optionsMission(){
 function vueJeux(){
   const l = jeux();
   const rep = jeuxDejaCoches();
+  // Une jauge par palier, groupées par compteur : chacun voit où il en est des quatre.
   const jauge = function(i){
-    const s = JSEUILS[i], v = s.f(), pc = Math.min(100, Math.round(v * 100 / s.n));
-    return '<div class="jsc"><span><b>' + v + ' / ' + s.n + '</b> ' + s.lb + '</span>' +
+    const s = JSEUILS[i], v = s.f(), atteint = v >= s.n, pc = Math.min(100, Math.round(v * 100 / s.n));
+    return '<div class="jsc' + (atteint ? " jsc-ok" : "") + '"><span>' + (atteint ? "✅ " : "") +
+      '<b>' + v + ' / ' + s.n + '</b> ' + s.lb + '</span>' +
       '<span class="jsb"><i style="width:' + pc + '%"></i></span></div>';
   };
+  const jauges = Object.keys(JSEUILS)
+    .sort(function(a,b){ return JSEUILS[a].c.localeCompare(JSEUILS[b].c) || JSEUILS[a].n - JSEUILS[b].n; })
+    .map(jauge).join("");
   const li = l.map(function(j){
     return '<div class="ligne js-l">' +
       '<div class="js-b"><input class="js-nom" id="jsn-' + j.id + '" data-act="jsnom" data-v="' + j.id + '" maxlength="40"' +
@@ -1596,7 +1596,7 @@ function vueJeux(){
   const tous = Object.keys(JSEUILS).every(function(i){ return JSEUILS[i].f() >= JSEUILS[i].n; });
   return '<section class="fiche"><h2>🎲 Jeux de société <span class="badge' + (tous ? " ok" : "") + '">' +
       jeuxDiff() + ' · ' + jeuxParties() + '</span></h2>' +
-    jauge(jalonCourant("d")) + jauge(jalonCourant("p")) +
+    jauges +
     (li || '<div class="note">Rien de joué pour l\'instant. Tape le nom d\'un jeu : il compte pour un jeu différent et une première partie.</div>') +
     // Menu des jeux déjà enregistrés : une partie de plus sans ressaisir le nom,
     // donc sans risquer « Uno » / « UNO » / « uno » en trois entrées.
