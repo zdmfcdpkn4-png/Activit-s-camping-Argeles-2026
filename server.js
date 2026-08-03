@@ -87,6 +87,20 @@ const server = createServer(async (req, res) => {
       return json(res, 200, cur);
     } catch (e) { return json(res, 502, { error: "base injoignable : " + (e && e.message) }); }
   }
+  // Icônes : servies en fichiers plutôt qu'en data URI — iOS ignore les data URI
+  // pour apple-touch-icon, or c'est là que l'icône compte le plus (écran d'accueil).
+  const ICONES = {
+    "/icone.svg": "image/svg+xml",
+    "/icone-180.png": "image/png",
+    "/icone-512.png": "image/png",
+  };
+  if (ICONES[u.pathname]) {
+    try {
+      const bin = await readFile(new URL("." + u.pathname, import.meta.url));
+      res.writeHead(200, { "Content-Type": ICONES[u.pathname], "Cache-Control": "public, max-age=86400" });
+      return res.end(bin);
+    } catch (e) { return json(res, 404, { error: "icône introuvable" }); }
+  }
   if (u.pathname === "/" || u.pathname === "/index.html") {
     try {
       const html = await readFile(new URL("./index.html", import.meta.url));

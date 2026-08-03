@@ -8,7 +8,7 @@ Appli familiale partagée : planning des animations du camping (toujours **en ex
 2. **GitHub** : dépôt privé déjà poussé (la valeur de `TRIP` est dans le code : garder le dépôt privé).
 3. **Render** : dashboard.render.com → New + → **Blueprint** → sélectionner le dépôt (le fichier `render.yaml` fait le reste) → renseigner la variable `DATABASE_URL` avec l'URL copiée → Apply. Sans Blueprint : New + → Web Service → runtime Node → Build command `npm install` → Start command `node server.js` → même variable. **Même région que la base** pour pouvoir utiliser l'URL interne ; sinon prendre l'External Database URL (TLS géré automatiquement).
 4. **Sécurité minimale** : `TRIP` a déjà été remplacé dans `index.html` par une chaîne aléatoire (`openssl rand -hex 16`). En cas de fuite de l'URL + du code, regénérer une valeur et pousser (Render redéploie seul, l'état repart de zéro pour le nouveau `TRIP`).
-5. Partager l'URL Render à la famille (l'ajouter à l'écran d'accueil du téléphone = effet appli).
+5. Partager l'URL Render à la famille (l'ajouter à l'écran d'accueil du téléphone = effet appli, avec l'icône du QG : deux sommets, un soleil et une tente).
 
 ## Limites connues
 - **Plan gratuit Render : le service s'endort** après inactivité → premier chargement de la journée en ~30-60 s. Acceptable en usage famille ; sinon plan payant, ou variante Vercel (le front est compatible avec l'`api/sync.js` du dépôt roadbook — même contrat `{state:{clé:{v,t}}, resetAt}`).
