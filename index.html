@@ -37,6 +37,7 @@
   --miel:#FFF4D6;              /* fond des encadrés d'aide */
   --encre-2:#39506F;           /* aplats sur l'en-tête sombre */
   --encre-nuit:#3B2A4A;        /* dégradé du bandeau de palier */
+  --alerte:#FDE7E0;            /* fond d'un bandeau d'alerte */
   --or-fonce:#8a6a00;          /* texte sur fond soleil clair */
   /* — couleurs de catégorie : source unique, lue aussi par la carte Leaflet — */
   --cat-G:var(--sapin);        /* ⛰️ Grands sites */
@@ -97,6 +98,14 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .jour small{font-weight:600;font-size:10px;opacity:.7}
 .jour.actif{background:var(--soleil);box-shadow:var(--om-actif)}
 .jour .pt{font-size:10px;line-height:1}
+/* Jour réel vs jour consulté : deux informations distinctes. Le jaune dit « c'est ce
+   que tu regardes », le liseré braise dit « on est aujourd'hui ». Les jours passés
+   s'effacent — sauf celui qu'on a ouvert exprès. */
+.jour{position:relative}
+.jour.passe{opacity:.55}
+.jour.passe.actif{opacity:1}
+.jour.auj{border-color:var(--braise)}
+.jour.auj small{color:var(--braise);opacity:1;font-weight:800}
 
 /* ---- chips horaires ---- */
 .ligne{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px dotted var(--trait);font-size:14px}
@@ -329,10 +338,22 @@ nav button.actif::after{animation:onglet .3s cubic-bezier(.2,.7,.3,1)}
 .lien:last-child{border-bottom:none}
 .danger{margin-top:12px;width:100%;min-height:48px;border:2px solid var(--braise);color:var(--braise);border-radius:var(--r2);font-weight:800}
 
+/* ---- bandeau de réveil du serveur ---- */
+#reveil{max-width:760px;margin:10px auto 0;padding:9px 12px;font-size:13px;
+  background:var(--miel);border:1px dashed var(--soleil);border-radius:var(--r2)}
+#reveil.off{background:var(--alerte);border-color:var(--braise);border-style:solid}
+
+/* ---- retour en haut ---- */
+#haut{position:fixed;right:14px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:55;
+  width:46px;height:46px;border-radius:var(--rp);background:var(--encre);color:var(--craie);
+  font-size:20px;font-weight:800;line-height:1;border:2px solid var(--craie);box-shadow:var(--om-flot)}
+
 /* ---- barre d'onglets ---- */
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--craie);border-top:2px solid var(--encre);z-index:60;padding-bottom:env(safe-area-inset-bottom)}
 .n-in{max-width:760px;margin:0 auto;display:flex}
-nav button{flex:1;min-height:64px;font-size:9px;font-weight:700;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;color:var(--texte-3)}
+/* Huit onglets sur 390 px : 10 px de libellé tient si on interdit le retour à la ligne
+   et qu'on resserre l'interlettrage. 9 px passait sous le seuil lisible. */
+nav button{flex:1;min-width:0;min-height:64px;font-size:10px;font-weight:700;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;color:var(--texte-3);white-space:nowrap;letter-spacing:-.2px;padding:0 1px}
 nav button .ic{font-size:18px}
 nav button.actif{color:var(--encre)}
 nav button.actif .ic{transform:translateY(-2px)}
@@ -346,7 +367,7 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
       <div class="h-t">🏕️ Le QG des vacances</div>
       <div class="h-s">Argelès-Gazost · 25 juil → 8 août 2026</div>
     </div>
-    <span class="badge-sync" id="sync">sync…</span>
+    <span class="badge-sync" id="sync" role="status" aria-live="polite">sync…</span>
   </div>
   <div id="prog"></div>
   <div class="score">
@@ -357,6 +378,7 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
 </header>
 
 <div id="toasts" aria-live="polite"></div>
+<div id="reveil" hidden role="status"></div>
 <main id="app"></main>
 
 <div id="carte" hidden>
@@ -365,7 +387,9 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
   <div class="legende" id="legende"></div>
 </div>
 
-<nav><div class="n-in">
+<button id="haut" hidden data-act="haut" aria-label="Revenir en haut de la page">↑</button>
+
+<nav aria-label="Sections du QG"><div class="n-in">
   <button data-vue="jour" class="actif"><span class="ic">📅</span>Semaine</button>
   <button data-vue="sorties"><span class="ic">🏔️</span>Sorties</button>
   <button data-vue="carte"><span class="ic">🗺️</span>Carte</button>
@@ -910,7 +934,9 @@ function chargePhoto(o){
 }
 
 function defJour(){
-  const d = new Date(); const iso = d.toISOString().slice(0,10);
+  // dateDe() lit l'heure locale. toISOString() donnait la date UTC : entre minuit et
+  // 2 h du matin (UTC+2 l'été), l'app s'ouvrait sur la veille.
+  const iso = dateDe();
   return DAYS.includes(iso) ? iso : DAYS[0];
 }
 function soireesDe(d){
@@ -1034,9 +1060,32 @@ async function sync(){
       method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify(ST)});
     if(!r.ok) throw new Error(r.status);
-    fusion(await r.json()); enLigne = true;
+    fusion(await r.json()); enLigne = true; premierSyncFait = true;
   }catch(e){ enLigne = false; }
-  majSync(); rendre();
+  majSync(); majReveil(); rendre();
+}
+/* Tant que le premier échange n'a pas abouti, la page affiche l'état vide : score à 0,
+   rien de coché. Sans un mot, on croit que tout a été perdu — or c'est le plan gratuit
+   Render qui réveille sa base. Le bandeau n'apparaît qu'au bout de 4 s, pour ne pas
+   clignoter quand tout va vite. */
+let premierSyncFait = false;
+function majReveil(){
+  const el = document.getElementById("reveil");
+  if(!el) return;
+  if(premierSyncFait){ el.hidden = true; return; }
+  if(enLigne === false){
+    el.className = "off";
+    el.textContent = "📵 Serveur injoignable pour l’instant. Ce que vous cochez reste sur cet appareil et partira dès qu’il répond.";
+    el.hidden = false;
+  } else if(!el.dataset.armed){
+    el.dataset.armed = "1";
+    setTimeout(function(){
+      if(premierSyncFait) return;
+      el.className = "";
+      el.textContent = "⏳ Réveil du serveur… vos coches arrivent. Le plan gratuit met la base en veille : comptez jusqu’à une minute.";
+      el.hidden = false;
+    }, 4000);
+  }
 }
 function planifSync(){ clearTimeout(timerSync); timerSync = setTimeout(sync, 800); }
 setInterval(function(){ if(document.visibilityState === "visible") sync(); }, 15000);
@@ -1202,10 +1251,14 @@ function vueProgramme(){
 }
 function vueJour(){
   const d = new Date(jourSel + "T12:00:00");
+  const auj = dateDe();
   const pills = DAYS.map(function(iso){
     const dd = new Date(iso + "T12:00:00");
     const met = val("met:"+iso,"");
-    return '<button class="jour' + (iso===jourSel?" actif":"") + '" data-act="jour" data-v="' + iso + '">' +
+    // les dates ISO se comparent comme des chaînes : l'ordre alphabétique est chronologique
+    const cl = "jour" + (iso===jourSel?" actif":"") + (iso===auj?" auj":"") + (iso<auj?" passe":"");
+    return '<button class="' + cl + '" data-act="jour" data-v="' + iso + '"' +
+      (iso===jourSel?' aria-current="date"':"") + (iso===auj?' title="Aujourd’hui"':"") + '>' +
       '<small>' + JSEM[dd.getDay()] + '</small>' + dd.getDate() +
       '<span class="pt">' + (met ? METEO[met].ic : "&nbsp;") + '</span></button>';
   }).join("");
@@ -1244,7 +1297,7 @@ function vueJour(){
     '<span class="n">' + soir.length + ' rendez-vous ' + (openS?"▾":"▸") + '</span></button>' +
     (openS ? lignes(soir, {d:jourSel, g:"s"}) : "");
   const note = NOTES[jourSel] ? '<div class="note">' + NOTES[jourSel] + '</div>' : "";
-  return '<div class="jours">' + pills + '</div>' + note +
+  return '<div class="jours" id="bandeJours">' + pills + '</div>' + note +
     '<section class="fiche"><h2>Aujourd\'hui on fait quoi ? <span style="text-transform:none;font-weight:600;font-size:12px">(' + JSEM[d.getDay()] + " " + d.getDate() + ')</span></h2>' +
     '<div class="meteo">' + meteoBtns + '</div>' + plan + '</section>' + vueProgramme() +
     '<section class="fiche"><h2>🏕️ Animations camping <span class="extra">toujours en extra ✨</span></h2>' + bloc +
@@ -1741,9 +1794,25 @@ function rendre(){
     if(el){ el.value = saisie.v; el.focus(); if(saisie.s !== null) try{ el.setSelectionRange(saisie.s, saisie.e); }catch(err){} }
   }
   animerEntree(change);
+  // La bande des jours ne se recentre qu'au changement de jour ou d'onglet : la synchro
+  // re-rend toutes les 15 s, et recentrer à chaque fois reprendrait la main sur le
+  // défilement horizontal de quelqu'un en train de lire.
+  if(vue === "jour" && (change || dernierJour !== jourSel)) centreBandeJours();
+  dernierJour = jourSel;
   majScore();
 }
+/* Amène le jour choisi au milieu de la bande. On écrit scrollLeft plutôt que d'appeler
+   scrollIntoView : la page est en scroll-behavior:smooth, et scrollIntoView sur un
+   enfant ferait aussi remonter la page entière. */
+function centreBandeJours(){
+  const bande = document.getElementById("bandeJours");
+  const actif = bande && bande.querySelector(".jour.actif");
+  if(!actif) return;
+  const b = bande.getBoundingClientRect(), a = actif.getBoundingClientRect();
+  bande.scrollLeft += (a.left - b.left) - (b.width - a.width) / 2;
+}
 let derniereVue = null;
+let dernierJour = null;
 let ouvertureFaite = false;
 /* Cascade d'ouverture : au tout premier affichage, l'en-tête, la barre des jours,
    les cartes puis les onglets montent et se révèlent par paliers de 70 ms.
@@ -1786,9 +1855,19 @@ window.addEventListener("scroll", function(){
   const h = document.documentElement.scrollHeight - window.innerHeight;
   const b = document.getElementById("prog");
   if(b) b.style.width = (h > 8 ? Math.min(100, (y / h) * 100) : 0) + "%";
+  // Les listes de sorties et de randos font plusieurs écrans : au-delà de 600 px,
+  // remonter ne doit pas obliger à changer d'onglet.
+  const ht = document.getElementById("haut");
+  if(ht) ht.hidden = y < 600;
 }, {passive:true});
 function majNav(){
-  document.querySelectorAll("nav button").forEach(function(b){ b.classList.toggle("actif", b.dataset.vue === vue); });
+  document.querySelectorAll("nav button").forEach(function(b){
+    const actif = b.dataset.vue === vue;
+    b.classList.toggle("actif", actif);
+    // aria-current plutôt que le motif « tabs » complet : la barre navigue entre des
+    // sections, elle ne pilote pas des panneaux au sens ARIA.
+    if(actif) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
 }
 
 /* ================= INTERACTIONS ================= */
@@ -1976,7 +2055,8 @@ document.addEventListener("click", function(ev){
   const el = ev.target.closest("[data-act]");
   if(!el) return;
   const a = el.dataset.act, v = el.dataset.v;
-  if(a==="jour"){ jourSel = v; rendre(); }
+  if(a==="haut"){ window.scrollTo({top:0, behavior:"smooth"}); return; }
+  else if(a==="jour"){ jourSel = v; rendre(); }
   else if(a==="met"){ put("met:"+jourSel, val("met:"+jourSel,"")===v ? "" : v); }
   else if(a==="acc"){ put("acc:"+v, !val("acc:"+v, v==="e" || v==="s")); }
   else if(a==="done"){
@@ -2122,6 +2202,8 @@ function feteMission(ev, texte, auto){
 
 /* ================= DÉMARRAGE ================= */
 poseLegende();
+majNav();
+majReveil();      // arme le bandeau de réveil : il ne s'affichera qu'au bout de 4 s
 rendre();
 sync();
 </script>
