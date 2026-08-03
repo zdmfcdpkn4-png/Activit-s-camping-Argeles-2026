@@ -75,12 +75,19 @@
   /* Texte posé sur un aplat soleil. Le jaune ne change pas au thème sombre : son
      texte doit donc rester foncé, alors que --encre, lui, devient clair. */
   --sur-soleil:var(--encre);
+  /* — échelle typographique : trois tailles qui respirent avec l'écran — */
+  --t1:clamp(17px,4.4vw,20px);   /* titre du QG */
+  --t2:clamp(15px,3.8vw,17px);   /* titre de carte */
+  --t3:clamp(14px,3.6vw,15px);   /* nom d'une fiche */
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
 }
+/* Chiffres à chasse fixe partout où un nombre change sous les yeux : sans ça, les
+   compteurs et les scores se décalent d'un rendu à l'autre. */
+.chip,.badge,.f-cpt,.rk,.jour,.js-n,.fv-n,.synth b,#scoretxt,.dt-in,.s-meta{font-variant-numeric:tabular-nums}
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{font-family:var(--sans);background:var(--papier);color:var(--encre);line-height:1.45;padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+body{font-family:var(--sans);background:var(--papier);color:var(--encre);line-height:1.5;padding-bottom:calc(100px + env(safe-area-inset-bottom))}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 :focus-visible{outline:3px solid var(--braise);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -88,7 +95,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 /* ---- entête fanion ---- */
 header{position:sticky;top:0;z-index:50;background:var(--sombre);color:var(--sur-sombre);padding:10px 14px;box-shadow:var(--om-entete)}
 .h-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px;justify-content:space-between}
-.h-t{font-weight:800;font-size:18px;letter-spacing:.3px}
+.h-t{font-weight:800;font-size:var(--t1);line-height:1.25;letter-spacing:.2px}
 .h-s{font-size:12px;opacity:.85}
 .badge-sync{font-size:11px;font-family:var(--mono);padding:4px 8px;border-radius:var(--rp);background:var(--encre-2);white-space:nowrap}
 .badge-sync.ok,.badge-sync.off{color:var(--craie)}
@@ -102,7 +109,7 @@ header{position:sticky;top:0;z-index:50;background:var(--sombre);color:var(--sur
 main{max-width:760px;margin:0 auto;padding:14px}
 .fiche{position:relative;background:var(--craie);border:2px solid var(--encre);border-radius:var(--r3);
   box-shadow:var(--om2);padding:14px;margin:18px 0}
-.fiche>h2{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+.fiche>h2{font-size:var(--t2);font-weight:800;line-height:1.25;text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px}
 .fiche::before{content:"";position:absolute;top:-10px;left:24px;width:74px;height:18px;background:var(--scotch);
   transform:rotate(-2deg);border-radius:var(--r0)}
 .note{font-size:13px;background:var(--miel);border:1px dashed var(--soleil);border-radius:var(--r1);padding:8px 10px;margin:8px 0}
@@ -136,7 +143,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .pub{display:flex;align-items:center;gap:8px;width:100%;padding:10px 4px;font-weight:800;font-size:14px;min-height:44px}
 .pub .n{margin-left:auto;font-size:12px;font-weight:600;opacity:.6}
 .extra{display:inline-block;background:var(--braise-t);color:var(--craie);font-size:10px;font-weight:800;
-  letter-spacing:.5px;padding:3px 8px;border-radius:var(--rp);transform:rotate(-2deg)}
+  letter-spacing:.7px;padding:3px 8px;border-radius:var(--rp);transform:rotate(-2deg)}
 
 /* ---- météo ---- */
 .meteo{display:flex;gap:8px;flex-wrap:wrap}
@@ -167,7 +174,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .f-vide p{font-size:14px;margin:8px 0 12px;color:var(--texte-2)}
 
 /* ---- sorties ---- */
-.cat-t{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--texte-3);margin:18px 4px 6px}
+.cat-t{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--texte-3);margin:18px 4px 6px}
 /* Liseré de catégorie : la même couleur que le repère sur la carte et que la légende. */
 .sortie.cat{border-left:7px solid var(--cat)}
 .cat-t.cat{border-left:5px solid var(--cat);padding-left:8px;color:var(--cat)}
@@ -179,7 +186,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .sortie{background:var(--craie);border:2px solid var(--encre);border-radius:var(--r3);box-shadow:var(--om1);padding:12px;margin:10px 0}
 .sortie.fait{opacity:.62;background:var(--surface-fait)}
 .s-top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
-.s-nom{font-weight:800;font-size:15px}
+.s-nom{font-weight:800;font-size:var(--t3);line-height:1.25;letter-spacing:-.1px}
 .s-meta{font-size:12px;font-family:var(--mono);color:var(--texte-2)}
 .s-pre{font-size:13px;margin:6px 0}
 .s-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
@@ -1198,7 +1205,7 @@ function majReveil(){
     setTimeout(function(){
       if(premierSyncFait) return;
       el.className = "";
-      el.textContent = "⏳ Réveil du serveur… vos coches arrivent. Le plan gratuit met la base en veille : comptez jusqu’à une minute.";
+      el.textContent = "⏳ Réveil du serveur… vos coches arrivent. Le plan gratuit met la base en veille : comptez jusqu’à une minute.";
       el.hidden = false;
     }, 4000);
   }
@@ -1241,7 +1248,7 @@ function majScore(){
   if(dernierNiveau !== null && n[1] !== dernierNiveau){
     setTimeout(function(){
       fete(null, ["🏆","🎊","✨","🎉"], 22);
-      toast("🏆 Nouveau niveau : " + n[1], "la famille grimpe — " + s + " points", "niv", 3400);
+      toast("🏆 Nouveau niveau : " + n[1], "la famille grimpe — " + s + " points", "niv", 3400);
     }, 320);
   }
   dernierNiveau = n[1];
@@ -1277,7 +1284,7 @@ function ligneCA(a, pref, marque, titre){
     '</div>';
 }
 function lignes(arr, pref){
-  if(!arr.length) return '<div class="ligne" style="opacity:.55">— rien d\'affiché —</div>';
+  if(!arr.length) return '<div class="ligne" style="opacity:.55">— rien d’affiché —</div>';
   return arr.map(function(a){ return ligneCA(a, pref); }).join("");
 }
 /* Ligne d'idée ou d'activité ajoutée : zone tactile vers la fiche + case « réalisée ». */
@@ -1349,7 +1356,7 @@ function vueProgramme(){
       '<button class="ca-cb' + (fait?" on":"") + '" data-act="ca" data-v="' + cle + '" aria-label="marquer réalisée">' + (fait?"✓":"") + '</button>' +
       '</div>';
   }).join("");
-  if(!corps) corps = '<div class="note">Rien d\'ajouté pour ce jour : choisis une sortie ou une rando dans la liste, ou écris ton idée.</div>';
+  if(!corps) corps = '<div class="note">Rien d’ajouté pour ce jour : choisis une sortie ou une rando dans la liste, ou écris ton idée.</div>';
   const dejaPose = {};
   const dejaJeu = {};
   items.forEach(function(it){ if(it.x) dejaPose[it.x] = 1; else if(it.j) dejaJeu[it.j] = 1; });
@@ -1374,7 +1381,7 @@ function vueProgramme(){
         '<button data-act="pjadd">+</button></div>' +
       '<div class="aj"><input id="npj" maxlength="80" placeholder="Ou une activité à nous…"><button data-act="pjtxt">+</button></div>' +
       '<div class="aj"><input id="njp" maxlength="40" placeholder="🎲 Un jeu de société joué…"><button data-act="pjjeu">+</button></div>' +
-      '<div class="note" style="margin-top:10px">La liste ne propose que ce qui n\'est ni déjà suggéré aujourd\'hui ni déjà réalisé. Tout se coche et part dans le 🏆 Bilan.</div>'
+      '<div class="note" style="margin-top:10px">La liste ne propose que ce qui n’est ni déjà suggéré aujourd’hui ni déjà réalisé. Tout se coche et part dans le 🏆 Bilan.</div>'
     : "";
   return '<section class="fiche"><h2>🎯 Notre programme du jour <span class="badge">' + items.length + '</span></h2>' + corps +
     '<button class="pj-plus' + (ouvertAjoutPJ?" on":"") + '" data-act="pjopen">' +
@@ -1404,8 +1411,8 @@ function vueJour(){
     plan = '<div class="note">💡 ' + M.tip + '</div>' + (restants.length ? restants.map(function(id){
       const t = trouveIdee(id);
       return t ? ligneIdee(t.o, t.rando) : "";
-    }).join("") : '<div class="note">🎉 Toutes les idées de ce créneau sont déjà faites — direction l\'onglet 🏆 Bilan !</div>') +
-      '<div class="note" style="margin-top:8px">👆 Touche une idée pour ouvrir sa fiche · ✅ coche-la quand c\'est fait (🥾 = rando).</div>';
+    }).join("") : '<div class="note">🎉 Toutes les idées de ce créneau sont déjà faites — direction l’onglet 🏆 Bilan !</div>') +
+      '<div class="note" style="margin-top:8px">👆 Touche une idée pour ouvrir sa fiche · ✅ coche-la quand c’est fait (🥾 = rando).</div>';
   } else {
     plan = '<div class="note">Choisis la météo du jour ci-dessus → le QG propose le bon plan (partagé avec toute la famille).</div>';
   }
@@ -1436,10 +1443,10 @@ function vueJour(){
   }
   const note = NOTES[jourSel] ? '<div class="note">' + NOTES[jourSel] + '</div>' : "";
   return '<div class="jours" id="bandeJours">' + pills + '</div>' + note +
-    '<section class="fiche"><h2>Aujourd\'hui on fait quoi ? <span style="text-transform:none;font-weight:600;font-size:12px">(' + JSEM[d.getDay()] + " " + d.getDate() + ')</span></h2>' +
+    '<section class="fiche"><h2>Aujourd’hui on fait quoi ? <span style="text-transform:none;font-weight:600;font-size:12px">(' + JSEM[d.getDay()] + " " + d.getDate() + ')</span></h2>' +
     '<div class="meteo">' + meteoBtns + '</div>' + plan + '</section>' + vueProgramme() +
     '<section class="fiche"><h2>🏕️ Animations camping <span class="extra">toujours en extra ✨</span></h2>' + bloc +
-    '<div class="note" style="margin-top:10px">Rappels : rien pour personne entre 12h30 et 16h (piscine !) · présence à l\'heure de début exigée · l\'appli Yelloh! fait foi.</div></section>';
+    '<div class="note" style="margin-top:10px">Rappels : rien pour personne entre 12h30 et 16h (piscine !) · présence à l’heure de début exigée · l’appli Yelloh! fait foi.</div></section>';
 }
 /* Fil chronologique : les mêmes lignes que les trois accordéons et les soirées, fondues
    en une seule frise horaire. Rien n'est retiré ni déplacé — c'est une autre lecture. */
@@ -1544,7 +1551,7 @@ function vueSorties(){
     return passeFiltre(o, "sorties", o.n + " " + o.pf.join(" ") + " " + o.ds + " " + o.pre);
   });
   let html = '<section class="fiche"><h2>Compteur d’aventures</h2><div class="note">✅ ' + faits + ' / ' + SORTIES.length +
-    ' — 10 points par sortie faite. Touche une fiche pour ouvrir le détail : photo, accès, itinéraire, horaires, points forts. Vote pour tes envies dans l\'onglet ⭐ Favoris.</div></section>';
+    ' — 10 points par sortie faite. Touche une fiche pour ouvrir le détail : photo, accès, itinéraire, horaires, points forts. Vote pour tes envies dans l’onglet ⭐ Favoris.</div></section>';
   html += barreFiltres("sorties", CATS, liste.length, SORTIES.length);
   if(!liste.length) return html + rienTrouve();
   Object.keys(CATS).forEach(function(c){
@@ -1570,7 +1577,7 @@ function carteSortie(o){
       '<div class="s-bloc"><b>🕘 Horaires</b>' + esc(o.ho) + '</div>' +
       '<div class="s-bloc"><b>⏱ Durée idéale famille</b>' + esc(o.di) + '</div>' +
       '<div class="s-bloc"><b>✨ Points forts</b><div class="pf">' + pfs + '</div></div>' +
-      ((typeof img === "string") ? '<div style="font-size:10px;color:var(--texte-4);margin-top:4px">Photo : Wikimédia, chargée en ligne</div>' : "") +
+      ((typeof img === "string") ? '<div style="font-size:10px;color:var(--texte-4);margin-top:4px">Photo : Wikimédia, chargée en ligne</div>' : "") +
       '</div>';
   }
   return '<article id="s-' + o.id + '" class="sortie cat' + (done?" fait":"") + '" style="--cat:' + catCouleur(o.c) + '">' +
@@ -1587,8 +1594,8 @@ function carteSortie(o){
     (RANDOS.some(function(r){ return r.id===o.id; }) ? '<button class="b-iti" data-act="rando" data-v="' + o.id + '">🥾 Fiche rando détaillée</button>' : "") +
     (o.gm ? '<a class="b-iti" href="https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=' + encodeURIComponent(o.gm) + '" target="_blank" rel="noopener">🧭 Itinéraire</a>' : "") +
     (o.u ? '<a class="b-resa" href="' + o.u + '" target="_blank" rel="noopener">Réserver / infos</a>' : "") +
-    '<button class="b-want' + (want?" on":"") + '" data-act="want" data-v="' + o.id + '">' + (want?"⭐ Au programme":"☆ On y va ?") + '</button>' +
-    '<button class="b-fait' + (done?" on":"") + '" data-act="done" data-v="' + o.id + '">' + (done?"✓ Fait !":"C’est fait ?") + '</button>' +
+    '<button class="b-want' + (want?" on":"") + '" data-act="want" data-v="' + o.id + '">' + (want?"⭐ Au programme":"☆ On y va ?") + '</button>' +
+    '<button class="b-fait' + (done?" on":"") + '" data-act="done" data-v="' + o.id + '">' + (done?"✓ Fait !":"C’est fait ?") + '</button>' +
     '</div></article>';
 }
 /* ================= FAVORIS ================= */
@@ -1625,8 +1632,8 @@ function vueFavoris(){
   }).join("");
   let intro;
   if(!mb.length) intro = '<div class="note">👋 Ajoutez une fois les prénoms de la famille (partagés sur tous les téléphones), puis chacun touche le sien pour voter.</div>';
-  else if(!m0) intro = '<div class="note">👆 Touche ton prénom pour voter — à re-sélectionner après un rechargement, rien n\'est stocké sur l\'appareil.</div>';
-  else intro = '<div class="note">Tu votes en tant que <b>' + m0.e + " " + esc(m0.n) + '</b> : touche une activité pour ❤️ / retirer ton vote.</div>';
+  else if(!m0) intro = '<div class="note">👆 Touche ton prénom pour voter — à re-sélectionner après un rechargement, rien n’est stocké sur l’appareil.</div>';
+  else intro = '<div class="note">Tu votes en tant que <b>' + m0.e + " " + esc(m0.n) + '</b> : touche une activité pour ❤️ / retirer ton vote.</div>';
   const tri = '<div class="meteo tri">' +
     '<button data-act="ftri" data-v="votes" class="' + (fvTri==="votes"?"actif":"") + '">🏆 Par votes</button>' +
     '<button data-act="ftri" data-v="type" class="' + (fvTri==="type"?"actif":"") + '">🗂️ Par type</button></div>';
@@ -1650,7 +1657,7 @@ function vueFavoris(){
   const totalVotes = mb.reduce(function(t,m){
     return t + FAVLIST().filter(function(s){ return val("fav:" + m.id + ":" + s.id, false); }).length;
   }, 0);
-  return '<section class="fiche"><h2>👨‍👩‍👧‍👦 Qui vote ?</h2>' +
+  return '<section class="fiche"><h2>👨‍👩‍👧‍👦 Qui vote ?</h2>' +
     '<div class="mbrs">' + chips + '</div>' +
     '<div class="aj"><input id="nmb" maxlength="16" placeholder="Prénom à ajouter…"><button data-act="mbadd">+</button></div>' +
     intro + '</section>' +
@@ -1704,7 +1711,7 @@ function majCarte(){
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom:17, attribution:"© OpenStreetMap" }).addTo(carteObj);
     carteObj.fitBounds(L.latLngBounds(SORTIES.map(function(s){ return s.ll; }).concat([CAMPING.ll])).pad(0.06));
     L.marker(CAMPING.ll, { zIndexOffset:1000, icon: L.divIcon({ className:"", html:'<div class="mk mk-camp">🏕️</div>', iconSize:[36,36], iconAnchor:[18,18] }) })
-      .addTo(carteObj).bindPopup("<b>" + CAMPING.n + "</b><br>Le point de départ de toutes les aventures !");
+      .addTo(carteObj).bindPopup("<b>" + CAMPING.n + "</b><br>Le point de départ de toutes les aventures !");
     carteMarqueurs = L.layerGroup().addTo(carteObj);
   }
   // Une bulle est ouverte : on ne reconstruit pas les repères maintenant,
@@ -1797,13 +1804,13 @@ function carteRando(r){
     '<button class="b-iti" data-act="rmap" data-v="' + r.id + '">🗺️ Grande carte</button>' +
     (r.lien ? '<a class="b-resa" href="' + r.lien + '" target="_blank" rel="noopener">🔗 Tracé — ' + esc(r.liensrc) + '</a>' : "") +
     (SORTIES.some(function(s){ return s.id===r.id; }) ? '<button class="b-want" data-act="fiche" data-v="' + r.id + '">↔ Fiche sortie</button>' : "") +
-    '<button class="b-fait' + (done?" on":"") + '" data-act="done" data-v="' + r.id + '">' + (done?"✓ Faite !":"C’est fait ?") + '</button>' +
+    '<button class="b-fait' + (done?" on":"") + '" data-act="done" data-v="' + r.id + '">' + (done?"✓ Faite !":"C’est fait ?") + '</button>' +
     '</div></article>';
 }
 function vueRandos(){
   const faites = RANDOS.filter(function(r){ return val("done:"+r.id,false); }).length;
   let html = '<section class="fiche"><h2>🥾 Randos famille <span class="badge' + (faites===RANDOS.length?" ok":"") + '">' + faites + "/" + RANDOS.length + '</span></h2>' +
-    '<div class="note">Sélection ≤ 500 m de D+ et ≤ demi-journée, vérifiée en ligne le 26/07/2026 (source liée sur chaque fiche) — <b>[à vérifier]</b> = non recoupé. Réflexes : départ matinal, eau, kways, chaussures fermées ; 10 points par rando faite, votes ❤️ dans l’onglet Favoris.</div></section>';
+    '<div class="note">Sélection ≤ 500 m de D+ et ≤ demi-journée, vérifiée en ligne le 26/07/2026 (source liée sur chaque fiche) — <b>[à vérifier]</b> = non recoupé. Réflexes : départ matinal, eau, kways, chaussures fermées ; 10 points par rando faite, votes ❤️ dans l’onglet Favoris.</div></section>';
   const liste = RANDOS.filter(function(r){
     return passeFiltre(r, "randos", r.n + " " + r.int + " " + r.dep);
   });
@@ -1914,7 +1921,7 @@ function vueBilan(){
   const tout = realisations();
   if(!tout.length){
     return '<section class="fiche"><h2>🏆 Bilan du séjour</h2>' +
-      '<div class="note">Rien de coché pour l\'instant. Marque une activité comme réalisée depuis le planning (vue Semaine), une fiche Sortie ou Rando : elle apparaîtra ici, datée du jour, et sa mission éventuelle se cochera toute seule.</div></section>';
+      '<div class="note">Rien de coché pour l’instant. Marque une activité comme réalisée depuis le planning (vue Semaine), une fiche Sortie ou Rando : elle apparaîtra ici, datée du jour, et sa mission éventuelle se cochera toute seule.</div></section>';
   }
   const choisis = Object.keys(fBilan).filter(function(k){ return fBilan[k]; });
   const R = choisis.length ? tout.filter(function(r){ return fBilan[r.ty]; }) : tout;
@@ -2009,7 +2016,7 @@ function vueJeux(){
   return '<section class="fiche"><h2>🎲 Jeux de société <span class="badge' + (tous ? " ok" : "") + '">' +
       jeuxDiff() + ' · ' + jeuxParties() + '</span></h2>' +
     jauges +
-    (li || '<div class="note">Rien de joué pour l\'instant. Tape le nom d\'un jeu : il compte pour un jeu différent et une première partie.</div>') +
+    (li || '<div class="note">Rien de joué pour l’instant. Tape le nom d’un jeu : il compte pour un jeu différent et une première partie.</div>') +
     // Date de la partie : elle décide du jour où le jeu apparaît au planning et au Bilan.
     '<div class="aj js-dt"><label for="djs">📅 Partie jouée le</label>' +
       '<input id="djs" type="date" data-act="jsdate" value="' + dateJeuDef() + '"' +
@@ -2020,11 +2027,11 @@ function vueJeux(){
         '<option value="">Une partie de plus à…</option>' +
         l.map(function(j){ return '<option value="' + j.id + '">' + esc(j.n) + ' (' + j.p + ')</option>'; }).join("") +
       '</select><button data-act="jspart">+</button></div>' : "") +
-    '<div class="aj"><input id="njs" maxlength="40" placeholder="Nom d\'un nouveau jeu…"><button data-act="jsadd">+</button></div>' +
+    '<div class="aj"><input id="njs" maxlength="40" placeholder="Nom d’un nouveau jeu…"><button data-act="jsadd">+</button></div>' +
     (rep.length ? '<button class="pj-plus" data-act="jsimport">↻ Reprendre ' + rep.length + ' jeu' + (rep.length>1?"x":"") +
         ' déjà coché' + (rep.length>1?"s":"") + ' (' + rep.map(function(j){ return esc(j.n); }).join(", ") + ')</button>' : "") +
-    '<div class="note" style="margin-top:10px">Même jeu rejoué ? Prends-le dans la liste ci-dessus — une partie de plus, ' +
-      'pas un jeu de plus, et pas de « Uno » écrit trois façons. La partie est posée sur la <b>date choisie</b> : ' +
+    '<div class="note" style="margin-top:10px">Même jeu rejoué ? Prends-le dans la liste ci-dessus — une partie de plus, ' +
+      'pas un jeu de plus, et pas de « Uno » écrit trois façons. La partie est posée sur la <b>date choisie</b> : ' +
       'elle apparaît au planning de ce jour-là et dans le 🏆 Bilan.<br>' +
       'Les <b>−</b> et <b>+</b> de chaque ligne ne corrigent que le compteur, sans toucher au planning. ' +
       '✕ retire le jeu, et le nom se modifie directement.</div></section>';
@@ -2046,7 +2053,7 @@ function vueMissions(){
       '<option value="">Choisir dans les sorties, randos, planning…</option>' + optionsMission() + '</select>' +
       '<button data-act="maddsel">+</button></div>' +
     '<div class="aj"><input id="nm" maxlength="90" placeholder="Ou une mission à nous…"><button data-act="add">+</button></div>' +
-    '<div class="note" style="margin-top:10px">2 points par mission accomplie — cochée sur un téléphone, cochée pour tous.<br>Une mission choisie dans la liste se coche toute seule dès que l\'activité est marquée réalisée.</div></section>' +
+    '<div class="note" style="margin-top:10px">2 points par mission accomplie — cochée sur un téléphone, cochée pour tous.<br>Une mission choisie dans la liste se coche toute seule dès que l’activité est marquée réalisée.</div></section>' +
     vueJeux();
 }
 function vueInfos(){
@@ -2066,14 +2073,14 @@ function vueInfos(){
                 : '<div class="lien">' + x[0] + " " + esc(x[1]) + '</div>';
   }).join("");
   return '<section class="fiche"><h2>ℹ️ Liens & réflexes</h2>' + li + '</section>' +
-    '<section class="fiche"><h2>Règles d\'or</h2>' +
-    '<div class="ligne">🕘 Grosses sorties : départ avant 9h (parkings + orages d\'après-midi).</div>' +
-    '<div class="ligne">🏊 12h30-16h : créneau libre pour tous → piscine, sieste, départ différé.</div>' +
-    '<div class="ligne">🎭 Retour 17h30-18h les jours d\'excursion → activités famille + soirée.</div>' +
+    '<section class="fiche"><h2>Règles d’or</h2>' +
+    '<div class="ligne">🕘 Grosses sorties : départ avant 9h (parkings + orages d’après-midi).</div>' +
+    '<div class="ligne">🏊 12h30-16h : créneau libre pour tous → piscine, sieste, départ différé.</div>' +
+    '<div class="ligne">🎭 Retour 17h30-18h les jours d’excursion → activités famille + soirée.</div>' +
     '<div class="ligne">🧥 Une polaire chacun, même par 30 °C en vallée.</div>' +
     '<div class="ligne">💶 À 5 ans, le petit paie tarif enfant presque partout (gratuités < 4-5 ans).</div>' +
     '<button class="danger" data-act="raz">Tout remettre à zéro (appuyer 2×)</button>' +
-    '<div class="note" style="margin-top:10px">Données du 26/07/2026, consolidées avec le panneau « Explore & Discover » du camping · prix susceptibles d\'évoluer · [à vérifier] = non confirmé en ligne.</div></section>';
+    '<div class="note" style="margin-top:10px">Données du 26/07/2026, consolidées avec le panneau « Explore & Discover » du camping · prix susceptibles d’évoluer · [à vérifier] = non confirmé en ligne.</div></section>';
 }
 let razArme = 0;
 function rendre(){
@@ -2395,7 +2402,7 @@ document.addEventListener("click", function(ev){
     const nv = !val("done:"+v,false);
     const t = trouveIdee(v);
     coche("done:"+v, nv, null, v, false);
-    if(nv){ fete(ev, ["🎉","⛰️","☀️","✨","🥾"], 16); toast("🎉 " + (t ? esc(t.o.n) : "C\'est fait !"), "+10 pts au compteur famille"); pulseScore(); }
+    if(nv){ fete(ev, ["🎉","⛰️","☀️","✨","🥾"], 16); toast("🎉 " + (t ? esc(t.o.n) : "C’est fait !"), "+10 pts au compteur famille"); pulseScore(); }
   }
   else if(a==="ca"){
     const nv = !val(v,false);
@@ -2492,7 +2499,7 @@ document.addEventListener("click", function(ev){
   else if(a==="raz"){
     const now = Date.now();
     if(now - razArme < 4000){ ST = {state:{}, resetAt:now}; razArme = 0; rendre(); planifSync(); }
-    else { razArme = now; el.textContent = "Sûr ? Réappuyer pour confirmer"; setTimeout(function(){ el.textContent = "Tout remettre à zéro (appuyer 2×)"; }, 4000); }
+    else { razArme = now; el.textContent = "Sûr ? Réappuyer pour confirmer"; setTimeout(function(){ el.textContent = "Tout remettre à zéro (appuyer 2×)"; }, 4000); }
   }
 });
 /* Gerbe de confettis autour du point touché. */
@@ -2535,7 +2542,7 @@ function pulseScore(){
 }
 function feteMission(ev, texte, auto){
   fete(ev, ["🎉","🏅","✨","⭐","🎊"], 16);
-  toast((auto ? "🏅 Mission débloquée !" : "🎉 Mission accomplie !"), texte + " · +2 pts");
+  toast((auto ? "🏅 Mission débloquée !" : "🎉 Mission accomplie !"), texte + " · +2 pts");
   pulseScore();
 }
 
