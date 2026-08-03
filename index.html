@@ -178,6 +178,12 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .fv-n{font-family:var(--mono);font-weight:800;font-size:13px;background:var(--craie);border:2px solid #D8DCE5;border-radius:999px;padding:3px 9px;white-space:nowrap;flex-shrink:0}
 .fv-n.z{color:#8A96AB}
 .fv.mien .fv-n{background:var(--braise);border-color:var(--braise);color:var(--craie)}
+/* Tampon « FAIT » — encre de tampon usée, légèrement de travers. */
+.tampon{flex-shrink:0;font-family:var(--mono);font-weight:800;font-size:10px;letter-spacing:.14em;
+  color:var(--sapin);border:2px solid var(--sapin);border-radius:5px;padding:2px 5px;opacity:.72;
+  transform:rotate(-8deg);white-space:nowrap;line-height:1.1}
+.fv-fait .fv-nom{opacity:.62}
+.bl .tampon{font-size:9px;padding:1px 4px;margin-left:2px}
 
 /* ---- carte ---- */
 #carte{max-width:760px;margin:0 auto;padding:14px}
@@ -610,7 +616,9 @@ null,   // retirée le 02/08 — souvenir fait main, doublon de la mission créa
 "🦅 Sortie : voir voler les rapaces (Donjon des Aigles ou vautours du Soulor)",
 "🧺 Sortie : goûter le gâteau à la broche au marché du mardi",
 "🎲 Jeux : découvrir 10 jeux de société différents",
-"🎲 Jeux : jouer 20 parties de jeux de société"
+"🎲 Jeux : jouer 20 parties de jeux de société",
+"🎲 Jeux : découvrir 20 jeux de société différents",
+"🎲 Jeux : jouer 30 parties de jeux de société"
 ];
 /* Missions ajoutées par la famille : elles sont saisies sans emoji. On en déduit une icône
    à l'affichage seulement — le libellé enregistré dans l'état partagé n'est jamais modifié
@@ -650,7 +658,21 @@ function libMission(txt){
 function jeux(){ return val("js", []); }
 function jeuxDiff(){ return jeux().length; }
 function jeuxParties(){ return jeux().reduce(function(t,j){ return t + (j.p || 0); }, 0); }
-const JSEUILS = {11:{f:jeuxDiff, n:10, lb:"jeux différents"}, 12:{f:jeuxParties, n:20, lb:"parties jouées"}};
+/* Deux compteurs, deux paliers chacun. Le bloc n'affiche que le palier en cours,
+   sinon quatre jauges pour deux chiffres. */
+const JSEUILS = {
+  11:{f:jeuxDiff, n:10, lb:"jeux différents", c:"d"},
+  12:{f:jeuxParties, n:20, lb:"parties jouées", c:"p"},
+  13:{f:jeuxDiff, n:20, lb:"jeux différents", c:"d"},
+  14:{f:jeuxParties, n:30, lb:"parties jouées", c:"p"},
+};
+/* Palier en cours d'un compteur : le premier non atteint, sinon le dernier. */
+function jalonCourant(c){
+  const idx = Object.keys(JSEUILS).filter(function(i){ return JSEUILS[i].c === c; })
+    .sort(function(a,b){ return JSEUILS[a].n - JSEUILS[b].n; });
+  for(let k = 0; k < idx.length; k++){ if(JSEUILS[idx[k]].f() < JSEUILS[idx[k]].n) return idx[k]; }
+  return idx[idx.length - 1];
+}
 /* Reprise des jeux déjà cochés avant l'arrivée du compteur. Motif volontairement étroit :
    mieux vaut en oublier deux (l'ajout manuel reste là) que compter une partie de piscine.
    Écarte donc « Jeux musicaux piscine », « Grand jeu aquatique », « Jeux en ligne »… */
@@ -1255,12 +1277,14 @@ function slugMembre(n){
 function ligneFav(s, med){
   const vs = votants(s.id), n = vs.length;
   const mien = moi ? val("fav:" + moi + ":" + s.id, false) : false;
+  const fait = val("done:" + s.id, false);
   const sub = (fvTri==="votes" ? FAVCATS[s.c] + (n ? " · " : "") : "") + vs.map(function(x){ return x.e; }).join(" ");
-  return '<button class="fv' + (mien?" mien":"") + '" data-act="vote" data-v="' + s.id + '">' +
+  return '<button class="fv' + (mien?" mien":"") + (fait?" fv-fait":"") + '" data-act="vote" data-v="' + s.id + '">' +
     '<span class="fv-med">' + med + '</span>' +
     '<span class="fv-e">' + s.e + '</span>' +
     '<span class="fv-b"><span class="fv-nom">' + esc(s.n) + '</span>' +
     (sub ? '<span class="fv-sub">' + sub + '</span>' : "") + '</span>' +
+    (fait ? '<span class="tampon" aria-label="déjà réalisé">FAIT</span>' : "") +
     '<span class="fv-n' + (n?"":" z") + '">' + (mien?"❤️":"🤍") + " " + n + '</span></button>';
 }
 function vueFavoris(){
@@ -1489,7 +1513,9 @@ function ligneBilan(r, idx){
     '<span class="fv-b"' + clic + '>' + (r.jeu
       ? '<input class="js-nom bl-nom" id="jsn-bl-' + r.jeu + '-' + idx + '" data-act="jsnom" data-v="' + r.jeu +
         '" maxlength="40" value="' + escA(String(r.n).replace(/^🎲\s*/, "")) + '" aria-label="nom du jeu">'
-      : '<span class="fv-nom">' + esc(r.n) + '</span>') +
+      // rappel du classement Favoris sur les sorties et randos, comme dans le planning
+      : '<span class="fv-nom">' + esc(r.n) +
+        (r.k && r.k.indexOf("done:") === 0 ? sigleFav(r.k.slice(5)) : "") + '</span>') +
       '<span class="fv-sub">' + r.sous + (r.pts ? " · +" + r.pts + " pt" : "") + '</span></span>' +
     '<input class="dt-in" id="' + id + '" type="date" value="' + (r.d||"") + '" min="' + DAYS[0] + '" max="' + DAYS[DAYS.length-1] + '"' +
       (r.cm ? ' data-act="dtcm" data-v="' + r.cm + '"' : ' data-act="dt" data-v="' + r.k + '"') + ' aria-label="corriger la date">' +
@@ -1567,15 +1593,23 @@ function vueJeux(){
       '<button class="js-p" data-act="jsplus" data-v="' + j.id + '" aria-label="une partie de plus">+</button>' +
       '<button class="lg-x" data-act="jsdel" data-v="' + j.id + '" aria-label="retirer ce jeu">✕</button></div>';
   }).join("");
-  return '<section class="fiche"><h2>🎲 Jeux de société <span class="badge' +
-      (jeuxDiff() >= 10 && jeuxParties() >= 20 ? " ok" : "") + '">' + jeuxDiff() + ' · ' + jeuxParties() + '</span></h2>' +
-    jauge(11) + jauge(12) +
+  const tous = Object.keys(JSEUILS).every(function(i){ return JSEUILS[i].f() >= JSEUILS[i].n; });
+  return '<section class="fiche"><h2>🎲 Jeux de société <span class="badge' + (tous ? " ok" : "") + '">' +
+      jeuxDiff() + ' · ' + jeuxParties() + '</span></h2>' +
+    jauge(jalonCourant("d")) + jauge(jalonCourant("p")) +
     (li || '<div class="note">Rien de joué pour l\'instant. Tape le nom d\'un jeu : il compte pour un jeu différent et une première partie.</div>') +
-    '<div class="aj"><input id="njs" maxlength="40" placeholder="Nom du jeu…"><button data-act="jsadd">+</button></div>' +
+    // Menu des jeux déjà enregistrés : une partie de plus sans ressaisir le nom,
+    // donc sans risquer « Uno » / « UNO » / « uno » en trois entrées.
+    (l.length ? '<div class="aj"><select id="seljs" aria-label="ajouter une partie à un jeu déjà joué">' +
+        '<option value="">Une partie de plus à…</option>' +
+        l.map(function(j){ return '<option value="' + j.id + '">' + esc(j.n) + ' (' + j.p + ')</option>'; }).join("") +
+      '</select><button data-act="jspart">+</button></div>' : "") +
+    '<div class="aj"><input id="njs" maxlength="40" placeholder="Nom d\'un nouveau jeu…"><button data-act="jsadd">+</button></div>' +
     (rep.length ? '<button class="pj-plus" data-act="jsimport">↻ Reprendre ' + rep.length + ' jeu' + (rep.length>1?"x":"") +
         ' déjà coché' + (rep.length>1?"s":"") + ' (' + rep.map(function(j){ return esc(j.n); }).join(", ") + ')</button>' : "") +
-    '<div class="note" style="margin-top:10px">Même jeu rejoué ? Retape son nom ou touche <b>+</b> : une partie de plus, pas un jeu de plus. ' +
-      '<b>−</b> corrige une partie en trop, ✕ retire le jeu. Le nom se modifie directement — deux jeux renommés pareil fusionnent.</div></section>';
+    '<div class="note" style="margin-top:10px">Même jeu rejoué ? Prends-le dans la liste ci-dessus (ou touche son <b>+</b>) — ' +
+      'une partie de plus, pas un jeu de plus, et pas de « Uno » écrit trois façons. ' +
+      '<b>−</b> corrige une partie en trop, ✕ retire le jeu, et le nom se modifie directement.</div></section>';
 }
 function vueMissions(){
   const cm = val("cm",[]);
@@ -1642,10 +1676,10 @@ function rendre(){
   // La synchro périodique re-rend la vue : sans ça, elle effaçait le champ
   // d'ajout (mission / membre) en pleine frappe et fermait le clavier.
   const actif = document.activeElement;
-  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id === "selm" || actif.id === "njs" || actif.id === "njp" || actif.id.indexOf("dt-") === 0 || actif.id.indexOf("jsn-") === 0))
+  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id === "selm" || actif.id === "njs" || actif.id === "njp" || actif.id === "seljs" || actif.id.indexOf("dt-") === 0 || actif.id.indexOf("jsn-") === 0))
     ? { id: actif.id, v: actif.value, s: (actif.type === "date" ? null : actif.selectionStart), e: (actif.type === "date" ? null : actif.selectionEnd) } : null;
   const valeurs = {};
-  ["nm","nmb","npj","selpj","selm","njs","njp"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
+  ["nm","nmb","npj","selpj","selm","njs","njp","seljs"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
   const change = derniereVue !== vue;
   derniereVue = vue;
   app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="randos" ? vueRandos() : vue==="bilan" ? vueBilan() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
@@ -1946,6 +1980,10 @@ document.addEventListener("click", function(ev){
   else if(a==="maddsel"){ ajouterMissionListe(); }
   else if(a==="jsadd"){ ajouterJeu(); }
   else if(a==="jsplus"){ partieDePlus(v, 1); }
+  else if(a==="jspart"){
+    const sel = document.getElementById("seljs");
+    if(sel && sel.value){ const id = sel.value; sel.value = ""; partieDePlus(id, 1); }
+  }
   else if(a==="jsmoins"){ partieDePlus(v, -1); }
   else if(a==="jsdel"){ retirerJeu(v); }
   else if(a==="jsimport"){ importerJeux(); }
