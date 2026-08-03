@@ -360,6 +360,15 @@ nav button.actif::after{animation:onglet .3s cubic-bezier(.2,.7,.3,1)}
 .badge{display:inline-block;background:var(--surface-2);color:var(--texte-2);border:1px solid var(--trait);border-radius:var(--rp);
   padding:2px 10px;font-size:11px;font-weight:800;text-transform:none;letter-spacing:0;vertical-align:middle}
 .badge.ok{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
+/* Synthèse du Bilan : ce que le séjour raconte, avant le détail jour par jour. */
+.synth{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.synth>div{flex:1 1 auto;min-width:70px;background:var(--surface-2);border:2px solid var(--trait);
+  border-radius:var(--r2);padding:8px 10px;text-align:center}
+.synth b{display:block;font-size:19px;font-weight:800;line-height:1.1}
+.synth small{display:block;font-size:11px;color:var(--texte-3);margin-top:2px}
+.synth-niv{flex:1 1 100%;background:var(--miel);border-color:var(--soleil)}
+.synth-niv b{font-size:15px}
+.fil-q{font-size:13px}
 .bl{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px dotted var(--trait)}
 .bl:last-child{border-bottom:none}
 .bl .fv-b{cursor:pointer}
@@ -953,6 +962,8 @@ const wikiImg = {};   // cache des photos Wikipédia
 let moi = "";         // membre qui vote sur CET appareil — mémoire seulement (pas de stockage navigateur)
 let fvTri = "votes";  // tri du classement des favoris : "votes" | "type"
 let ouvertAjoutPJ = false;  // zone d'ajout du programme repliée par défaut (allège la vue)
+let filJour = false;        // lecture chronologique de la journée (local, comme fvTri)
+let fBilan = {};            // types retenus au Bilan (local aussi)
 function chargePhoto(o){
   if(!o.w || wikiImg[o.id] !== undefined) return;
   wikiImg[o.id] = null;
@@ -1139,10 +1150,20 @@ function score(){
   return s;
 }
 let dernierNiveau = null;
+const NIVEAUX = [[0,"🐹 Marmotte"],[30,"🐐 Isard"],[80,"🦅 Vautour"],[150,"🐻 Ours des Pyrénées"]];
+const SCOREMAX = 160;
+/* Palier courant, palier suivant et points restants — l'échelle vivait enfermée dans
+   majScore() alors que le Bilan et l'en-tête ont besoin de la lire. */
+function palier(s){
+  let i = 0;
+  NIVEAUX.forEach(function(x, k){ if(s >= x[0]) i = k; });
+  const suiv = NIVEAUX[i+1] || null;
+  return {nom:NIVEAUX[i][1], suivant:suiv ? suiv[1] : null, restant:suiv ? suiv[0] - s : 0};
+}
 function majScore(){
   const s = score();
-  const niveaux = [[0,"🐹 Marmotte"],[30,"🐐 Isard"],[80,"🦅 Vautour"],[150,"🐻 Ours des Pyrénées"]];
-  let n = niveaux[0], max = 160;
+  const niveaux = NIVEAUX;
+  let n = niveaux[0], max = SCOREMAX;
   niveaux.forEach(function(x){ if(s >= x[0]) n = x; });
   if(dernierNiveau !== null && n[1] !== dernierNiveau){
     setTimeout(function(){
@@ -1166,20 +1187,25 @@ function chip(h){
   const cl = H < 13 ? "m-matin" : (H < 19 ? "m-aprem" : "m-soir");
   return '<span class="chip ' + cl + '">' + h + '</span>';
 }
+/* Une ligne du planning. Le fil chronologique la réutilise telle quelle, avec en plus
+   la pastille du public — même clé `ca:` dans les deux lectures, donc mêmes coches,
+   même score, même Bilan : c'est une lecture de plus, pas un état de plus. */
+function ligneCA(a, pref, marque, titre){
+  const fl = a[2]||"";
+  let extra = "";
+  if(fl.indexOf("*")>-1) extra += " ⭐";
+  if(fl.indexOf("F")>-1) extra += ' <b style="color:var(--braise)">EN FAMILLE</b>';
+  if(fl.indexOf("I")>-1) extra += ' <b style="color:var(--gave)">SUR INSCRIPTION</b>';
+  const k = pref ? cleCA(pref.d, pref.g, a) : null;
+  const fait = k ? val(k, false) : false;
+  return '<div class="ligne' + (fait?" lg-fait":"") + '">' + chip(a[0]) +
+    '<div>' + (marque ? '<span class="fil-q" title="' + escA(titre) + '">' + marque + '</span> ' : "") + esc(a[1]) + extra + '</div>' +
+    (k ? '<button class="ca-cb' + (fait?" on":"") + '" data-act="ca" data-v="' + k + '" aria-label="marquer réalisée">' + (fait?"✓":"") + '</button>' : "") +
+    '</div>';
+}
 function lignes(arr, pref){
   if(!arr.length) return '<div class="ligne" style="opacity:.55">— rien d\'affiché —</div>';
-  return arr.map(function(a){
-    const fl = a[2]||"";
-    let extra = "";
-    if(fl.indexOf("*")>-1) extra += " ⭐";
-    if(fl.indexOf("F")>-1) extra += ' <b style="color:var(--braise)">EN FAMILLE</b>';
-    if(fl.indexOf("I")>-1) extra += ' <b style="color:var(--gave)">SUR INSCRIPTION</b>';
-    const k = pref ? cleCA(pref.d, pref.g, a) : null;
-    const fait = k ? val(k, false) : false;
-    return '<div class="ligne' + (fait?" lg-fait":"") + '">' + chip(a[0]) + '<div>' + esc(a[1]) + extra + '</div>' +
-      (k ? '<button class="ca-cb' + (fait?" on":"") + '" data-act="ca" data-v="' + k + '" aria-label="marquer réalisée">' + (fait?"✓":"") + '</button>' : "") +
-      '</div>';
-  }).join("");
+  return arr.map(function(a){ return ligneCA(a, pref); }).join("");
 }
 /* Ligne d'idée ou d'activité ajoutée : zone tactile vers la fiche + case « réalisée ». */
 function ligneIdee(o, estRando, sup){
@@ -1311,9 +1337,15 @@ function vueJour(){
     plan = '<div class="note">Choisis la météo du jour ci-dessus → le QG propose le bon plan (partagé avec toute la famille).</div>';
   }
   const camp = CAMP[jourSel];
+  const soir = soireesDe(jourSel);
+  const bascule = '<div class="meteo tri">' +
+    '<button data-act="fil" data-v="0" class="' + (filJour?"":"actif") + '">🗂️ Par public</button>' +
+    '<button data-act="fil" data-v="1" class="' + (filJour?"actif":"") + '">🕘 Fil de la journée</button></div>';
   let bloc;
-  if(camp){
-    bloc = ["e","a","x"].map(function(g,i){
+  if(filJour){
+    bloc = bascule + filDuJour(camp, soir);
+  } else if(camp){
+    bloc = bascule + ["e","a","x"].map(function(g,i){
       const noms = ["🧒 Enfants 5-12 ans","🎧 Ados","🍹 Adultes"];
       const open = val("acc:"+g, g==="e");
       return '<button class="pub" data-act="acc" data-v="' + g + '">' + noms[i] +
@@ -1321,19 +1353,42 @@ function vueJour(){
         (open ? lignes(camp[g], {d:jourSel, g:g}) : "");
     }).join("");
   } else {
-    bloc = '<div class="note">🧳 Jour du départ — le panneau affiche ce samedi le programme de la semaine suivante, non repris ici.</div>';
+    bloc = bascule + '<div class="note">🧳 Jour du départ — le panneau affiche ce samedi le programme de la semaine suivante, non repris ici.</div>';
   }
-  const soir = soireesDe(jourSel);
-  const openS = val("acc:s", true);
-  bloc += '<button class="pub" data-act="acc" data-v="s">🌙 Soirées' +
-    '<span class="n">' + soir.length + ' rendez-vous ' + (openS?"▾":"▸") + '</span></button>' +
-    (openS ? lignes(soir, {d:jourSel, g:"s"}) : "");
+  if(!filJour){
+    const openS = val("acc:s", true);
+    bloc += '<button class="pub" data-act="acc" data-v="s">🌙 Soirées' +
+      '<span class="n">' + soir.length + ' rendez-vous ' + (openS?"▾":"▸") + '</span></button>' +
+      (openS ? lignes(soir, {d:jourSel, g:"s"}) : "");
+  }
   const note = NOTES[jourSel] ? '<div class="note">' + NOTES[jourSel] + '</div>' : "";
   return '<div class="jours" id="bandeJours">' + pills + '</div>' + note +
     '<section class="fiche"><h2>Aujourd\'hui on fait quoi ? <span style="text-transform:none;font-weight:600;font-size:12px">(' + JSEM[d.getDay()] + " " + d.getDate() + ')</span></h2>' +
     '<div class="meteo">' + meteoBtns + '</div>' + plan + '</section>' + vueProgramme() +
     '<section class="fiche"><h2>🏕️ Animations camping <span class="extra">toujours en extra ✨</span></h2>' + bloc +
     '<div class="note" style="margin-top:10px">Rappels : rien pour personne entre 12h30 et 16h (piscine !) · présence à l\'heure de début exigée · l\'appli Yelloh! fait foi.</div></section>';
+}
+/* Fil chronologique : les mêmes lignes que les trois accordéons et les soirées, fondues
+   en une seule frise horaire. Rien n'est retiré ni déplacé — c'est une autre lecture. */
+const PUBLICS = {e:{m:"🧒", t:"Enfants 5-12 ans"}, a:{m:"🎧", t:"Ados"}, x:{m:"🍹", t:"Adultes"}, s:{m:"🌙", t:"Soirée"}};
+function filDuJour(camp, soir){
+  const items = [];
+  if(camp) ["e","a","x"].forEach(function(g){
+    (camp[g]||[]).forEach(function(it){ items.push({g:g, it:it}); });
+  });
+  soir.forEach(function(it){ items.push({g:"s", it:it}); });
+  // heures « HH:MM » : l'ordre alphabétique est l'ordre chronologique
+  items.sort(function(A,B){ return A.it[0].localeCompare(B.it[0]) || A.g.localeCompare(B.g); });
+  if(!items.length) return '<div class="note">🧳 Jour du départ — rien au panneau ce jour-là.</div>';
+  let corps = "", tranche = "";
+  items.forEach(function(x){
+    const h = parseInt(x.it[0], 10);
+    const t = h < 13 ? "☀️ Matin" : (h < 19 ? "🌤️ Après-midi" : "🌙 Soirée");
+    if(t !== tranche){ tranche = t; corps += '<div class="cat-t">' + t + '</div>'; }
+    corps += ligneCA(x.it, {d:jourSel, g:x.g}, PUBLICS[x.g].m, PUBLICS[x.g].t);
+  });
+  return corps + '<div class="note" style="margin-top:10px">🧒 enfants · 🎧 ados · 🍹 adultes · 🌙 soirée. ' +
+    'Les mêmes activités que « par public » — cocher ici revient exactement au même.</div>';
 }
 /* ================= RECHERCHE & FILTRES =================
    État local à la page — comme `moi`, `fvTri` ou `dateJeu`. Filtrer est un geste
@@ -1740,24 +1795,84 @@ function ligneBilan(r, idx){
       (r.cm ? ' data-act="dtcm" data-v="' + r.cm + '"' : ' data-act="dt" data-v="' + r.k + '"') + ' aria-label="corriger la date">' +
     '</div>';
 }
-function vueBilan(){
+/* Récapitulatif en texte brut, prêt à envoyer à la famille. */
+function recapTexte(){
   const R = realisations();
-  if(!R.length){
+  const parJour = {};
+  R.forEach(function(r){ const d = r.d || "sans-date"; (parJour[d] = parJour[d] || []).push(r); });
+  const pts = R.reduce(function(t,r){ return t + r.pts; }, 0);
+  const p = palier(score());
+  const l = ["🏕️ Le QG des vacances — Argelès-Gazost 2026",
+    R.length + " activité" + (R.length>1?"s":"") + " sur " + Object.keys(parJour).length +
+      " jour" + (Object.keys(parJour).length>1?"s":"") + " · " + pts + " points · " + p.nom, ""];
+  Object.keys(parJour).sort().forEach(function(d){
+    l.push(d === "sans-date" ? "Sans date" : titreJour(d));
+    parJour[d].sort(function(a,b){ return a.ty.localeCompare(b.ty) || a.n.localeCompare(b.n,"fr"); })
+      .forEach(function(r){ l.push("  " + r.e + " " + r.n + (r.pts ? " (+" + r.pts + ")" : "")); });
+    l.push("");
+  });
+  return l.join("\n");
+}
+function copierRecap(){
+  const txt = recapTexte();
+  const fini = function(){ toast("📋 Récap copié", "à coller dans un message à la famille"); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(fini, replierRecap);
+    return;
+  }
+  replierRecap();
+  function replierRecap(){
+    // Repli quand le presse-papier n'est pas accessible (contexte non sécurisé, vieux Safari)
+    const z = document.createElement("textarea");
+    z.value = txt; z.style.position = "fixed"; z.style.opacity = "0";
+    document.body.appendChild(z); z.focus(); z.select();
+    let ok = false;
+    try{ ok = document.execCommand("copy"); }catch(e){ ok = false; }
+    z.remove();
+    if(ok) fini(); else toast("📋 Copie impossible", "sélectionnez le texte à la main", "niv", 3200);
+  }
+}
+function titreJour(d){
+  const dd = new Date(d + "T12:00:00");
+  return JSEM[dd.getDay()] + " " + dd.getDate() + " " +
+    ["janv","févr","mars","avr","mai","juin","juil","août","sept","oct","nov","déc"][dd.getMonth()];
+}
+function vueBilan(){
+  const tout = realisations();
+  if(!tout.length){
     return '<section class="fiche"><h2>🏆 Bilan du séjour</h2>' +
       '<div class="note">Rien de coché pour l\'instant. Marque une activité comme réalisée depuis le planning (vue Semaine), une fiche Sortie ou Rando : elle apparaîtra ici, datée du jour, et sa mission éventuelle se cochera toute seule.</div></section>';
   }
+  const choisis = Object.keys(fBilan).filter(function(k){ return fBilan[k]; });
+  const R = choisis.length ? tout.filter(function(r){ return fBilan[r.ty]; }) : tout;
   const parJour = {};
   R.forEach(function(r){ const d = r.d || "sans-date"; (parJour[d] = parJour[d] || []).push(r); });
   const jours = Object.keys(parJour).sort();
   let idx = 0, html = "";
   const totalPts = R.reduce(function(t,r){ return t + r.pts; }, 0);
+  const p = palier(score());
+  // Synthèse en tête : ce que le séjour raconte, avant le détail jour par jour.
+  const presents = {};
+  tout.forEach(function(r){ presents[r.ty] = (presents[r.ty] || 0) + 1; });
+  const chips = Object.keys(TYPB).filter(function(k){ return presents[k]; }).map(function(k){
+    return '<button class="fchip' + (fBilan[k]?" on":"") + '" data-act="fbil" data-v="' + k +
+      '" aria-pressed="' + (fBilan[k]?"true":"false") + '">' + TYPB[k].e + " " + TYPB[k].t +
+      ' <b>' + presents[k] + '</b></button>';
+  }).join("");
   html += '<section class="fiche"><h2>🏆 Bilan du séjour <span class="badge">' + R.length + '</span></h2>' +
-    '<div class="note">' + R.length + ' activité' + (R.length>1?"s":"") + ' réalisée' + (R.length>1?"s":"") + ' sur ' + jours.length + ' jour' + (jours.length>1?"s":"") + ' · ' + totalPts + ' points cumulés.<br>📅 La date est celle du jour où tu as coché — touche-la pour la corriger si besoin.</div></section>';
+    '<div class="synth">' +
+      '<div><b>' + R.length + '</b><small>activité' + (R.length>1?"s":"") + '</small></div>' +
+      '<div><b>' + jours.length + '</b><small>jour' + (jours.length>1?"s":"") + '</small></div>' +
+      '<div><b>' + totalPts + '</b><small>points</small></div>' +
+      '<div class="synth-niv"><b>' + p.nom + '</b><small>' +
+        (p.suivant ? p.restant + " pts avant " + p.suivant : "palier maximal") + '</small></div>' +
+    '</div>' +
+    '<div class="fchips">' + chips + (choisis.length ? '<button class="fchip" data-act="fbilraz">✕ Tout voir</button>' : "") + '</div>' +
+    '<button class="pj-plus" data-act="recap">📋 Copier le récap du séjour</button>' +
+    '<div class="note" style="margin-top:10px">📅 La date est celle du jour où tu as coché — touche-la pour la corriger si besoin.</div></section>';
   jours.forEach(function(d){
     const items = parJour[d].sort(function(a,b){ return a.ty.localeCompare(b.ty) || a.n.localeCompare(b.n,"fr"); });
-    let titre;
-    if(d === "sans-date") titre = "📌 Sans date";
-    else { const dd = new Date(d + "T12:00:00"); titre = JSEM[dd.getDay()] + " " + dd.getDate() + " " + ["janv","févr","mars","avr","mai","juin","juil","août","sept","oct","nov","déc"][dd.getMonth()]; }
+    const titre = d === "sans-date" ? "📌 Sans date" : titreJour(d);
     const pts = items.reduce(function(t,r){ return t + r.pts; }, 0);
     let corps = "", ty = "";
     items.forEach(function(r){
@@ -2237,6 +2352,10 @@ document.addEventListener("click", function(ev){
   else if(a==="fcat"){ const f = FILTRE[vue]; f.cat[v] = !f.cat[v]; rendre(); }
   else if(a==="fcrit"){ const f = FILTRE[vue]; f.crit[v] = !f.crit[v]; rendre(); }
   else if(a==="fraz"){ FILTRE[vue] = {q:"", cat:{}, crit:{}}; rendre(); }
+  else if(a==="fil"){ filJour = v === "1"; rendre(); }
+  else if(a==="fbil"){ fBilan[v] = !fBilan[v]; rendre(); }
+  else if(a==="fbilraz"){ fBilan = {}; rendre(); }
+  else if(a==="recap"){ copierRecap(); }
   else if(a==="pjopen"){ ouvertAjoutPJ = !ouvertAjoutPJ; rendre(); }
   else if(a==="pjadd"){ ajouterAuProgramme(); }
   else if(a==="pjtxt"){ ajouterProgrammeLibre(); }
