@@ -79,6 +79,8 @@
   --t1:clamp(17px,4.4vw,20px);   /* titre du QG */
   --t2:clamp(15px,3.8vw,17px);   /* titre de carte */
   --t3:clamp(14px,3.6vw,15px);   /* nom d'une fiche */
+  /* Filigrane des visuels de fiche : la silhouette de l'icône du site, en SVG inline. */
+  --filigrane:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Cpath d='M0 40 L22 12 L36 26 L54 4 L82 40Z' fill='%23ffffff' opacity='.26'/%3E%3Cpath d='M46 40 L70 16 L84 30 L100 14 L100 40Z' fill='%23ffffff' opacity='.16'/%3E%3C/svg%3E");
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
 }
@@ -188,8 +190,6 @@ main{max-width:760px;margin:0 auto;padding:14px}
    collante, chaque pixel qu'elle occupe est pris à la lecture. */
 .f-cpt{flex:0 0 auto;font-family:var(--mono);font-size:12px;font-weight:800;color:var(--texte-3);white-space:nowrap}
 .f-cpt b{color:var(--encre)}
-.f-vide{text-align:center;padding:26px 14px}
-.f-vide p{font-size:14px;margin:8px 0 12px;color:var(--texte-2)}
 
 /* ---- sorties ---- */
 /* Titre de catégorie collant sous la barre de filtres : on sait toujours dans quelle
@@ -206,7 +206,10 @@ main{max-width:760px;margin:0 auto;padding:14px}
   display:flex;align-items:center;justify-content:center;font-size:22px}
 .s-corps{flex:1;min-width:0}
 .sortie{background:var(--craie);border:2px solid var(--encre);border-radius:var(--r3);box-shadow:var(--om1);padding:12px;margin:10px 0}
-.sortie.fait{opacity:.62;background:var(--surface-fait)}
+/* `article.` en tête pour passer devant `.rev.vu{opacity:1}`, déclarée plus bas :
+   à spécificité égale la dernière gagnait, et une sortie déjà faite reprenait son
+   opacité pleine dès qu'on revenait sur l'onglet. */
+article.sortie.fait{opacity:.62;background:var(--surface-fait)}
 .s-top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
 .s-nom{font-weight:800;font-size:var(--t3);line-height:1.25;letter-spacing:-.1px}
 .s-meta{font-size:12px;font-family:var(--mono);color:var(--texte-2)}
@@ -222,8 +225,26 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .s-meta{display:block}
 .s-hint{margin-left:auto;font-size:12px;font-weight:700;color:var(--texte-3);white-space:nowrap}
 .s-det{margin-top:10px;border-top:2px dashed var(--trait);padding-top:10px}
-.s-photo{width:100%;height:150px;object-fit:cover;border:2px solid var(--encre);border-radius:var(--r1);display:block;background:var(--eau)}
-.s-banner{height:110px;border:2px solid var(--encre);border-radius:var(--r1);display:flex;align-items:center;justify-content:center;font-size:52px}
+/* Visuel d'une fiche dépliée. La boîte a sa forme AVANT que la photo arrive : plus de
+   saut de page quand elle se charge, et le dégradé de catégorie sert d'abord de fond
+   d'attente, puis de repli définitif si la photo ne vient pas. */
+.s-vis{position:relative;aspect-ratio:16/10;border:2px solid var(--encre);border-radius:var(--r1);
+  overflow:hidden;display:flex;align-items:center;justify-content:center;margin:0}
+/* Silhouette de sommet en filigrane : les six dégradés étaient de simples diagonales. */
+.s-vis::before{content:"";position:absolute;inset:0;background:var(--filigrane) no-repeat right -8px bottom / auto 62%}
+.s-vis img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .45s ease}
+.s-vis img.vu{opacity:1}
+.s-moji{position:relative;font-size:clamp(38px,12vw,60px);line-height:1}
+/* Nom incrusté sur un voile dégradé : lisible quelle que soit la photo dessous. */
+.s-vis figcaption{position:absolute;left:0;right:0;bottom:0;padding:26px 12px 9px;text-align:left;
+  color:#FFFFFF;font-weight:800;font-size:var(--t3);line-height:1.2;letter-spacing:-.1px;
+  background:linear-gradient(to top,rgba(10,16,26,.88),rgba(10,16,26,.55) 58%,rgba(10,16,26,0));
+  text-shadow:0 1px 3px rgba(0,0,0,.65)}
+.s-credit{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--texte-4);margin-top:5px}
+/* ---- états vides illustrés ---- */
+.vide{text-align:center;padding:20px 14px 8px}
+.vide svg{width:104px;height:auto;display:block;margin:0 auto 10px;color:var(--texte-3)}
+.vide p{font-size:14px;color:var(--texte-2);margin:0 auto 12px;max-width:34ch}
 .bn-G{background:linear-gradient(160deg,#BFE3F0 55%,#8FBF9F 55%)}
 .bn-E{background:linear-gradient(160deg,#FFE9B3 55%,#CDE7C5 55%)}
 .bn-S{background:linear-gradient(160deg,#CDEDE8 55%,#F6D9A8 55%)}
@@ -1407,7 +1428,7 @@ function vueProgramme(){
       '<button class="ca-cb' + (fait?" on":"") + '" data-act="ca" data-v="' + cle + '" aria-label="marquer réalisée">' + (fait?"✓":"") + '</button>' +
       '</div>';
   }).join("");
-  if(!corps) corps = '<div class="note">Rien d’ajouté pour ce jour : choisis une sortie ou une rando dans la liste, ou écris ton idée.</div>';
+  if(!corps) corps = etatVide("carnet", 'Rien d’ajouté pour ce jour : choisis une sortie ou une rando dans la liste, ou écris ton idée.');
   const dejaPose = {};
   const dejaJeu = {};
   items.forEach(function(it){ if(it.x) dejaPose[it.x] = 1; else if(it.j) dejaJeu[it.j] = 1; });
@@ -1591,10 +1612,39 @@ function barreFiltres(cle, groupes, nb, total){
       (actifs ? '<button class="f-x" data-act="fraz" aria-label="Effacer les ' + actifs + ' filtres actifs">✕</button>' : "") +
     '</div><div class="fchips">' + chips + '</div></div>';
 }
+/* Petites illustrations d'état vide, au même vocabulaire graphique que l'icône du site.
+   Quatre pavés de texte remplacés par quatre dessins — dessinés à la main, en SVG
+   inline : aucune requête, quelques centaines d'octets chacun. */
+const DESSINS = {
+  sommet:'<svg viewBox="0 0 120 70" role="img" aria-hidden="true" fill="none">' +
+    '<circle cx="96" cy="18" r="9" fill="currentColor" opacity=".35"/>' +
+    '<path d="M4 64 L34 20 L52 42 L74 10 L116 64Z" fill="currentColor" opacity=".22"/>' +
+    '<path d="M34 20 L44 34 L24 34Z" fill="currentColor" opacity=".5"/>' +
+    '<path d="M74 10 L86 28 L62 28Z" fill="currentColor" opacity=".5"/>' +
+    '<line x1="2" y1="64" x2="118" y2="64" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>',
+  loupe:'<svg viewBox="0 0 120 70" role="img" aria-hidden="true" fill="none">' +
+    '<path d="M8 62 L34 28 L50 48 L68 22 L100 62Z" fill="currentColor" opacity=".16"/>' +
+    '<circle cx="70" cy="30" r="20" stroke="currentColor" stroke-width="4"/>' +
+    '<line x1="85" y1="45" x2="102" y2="62" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+    '<line x1="2" y1="62" x2="118" y2="62" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>',
+  carnet:'<svg viewBox="0 0 120 70" role="img" aria-hidden="true" fill="none">' +
+    '<rect x="30" y="8" width="60" height="54" rx="6" stroke="currentColor" stroke-width="3.5"/>' +
+    '<rect x="50" y="2" width="20" height="12" rx="4" fill="currentColor" opacity=".4"/>' +
+    '<line x1="42" y1="30" x2="78" y2="30" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".55"/>' +
+    '<line x1="42" y1="42" x2="66" y2="42" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".35"/></svg>',
+  de:'<svg viewBox="0 0 120 70" role="img" aria-hidden="true" fill="none">' +
+    '<rect x="38" y="10" width="46" height="46" rx="9" stroke="currentColor" stroke-width="3.5" transform="rotate(-8 61 33)"/>' +
+    '<circle cx="52" cy="26" r="4" fill="currentColor" opacity=".6"/>' +
+    '<circle cx="70" cy="40" r="4" fill="currentColor" opacity=".6"/>' +
+    '<circle cx="52" cy="44" r="4" fill="currentColor" opacity=".3"/>' +
+    '<circle cx="70" cy="22" r="4" fill="currentColor" opacity=".3"/></svg>',
+};
+function etatVide(dessin, texte, bouton){
+  return '<div class="vide">' + DESSINS[dessin] + '<p>' + texte + '</p>' + (bouton || "") + '</div>';
+}
 function rienTrouve(){
-  return '<div class="f-vide"><div style="font-size:34px">🔍</div>' +
-    '<p>Rien ne correspond à cette recherche.</p>' +
-    '<button class="pj-plus" data-act="fraz" style="max-width:280px;margin:0 auto">✕ Effacer les filtres</button></div>';
+  return etatVide("loupe", "Rien ne correspond à cette recherche.",
+    '<button class="pj-plus" data-act="fraz" style="max-width:280px;margin:0 auto">✕ Effacer les filtres</button>');
 }
 function vueSorties(){
   const faits = SORTIES.filter(function(o){return val("done:"+o.id,false);}).length;
@@ -1618,9 +1668,11 @@ function carteSortie(o){
   let det = "";
   if(open){
     const img = wikiImg[o.id];
-    const visuel = (typeof img === "string")
-      ? '<img class="s-photo" loading="lazy" alt="' + esc(o.n) + '" src="' + img + '">'
-      : '<div class="s-banner bn-' + o.c + '">' + o.e + '</div>';
+    // photo et repli occupent la même boîte : rien ne saute quand la photo arrive
+    const visuel = '<figure class="s-vis bn-' + o.c + '">' +
+      ((typeof img === "string") ? '<img loading="lazy" alt="' + escA(o.n) + '" src="' + img + '">' : "") +
+      '<span class="s-moji">' + o.e + '</span>' +
+      '<figcaption>' + esc(o.n) + '</figcaption></figure>';
     const pfs = o.pf.map(function(pt){ return '<span>' + esc(pt) + '</span>'; }).join("");
     det = '<div class="s-det">' + visuel +
       '<div class="s-bloc">' + esc(o.ds) + '</div>' +
@@ -1628,7 +1680,7 @@ function carteSortie(o){
       '<div class="s-bloc"><b>🕘 Horaires</b>' + esc(o.ho) + '</div>' +
       '<div class="s-bloc"><b>⏱ Durée idéale famille</b>' + esc(o.di) + '</div>' +
       '<div class="s-bloc"><b>✨ Points forts</b><div class="pf">' + pfs + '</div></div>' +
-      ((typeof img === "string") ? '<div style="font-size:10px;color:var(--texte-4);margin-top:4px">Photo : Wikimédia, chargée en ligne</div>' : "") +
+      ((typeof img === "string") ? '<div class="s-credit">Photo : Wikimédia, chargée en ligne</div>' : "") +
       '</div>';
   }
   return '<article id="s-' + o.id + '" class="sortie cat' + (done?" fait":"") + '" style="--cat:' + catCouleur(o.c) + '">' +
@@ -1972,7 +2024,7 @@ function vueBilan(){
   const tout = realisations();
   if(!tout.length){
     return '<section class="fiche"><h2>🏆 Bilan du séjour</h2>' +
-      '<div class="note">Rien de coché pour l’instant. Marque une activité comme réalisée depuis le planning (vue Semaine), une fiche Sortie ou Rando : elle apparaîtra ici, datée du jour, et sa mission éventuelle se cochera toute seule.</div></section>';
+      etatVide("sommet", 'Rien de coché pour l’instant. Marque une activité comme réalisée depuis le planning (vue Semaine), une fiche Sortie ou Rando : elle apparaîtra ici, datée du jour, et sa mission éventuelle se cochera toute seule.') + '</section>';
   }
   const choisis = Object.keys(fBilan).filter(function(k){ return fBilan[k]; });
   const R = choisis.length ? tout.filter(function(r){ return fBilan[r.ty]; }) : tout;
@@ -2067,7 +2119,7 @@ function vueJeux(){
   return '<section class="fiche"><h2>🎲 Jeux de société <span class="badge' + (tous ? " ok" : "") + '">' +
       jeuxDiff() + ' · ' + jeuxParties() + '</span></h2>' +
     jauges +
-    (li || '<div class="note">Rien de joué pour l’instant. Tape le nom d’un jeu : il compte pour un jeu différent et une première partie.</div>') +
+    (li || etatVide("de", 'Rien de joué pour l’instant. Tape le nom d’un jeu : il compte pour un jeu différent et une première partie.')) +
     // Date de la partie : elle décide du jour où le jeu apparaît au planning et au Bilan.
     '<div class="aj js-dt"><label for="djs">📅 Partie jouée le</label>' +
       '<input id="djs" type="date" data-act="jsdate" value="' + dateJeuDef() + '"' +
@@ -2434,6 +2486,12 @@ function ajouterMembre(){
 /* La recherche filtre à la frappe. `rendre()` préserve la valeur, le focus et le curseur
    du champ #rech (cf. sa liste de saisies) : sans ça, la synchro périodique viderait la
    recherche en cours et fermerait le clavier — le bug corrigé en v1.7.1 sur les missions. */
+/* La photo Wikipédia apparaît en fondu à la place du vide gris. En capture, parce que
+   l'événement `load` ne bouillonne pas. */
+document.addEventListener("load", function(ev){
+  const el = ev.target;
+  if(el && el.tagName === "IMG" && el.parentElement && el.parentElement.classList.contains("s-vis")) el.classList.add("vu");
+}, true);
 document.addEventListener("input", function(ev){
   if(ev.target && ev.target.id === "rech" && FILTRE[vue]){ FILTRE[vue].q = ev.target.value || ""; rendre(); }
 });
