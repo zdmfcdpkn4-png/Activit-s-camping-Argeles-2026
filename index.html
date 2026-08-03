@@ -93,7 +93,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* ---- entête fanion ---- */
-header{position:sticky;top:0;z-index:50;background:var(--sombre);color:var(--sur-sombre);padding:10px 14px;box-shadow:var(--om-entete)}
+/* Silhouette de sommets en fond de bandeau : même vocabulaire graphique que l'icône
+   du site, en SVG inline — aucune requête, quelques centaines d'octets. */
+header{position:sticky;top:0;z-index:50;background:var(--sombre);color:var(--sur-sombre);padding:10px 14px;box-shadow:var(--om-entete);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 44'%3E%3Ccircle cx='118' cy='13' r='8' fill='%23FFB800' opacity='.20'/%3E%3Cpath d='M0 44 L30 14 L46 30 L68 6 L96 44Z' fill='%23FBF3E2' opacity='.07'/%3E%3Cpath d='M62 44 L92 18 L112 34 L128 22 L150 44Z' fill='%23FBF3E2' opacity='.05'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right -8px bottom;background-size:auto 100%}
 .h-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px;justify-content:space-between}
 .h-t{font-weight:800;font-size:var(--t1);line-height:1.25;letter-spacing:.2px}
 .h-s{font-size:12px;opacity:.85}
@@ -104,14 +108,28 @@ header{position:sticky;top:0;z-index:50;background:var(--sombre);color:var(--sur
 .score{max-width:760px;margin:6px auto 0;display:flex;align-items:center;gap:8px;font-size:12px}
 .score .bar{flex:1;height:8px;background:var(--encre-2);border-radius:var(--rp);overflow:hidden}
 .score .fill{height:100%;background:var(--soleil);border-radius:var(--rp);transition:width .4s}
+/* Le palier suivant : l'échelle Marmotte → Ours existait, mais restait invisible tant
+   qu'on n'en franchissait pas un. */
+.prochain{max-width:760px;margin:3px auto 0;font-size:11px;opacity:.82;transition:opacity .25s ease,max-height .3s ease,margin .25s ease}
+body.defile .prochain{opacity:0;max-height:0;overflow:hidden;margin:0}
 
 /* ---- fiches façon panneau d'affichage ---- */
 main{max-width:760px;margin:0 auto;padding:14px}
 .fiche{position:relative;background:var(--craie);border:2px solid var(--encre);border-radius:var(--r3);
-  box-shadow:var(--om2);padding:14px;margin:18px 0}
+  box-shadow:var(--om1);padding:14px;margin:18px 0}
 .fiche>h2{font-size:var(--t2);font-weight:800;line-height:1.25;text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px}
-.fiche::before{content:"";position:absolute;top:-10px;left:24px;width:74px;height:18px;background:var(--scotch);
-  transform:rotate(-2deg);border-radius:var(--r0)}
+/* Le ruban adhésif et l'ombre portée appuyée sont réservés à la carte de tête de
+   chaque vue : sur toutes les cartes, l'effet s'annulait — plus rien ne ressortait. */
+#app>section.fiche:first-of-type{box-shadow:var(--om2)}
+#app>section.fiche:first-of-type::before{content:"";position:absolute;top:-10px;left:24px;width:74px;height:18px;
+  background:var(--scotch);transform:rotate(-2deg);border-radius:var(--r0)}
+/* Deux colonnes dès qu'il y a la place : sur tablette, une seule colonne de cartes
+   dans 760 px laissait beaucoup de vide. La vue Semaine reste en une colonne — c'est
+   une lecture chronologique, pas un catalogue. */
+@media (min-width:680px){
+  .grille{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;margin:10px 0}
+  .grille>*{margin:0}
+}
 .note{font-size:13px;background:var(--miel);border:1px dashed var(--soleil);border-radius:var(--r1);padding:8px 10px;margin:8px 0}
 
 /* ---- pastilles jours ---- */
@@ -131,10 +149,10 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .jour.auj small{color:var(--braise-t);opacity:1;font-weight:800}
 
 /* ---- chips horaires ---- */
-.ligne{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px dotted var(--trait);font-size:14px}
+.ligne{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dotted var(--trait);font-size:14px}
 .lg-btn{display:flex;gap:8px;align-items:flex-start;flex:1;min-width:0;text-align:left;cursor:pointer;min-height:44px;background:none;border:0;padding:0}
 .aj select{flex:1;min-width:0;min-height:46px;border:2px solid var(--encre);border-radius:var(--r2);padding:0 10px;font-size:14px;font-family:inherit;background:var(--craie);color:var(--encre)}
-.lg-x{flex-shrink:0;min-width:34px;min-height:34px;align-self:center;font-size:13px;opacity:.45}
+.lg-x{position:relative;flex-shrink:0;min-width:36px;min-height:36px;align-self:center;font-size:13px;opacity:.45}
 .ligne:last-child{border-bottom:none}
 .chip{font-family:var(--mono);font-size:12px;font-weight:700;padding:3px 7px;border-radius:var(--r1);min-width:52px;text-align:center;transform:rotate(-1deg)}
 .m-matin{background:var(--soleil);color:var(--sur-soleil)}
@@ -174,7 +192,11 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .f-vide p{font-size:14px;margin:8px 0 12px;color:var(--texte-2)}
 
 /* ---- sorties ---- */
-.cat-t{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--texte-3);margin:18px 4px 6px}
+/* Titre de catégorie collant sous la barre de filtres : on sait toujours dans quelle
+   famille on défile. --h-collant est tenue à jour en JS (en-tête + barre de filtres). */
+.cat-t{position:sticky;top:var(--h-collant,140px);z-index:30;background:var(--papier);
+  font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--texte-3);
+  margin:18px 4px 6px;padding:5px 0}
 /* Liseré de catégorie : la même couleur que le repère sur la carte et que la légende. */
 .sortie.cat{border-left:7px solid var(--cat)}
 .cat-t.cat{border-left:5px solid var(--cat);padding-left:8px;color:var(--cat)}
@@ -242,7 +264,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 /* ---- missions ---- */
 .mi{display:flex;gap:10px;align-items:center;min-height:48px;border-bottom:1px dotted var(--trait);font-size:14px}
 .mi:last-child{border-bottom:none}
-.mi button.cb{width:30px;height:30px;border:2px solid var(--encre);border-radius:var(--r1);flex-shrink:0;font-size:16px;font-weight:800}
+.mi button.cb{position:relative;width:34px;height:34px;border:2px solid var(--encre);border-radius:var(--r1);flex-shrink:0;font-size:16px;font-weight:800}
 .mi.done{opacity:.55;text-decoration:line-through}
 .mi-lie{display:block;font-size:11px;color:var(--sapin);font-weight:700;text-decoration:none}
 .jsc{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px}
@@ -258,16 +280,16 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .js-n{display:block;font-size:11px;opacity:.65;padding-left:2px}
 .js-l{gap:6px}
 .js-b{flex:1;min-width:0}
-.js-nom{width:100%;min-height:40px;border:2px solid transparent;border-radius:var(--r1);padding:0 6px;font-size:14px;
+.js-nom{width:100%;min-height:44px;border:2px solid transparent;border-radius:var(--r1);padding:0 6px;font-size:14px;
   font-family:inherit;font-weight:600;color:inherit;background:transparent}
 .js-nom:focus{border-color:var(--encre);background:var(--craie);outline:none}
-.bl-nom{font-weight:700;font-size:14px;min-height:34px;padding:0 4px}
-.js-p{width:40px;min-height:44px;border:2px solid var(--encre);border-radius:var(--r1);font-weight:800;font-size:17px;flex-shrink:0;line-height:1}
+.bl-nom{font-weight:700;font-size:14px;min-height:44px;padding:0 4px}
+.js-p{width:44px;min-height:44px;border:2px solid var(--encre);border-radius:var(--r1);font-weight:800;font-size:17px;flex-shrink:0;line-height:1}
 .js-p[disabled]{opacity:.3}
 .mi.done button.cb{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
 .aj{display:flex;gap:8px;margin-top:10px}
 .aj input{flex:1;min-height:46px;border:2px solid var(--encre);border-radius:var(--r2);padding:0 12px;font-size:14px;font-family:inherit;background:var(--craie)}
-.aj button{min-height:46px;padding:0 16px;border-radius:var(--r2);background:var(--soleil);color:var(--sur-soleil);font-weight:800}
+.aj button{min-height:46px;min-width:46px;padding:0 16px;border-radius:var(--r2);background:var(--soleil);color:var(--sur-soleil);font-weight:800}
 
 /* ---- favoris ---- */
 .mbrs{display:flex;flex-wrap:wrap;gap:8px}
@@ -304,7 +326,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .legende span{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;background:var(--craie);border:1px solid var(--trait);border-radius:var(--rp);padding:4px 9px}
 .legende i{width:10px;height:10px;border-radius:50%;display:inline-block}
 .pop-fiche{display:inline-block;margin-top:6px;padding:7px 11px;border-radius:var(--r1);background:var(--encre);color:var(--craie);font-weight:700;font-size:12px}
-.sortie{scroll-margin-top:100px}
+.sortie,article[id^="r-"]{scroll-margin-top:calc(var(--h-collant,140px) + 12px)}
 .bn-R{background:linear-gradient(160deg,#DCE9D5 55%,#F6E3B8 55%)}
 
 /* ---- randos ---- */
@@ -377,8 +399,12 @@ nav button.actif::after{animation:onglet .3s cubic-bezier(.2,.7,.3,1)}
 }
 
 /* ---- planning cochable & bilan ---- */
-.ca-cb{width:28px;height:28px;border:2px solid var(--encre);border-radius:var(--r1);flex-shrink:0;margin-left:auto;align-self:center;font-size:14px;font-weight:800;background:var(--craie)}
+.ca-cb{position:relative;width:36px;height:36px;border:2px solid var(--encre);border-radius:var(--r1);flex-shrink:0;margin-left:auto;align-self:center;font-size:14px;font-weight:800;background:var(--craie)}
 .ca-cb.on{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
+/* La zone de contact s'étend au-delà de la boîte visible : 44 px sous le doigt sans
+   grossir le dessin ni décaler la mise en page. */
+.ca-cb::after,.lg-x::after{content:"";position:absolute;inset:-4px}
+.mi button.cb::after{content:"";position:absolute;inset:-5px}
 .lg-fait > div{opacity:.55;text-decoration:line-through}
 .badge{display:inline-block;background:var(--surface-2);color:var(--texte-2);border:1px solid var(--trait);border-radius:var(--rp);
   padding:2px 10px;font-size:11px;font-weight:800;text-transform:none;letter-spacing:0;vertical-align:middle}
@@ -395,7 +421,7 @@ nav button.actif::after{animation:onglet .3s cubic-bezier(.2,.7,.3,1)}
 .bl{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px dotted var(--trait)}
 .bl:last-child{border-bottom:none}
 .bl .fv-b{cursor:pointer}
-.dt-in{flex-shrink:0;min-height:40px;border:2px solid var(--trait);border-radius:var(--r1);padding:0 8px;font-family:var(--mono);font-size:11px;background:var(--craie);color:var(--encre)}
+.dt-in{flex-shrink:0;min-height:44px;border:2px solid var(--trait);border-radius:var(--r1);padding:0 8px;font-family:var(--mono);font-size:11px;background:var(--craie);color:var(--encre)}
 
 /* ---- infos ---- */
 .lien{display:flex;min-height:46px;align-items:center;font-size:14px;border-bottom:1px dotted var(--trait);color:var(--encre);text-decoration:none;font-weight:600;gap:8px}
@@ -496,6 +522,7 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
     <div class="bar"><div class="fill" id="scorefill" style="width:0%"></div></div>
     <span id="scoretxt" style="font-family:var(--mono)">0 pt</span>
   </div>
+  <div class="prochain" id="prochain"></div>
 </header>
 
 <div id="toasts" aria-live="polite"></div>
@@ -1255,6 +1282,10 @@ function majScore(){
   document.getElementById("niveau").textContent = n[1];
   document.getElementById("scoretxt").textContent = s + " pt";
   document.getElementById("scorefill").style.width = Math.min(100, Math.round(s/max*100)) + "%";
+  const pr = palier(s), el = document.getElementById("prochain");
+  if(el) el.textContent = pr.suivant
+    ? "Encore " + pr.restant + " point" + (pr.restant>1?"s":"") + " avant " + pr.suivant
+    : "Palier maximal atteint — bravo la famille !";
 }
 
 /* ================= RENDUS ================= */
@@ -1557,8 +1588,8 @@ function vueSorties(){
   Object.keys(CATS).forEach(function(c){
     const dedans = liste.filter(function(o){return o.c===c;});
     if(!dedans.length) return;
-    html += '<div class="cat-t cat" style="--cat:' + catCouleur(c) + '">' + CATS[c] + '</div>';
-    dedans.forEach(function(o){ html += carteSortie(o); });
+    html += '<div class="cat-t cat" style="--cat:' + catCouleur(c) + '">' + CATS[c] + '</div>' +
+      '<div class="grille">' + dedans.map(carteSortie).join("") + '</div>';
   });
   return html;
 }
@@ -1820,8 +1851,8 @@ function vueRandos(){
   ["ville","auto"].forEach(function(g){
     const dedans = liste.filter(function(r){ return r.g===g; });
     if(!dedans.length) return;
-    html += '<div class="cat-t">' + titres[g] + '</div>';
-    dedans.forEach(function(r){ html += carteRando(r); });
+    html += '<div class="cat-t">' + titres[g] + '</div>' +
+      '<div class="grille">' + dedans.map(carteRando).join("") + '</div>';
   });
   return html;
 }
@@ -2185,12 +2216,16 @@ window.addEventListener("scroll", function(){
 /* La barre de filtres est collante sous l'en-tête, qui se compacte au défilement :
    sa hauteur est publiée en variable CSS plutôt que figée, sinon on aurait tantôt un
    trou tantôt un recouvrement. */
-let hEntete = 0;
+let hEntete = 0, hCollant = 0;
 function majHauteurEntete(){
   const e = document.querySelector("header");
   if(!e) return;
   const h = e.offsetHeight;
   if(h !== hEntete){ hEntete = h; document.documentElement.style.setProperty("--h-entete", h + "px"); }
+  // les titres de catégorie se collent sous la barre de filtres quand elle existe
+  const f = document.querySelector(".filtres");
+  const c = h + (f ? f.offsetHeight : 0);
+  if(c !== hCollant){ hCollant = c; document.documentElement.style.setProperty("--h-collant", c + "px"); }
 }
 window.addEventListener("resize", majHauteurEntete, {passive:true});
 function majNav(){
