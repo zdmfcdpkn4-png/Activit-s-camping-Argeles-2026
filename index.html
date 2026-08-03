@@ -7,7 +7,8 @@
 <link rel="icon" type="image/svg+xml" href="/icone.svg">
 <link rel="icon" type="image/png" sizes="180x180" href="/icone-180.png">
 <link rel="apple-touch-icon" href="/icone-180.png">
-<meta name="theme-color" content="#23324A">
+<meta name="theme-color" content="#23324A" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E141D" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-title" content="Le QG">
 <meta name="description" content="Le QG des vacances de la famille à Argelès-Gazost : planning du camping, sorties, randos, missions et bilan du séjour.">
 <meta name="robots" content="noindex, nofollow">
@@ -33,20 +34,27 @@
   --trait:#D8DCE5;             /* filets, séparateurs pointillés */
   --texte-2:#4E5D77;           /* méta d'une fiche */
   --texte-3:#5A6A85;           /* intitulés, sous-titres */
-  --texte-4:#8A96AB;           /* crédits, mentions */
+  --texte-4:#626E85;           /* crédits, mentions */
   --miel:#FFF4D6;              /* fond des encadrés d'aide */
+  /* Variantes assez foncées pour porter du texte sur le papier crème : le turquoise
+     et la braise d'origine plafonnent à 4,3:1, sous le seuil AA. */
+  --gave-t:#186B71;
+  --braise-t:#B8441F;
   --encre-2:#39506F;           /* aplats sur l'en-tête sombre */
   --encre-nuit:#3B2A4A;        /* dégradé du bandeau de palier */
   --alerte:#FDE7E0;            /* fond d'un bandeau d'alerte */
   --or-fonce:#8a6a00;          /* texte sur fond soleil clair */
-  /* — couleurs de catégorie : source unique, lue aussi par la carte Leaflet — */
-  --cat-G:var(--sapin);        /* ⛰️ Grands sites */
-  --cat-E:var(--braise);       /* 🦊 Spécial enfants */
-  --cat-S:var(--gave);         /* 🚴 Vélo & sensations */
-  --cat-R:#B07A00;             /* 🚶 Balades à pied */
-  --cat-O:var(--encre-2);      /* 💧 Eau & détente */
-  --cat-V:#7E57C2;             /* 🏘️ Villages & marchés */
-  --cat-H:var(--sapin);        /* 🥾 Randos (groupe Favoris) */
+  /* — couleurs de catégorie : source unique, lue aussi par la carte Leaflet —
+     Valeurs propres et non des alias des couleurs d'accent : elles servent aussi de
+     couleur de texte pour les titres de section, ce qui impose de tenir 4,5:1 sur le
+     papier crème. Le sapin, la braise et le turquoise d'origine n'y arrivent pas. */
+  --cat-G:#2A6F46;             /* ⛰️ Grands sites */
+  --cat-E:#B8441F;             /* 🦊 Spécial enfants */
+  --cat-S:#1C7278;             /* 🚴 Vélo & sensations */
+  --cat-R:#8A6000;             /* 🚶 Balades à pied */
+  --cat-O:#39506F;             /* 💧 Eau & détente */
+  --cat-V:#6B44B0;             /* 🏘️ Villages & marchés */
+  --cat-H:#2A6F46;             /* 🥾 Randos (groupe Favoris) */
   /* — échelle d'arrondi : quatre valeurs au lieu de dix — */
   --r0:4px;    /* micro-détails : ruban, indicateur d'onglet, tampon */
   --r1:8px;    /* contrôles : chips, cases, champs de date */
@@ -60,6 +68,13 @@
   --om-entete:0 2px 10px rgba(35,50,74,.35);
   --om-flot:0 6px 22px rgba(35,50,74,.42);
   --om-mk:0 1px 4px rgba(0,0,0,.35);
+  /* Surfaces qui restent sombres dans les deux thèmes : le bandeau de titre et les
+     bandeaux de félicitations. Les inverser donnerait une barre claire en pleine nuit. */
+  --sombre:var(--encre);
+  --sur-sombre:var(--craie);
+  /* Texte posé sur un aplat soleil. Le jaune ne change pas au thème sombre : son
+     texte doit donc rester foncé, alors que --encre, lui, devient clair. */
+  --sur-soleil:var(--encre);
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
 }
@@ -71,11 +86,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* ---- entête fanion ---- */
-header{position:sticky;top:0;z-index:50;background:var(--encre);color:var(--craie);padding:10px 14px;box-shadow:var(--om-entete)}
+header{position:sticky;top:0;z-index:50;background:var(--sombre);color:var(--sur-sombre);padding:10px 14px;box-shadow:var(--om-entete)}
 .h-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px;justify-content:space-between}
 .h-t{font-weight:800;font-size:18px;letter-spacing:.3px}
 .h-s{font-size:12px;opacity:.85}
 .badge-sync{font-size:11px;font-family:var(--mono);padding:4px 8px;border-radius:var(--rp);background:var(--encre-2);white-space:nowrap}
+.badge-sync.ok,.badge-sync.off{color:var(--craie)}
 .badge-sync.ok{background:var(--sapin)}
 .badge-sync.off{background:var(--braise)}
 .score{max-width:760px;margin:6px auto 0;display:flex;align-items:center;gap:8px;font-size:12px}
@@ -96,7 +112,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .jour{min-width:64px;min-height:56px;border:2px solid var(--encre);border-radius:var(--r2);background:var(--craie);
   font-weight:700;font-size:13px;padding:6px 4px;text-align:center;flex-direction:column;display:flex;gap:2px;align-items:center;justify-content:center}
 .jour small{font-weight:600;font-size:10px;opacity:.7}
-.jour.actif{background:var(--soleil);box-shadow:var(--om-actif)}
+.jour.actif{background:var(--soleil);color:var(--sur-soleil);box-shadow:var(--om-actif)}
 .jour .pt{font-size:10px;line-height:1}
 /* Jour réel vs jour consulté : deux informations distinctes. Le jaune dit « c'est ce
    que tu regardes », le liseré braise dit « on est aujourd'hui ». Les jours passés
@@ -104,8 +120,8 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .jour{position:relative}
 .jour.passe{opacity:.55}
 .jour.passe.actif{opacity:1}
-.jour.auj{border-color:var(--braise)}
-.jour.auj small{color:var(--braise);opacity:1;font-weight:800}
+.jour.auj{border-color:var(--braise-t)}
+.jour.auj small{color:var(--braise-t);opacity:1;font-weight:800}
 
 /* ---- chips horaires ---- */
 .ligne{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px dotted var(--trait);font-size:14px}
@@ -114,12 +130,12 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .lg-x{flex-shrink:0;min-width:34px;min-height:34px;align-self:center;font-size:13px;opacity:.45}
 .ligne:last-child{border-bottom:none}
 .chip{font-family:var(--mono);font-size:12px;font-weight:700;padding:3px 7px;border-radius:var(--r1);min-width:52px;text-align:center;transform:rotate(-1deg)}
-.m-matin{background:var(--soleil);color:var(--encre)}
+.m-matin{background:var(--soleil);color:var(--sur-soleil)}
 .m-aprem{background:var(--gave);color:var(--craie);transform:rotate(1deg)}
 .m-soir{background:var(--encre);color:var(--craie)}
 .pub{display:flex;align-items:center;gap:8px;width:100%;padding:10px 4px;font-weight:800;font-size:14px;min-height:44px}
 .pub .n{margin-left:auto;font-size:12px;font-weight:600;opacity:.6}
-.extra{display:inline-block;background:var(--braise);color:var(--craie);font-size:10px;font-weight:800;
+.extra{display:inline-block;background:var(--braise-t);color:var(--craie);font-size:10px;font-weight:800;
   letter-spacing:.5px;padding:3px 8px;border-radius:var(--rp);transform:rotate(-2deg)}
 
 /* ---- météo ---- */
@@ -172,7 +188,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .b-fait{border:2px solid var(--sapin);color:var(--sapin)}
 .b-fait.on{background:var(--sapin);color:var(--craie)}
 .b-want{border:2px solid var(--soleil);color:var(--or-fonce)}
-.b-want.on{background:var(--soleil);color:var(--encre)}
+.b-want.on{background:var(--soleil);color:var(--sur-soleil)}
 .s-open{display:flex;gap:10px;align-items:center;width:100%;text-align:left;min-height:44px}
 .s-meta{display:block}
 .s-hint{margin-left:auto;font-size:12px;font-weight:700;color:var(--texte-3);white-space:nowrap}
@@ -188,7 +204,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .s-bloc b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--texte-3);margin-bottom:2px}
 .pf{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .pf span{background:var(--miel);border:1px solid var(--soleil);border-radius:var(--rp);padding:4px 10px;font-size:12px;font-weight:600}
-.b-iti{border:2px solid var(--gave);color:var(--gave)}
+.b-iti{border:2px solid var(--gave);color:var(--gave-t)}
 @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
 .pop{animation:pop .35s ease}
 .confetti{position:fixed;font-size:26px;pointer-events:none;animation:vole 1s ease-out forwards;z-index:200}
@@ -203,12 +219,12 @@ main{max-width:760px;margin:0 auto;padding:14px}
   100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--rot)) scale(1.15)}}
 #toasts{position:fixed;top:calc(10px + env(safe-area-inset-top));left:0;right:0;z-index:300;
   display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 12px}
-.toast{background:var(--encre);color:var(--craie);border:2px solid var(--soleil);border-radius:var(--r3);
+.toast{background:var(--sombre);color:var(--sur-sombre);border:2px solid var(--soleil);border-radius:var(--r3);
   padding:9px 16px;max-width:96%;text-align:center;box-shadow:var(--om-flot);
   animation:toastIn .3s ease}
 .toast b{display:block;font-size:14px;font-weight:800}
 .toast small{display:block;font-size:12px;opacity:.9;margin-top:1px}
-.toast.niv{border-color:var(--braise);background:linear-gradient(135deg,var(--encre),var(--encre-nuit))}
+.toast.niv{border-color:var(--braise);background:linear-gradient(135deg,var(--sombre),var(--encre-nuit))}
 .toast.out{animation:toastOut .3s ease forwards}
 @keyframes toastIn{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes toastOut{to{opacity:0;transform:translateY(-14px) scale(.96)}}
@@ -244,12 +260,12 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .mi.done button.cb{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
 .aj{display:flex;gap:8px;margin-top:10px}
 .aj input{flex:1;min-height:46px;border:2px solid var(--encre);border-radius:var(--r2);padding:0 12px;font-size:14px;font-family:inherit;background:var(--craie)}
-.aj button{min-height:46px;padding:0 16px;border-radius:var(--r2);background:var(--soleil);font-weight:800}
+.aj button{min-height:46px;padding:0 16px;border-radius:var(--r2);background:var(--soleil);color:var(--sur-soleil);font-weight:800}
 
 /* ---- favoris ---- */
 .mbrs{display:flex;flex-wrap:wrap;gap:8px}
 .mbr{display:inline-flex;align-items:center;border:2px solid var(--encre);border-radius:var(--rp);background:var(--craie);overflow:hidden}
-.mbr.actif{background:var(--soleil);box-shadow:var(--om-actif)}
+.mbr.actif{background:var(--soleil);color:var(--sur-soleil);box-shadow:var(--om-actif)}
 .mbr-t{min-height:44px;padding:0 4px 0 12px;font-weight:800;font-size:13px}
 .mbr-x{min-height:44px;padding:0 10px;font-size:11px;opacity:.45}
 .tri{margin-bottom:4px}
@@ -273,7 +289,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 /* ---- carte ---- */
 #carte{max-width:760px;margin:0 auto;padding:14px}
 #map{height:min(58vh,520px);border:2px solid var(--encre);border-radius:var(--r3);background:var(--eau);box-shadow:var(--om1)}
-.map-off{display:flex;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;color:var(--texte-3);font-size:14px}
+.map-off{display:flex;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;color:var(--texte-2);font-size:14px}
 .mk{width:30px;height:30px;border-radius:50%;background:var(--craie);border:3px solid var(--encre);display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:var(--om-mk)}
 .mk-done{opacity:.55;filter:grayscale(.4)}
 .mk-camp{width:36px;height:36px;font-size:18px;background:var(--soleil)}
@@ -300,7 +316,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 /* ---- sigle de classement favoris ---- */
 .rk{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:var(--rp);font-size:11px;font-weight:800;
   background:var(--surface-2);color:var(--texte-2);border:1px solid var(--trait);vertical-align:middle;white-space:nowrap}
-.rk-pod{background:var(--soleil);border-color:var(--soleil);color:var(--encre);font-size:12px;padding:1px 6px}
+.rk-pod{background:var(--soleil);border-color:var(--soleil);color:var(--sur-soleil);font-size:12px;padding:1px 6px}
 .rk-fiche{margin-left:0;align-self:center;flex-shrink:0}
 
 /* ---- bouton d'ouverture de l'ajout au programme ---- */
@@ -377,7 +393,7 @@ nav button.actif::after{animation:onglet .3s cubic-bezier(.2,.7,.3,1)}
 /* ---- infos ---- */
 .lien{display:flex;min-height:46px;align-items:center;font-size:14px;border-bottom:1px dotted var(--trait);color:var(--encre);text-decoration:none;font-weight:600;gap:8px}
 .lien:last-child{border-bottom:none}
-.danger{margin-top:12px;width:100%;min-height:48px;border:2px solid var(--braise);color:var(--braise);border-radius:var(--r2);font-weight:800}
+.danger{margin-top:12px;width:100%;min-height:48px;border:2px solid var(--braise);color:var(--braise-t);border-radius:var(--r2);font-weight:800}
 
 /* ---- bandeau de réveil du serveur ---- */
 #reveil{max-width:760px;margin:10px auto 0;padding:9px 12px;font-size:13px;
@@ -399,6 +415,63 @@ nav button .ic{font-size:18px}
 nav button.actif{color:var(--encre)}
 nav button.actif .ic{transform:translateY(-2px)}
 nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0);background:var(--soleil)}
+/* ---- mode nuit ----
+   Automatique : il suit le réglage du téléphone. Pas de bouton — l'invariant « aucun
+   stockage navigateur » interdit de mémoriser un choix, et le ranger dans l'état
+   partagé imposerait le thème d'un appareil à toute la famille.
+   L'essentiel tient dans l'inversion de --craie (surface) et --encre (encre) : les
+   règles qui les emploient par paire s'inversent correctement d'elles-mêmes. */
+@media (prefers-color-scheme:dark){
+  :root{
+    --papier:#131A25;
+    --encre:#E9EFF7;
+    --craie:#1C2534;
+    --soleil:#FFB800;
+    --gave:#3FB3BC;            /* remontés d'un cran : le turquoise et le sapin */
+    --sapin:#4FBF80;           /* d'origine tombent sous le seuil lisible sur fond sombre */
+    --braise:#FF7A52;
+    --scotch:rgba(222,196,138,.34);
+    --surface-2:#243044;
+    --surface-fait:#1B2B25;
+    --surface-svg:#1A2A22;
+    --eau:#22303F;
+    --trait:#3A4A63;
+    --texte-2:#BAC7DB;
+    --texte-3:#A5B4CC;
+    --texte-4:#8796AE;
+    --miel:#2E2716;
+    --encre-2:#3A4C68;
+    --encre-nuit:#2A1F38;
+    --or-fonce:#E5BE55;
+    --alerte:#3A1E17;
+    --gave-t:var(--gave);        /* sur fond sombre, ce sont les variantes claires */
+    --braise-t:var(--braise);    /* qui portent le texte */
+    --cat-G:#4FBF80;
+    --cat-E:#FF7A52;
+    --cat-S:#3FB3BC;
+    --cat-R:#D9A02A;
+    --cat-O:#6D8CB8;
+    --cat-V:#A98BE0;
+    --cat-H:#4FBF80;
+    --sombre:#0E141D;
+    --sur-sombre:#EDF2F8;
+    --sur-soleil:#1A2230;
+  }
+  /* Les dégradés de catégorie sont des pastels : tels quels, ils éblouiraient.
+     Mêmes teintes, luminosité de nuit. */
+  .bn-G{background:linear-gradient(160deg,#24485C 55%,#1F4433 55%)}
+  .bn-E{background:linear-gradient(160deg,#4A3D18 55%,#2A4326 55%)}
+  .bn-S{background:linear-gradient(160deg,#1E4744 55%,#4A3A1C 55%)}
+  .bn-O{background:linear-gradient(160deg,#22455A 55%,#1E4046 55%)}
+  .bn-V{background:linear-gradient(160deg,#443A22 55%,#362B48 55%)}
+  .bn-R{background:linear-gradient(160deg,#2A3E27 55%,#48401C 55%)}
+  /* Les tuiles OpenStreetMap restent claires : leur appliquer un filtre fausserait
+     les couleurs de la carte. On garde donc des repères clairs par-dessus, et on
+     assombrit le cadre autour. */
+  .mk{background:#FFFFFF}
+  .mkstep{border-color:#FFFFFF}
+  #map{border-color:var(--trait)}
+}
 </style>
 </head>
 <body>
