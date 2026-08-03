@@ -1595,6 +1595,14 @@ function vueInfos(){
 }
 let razArme = 0;
 function rendre(){
+  // Les missions à seuil dépendent d'un total, pas d'une coche : on les évalue à chaque
+  // rendu — donc aussi quand le compteur est franchi sur un autre téléphone et nous
+  // arrive par la synchro. autoMissionsJeux() n'écrit que s'il y a du nouveau : pas de boucle.
+  const seuils = autoMissionsJeux();
+  if(seuils.length){
+    planifSync();
+    seuils.forEach(function(m, i){ setTimeout(function(){ feteMission(null, esc(m), true); }, 350 + i*450); });
+  }
   const app = document.getElementById("app");
   const enCarte = vue === "carte";
   // La carte vit hors de #app pour survivre aux re-rendus (zoom conservé à chaque sync).
@@ -1667,11 +1675,7 @@ function ajouterMission(){
 /* Écrit la liste des jeux et déclenche les missions à seuil dans la foulée. */
 function majJeux(l){
   ST.state["js"] = {v:l, t:Date.now()};
-  const gagnees = autoMissionsJeux();
-  rendre(); planifSync();
-  gagnees.forEach(function(m, i){
-    setTimeout(function(){ feteMission(null, esc(m), true); }, 350 + i*450);
-  });
+  rendre(); planifSync();   // le seuil est évalué dans rendre(), y compris sur l'état reçu
 }
 function ajouterJeu(){
   const inp = document.getElementById("njs"); if(!inp) return;
