@@ -144,6 +144,10 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .mi.done{opacity:.55;text-decoration:line-through}
 .mi-lie{display:block;font-size:11px;color:var(--sapin);font-weight:700;text-decoration:none}
 .jsc{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px}
+.js-dt{align-items:center;gap:10px}
+.js-dt label{font-size:13px;font-weight:700;white-space:nowrap}
+.js-dt input{flex:1;min-height:44px;border:2px solid var(--encre);border-radius:12px;padding:0 10px;
+  font-size:14px;font-family:inherit;background:var(--craie);color:inherit}
 .jsc-ok{opacity:.75}
 .jsc-ok .jsb i{background:var(--soleil)}
 .jsc>span:first-child{flex:0 0 auto;white-space:nowrap}
@@ -1598,6 +1602,10 @@ function vueJeux(){
       jeuxDiff() + ' · ' + jeuxParties() + '</span></h2>' +
     jauges +
     (li || '<div class="note">Rien de joué pour l\'instant. Tape le nom d\'un jeu : il compte pour un jeu différent et une première partie.</div>') +
+    // Date de la partie : elle décide du jour où le jeu apparaît au planning et au Bilan.
+    '<div class="aj js-dt"><label for="djs">📅 Partie jouée le</label>' +
+      '<input id="djs" type="date" data-act="jsdate" value="' + dateJeuDef() + '"' +
+      ' min="' + DAYS[0] + '" max="' + DAYS[DAYS.length-1] + '" aria-label="date de la partie"></div>' +
     // Menu des jeux déjà enregistrés : une partie de plus sans ressaisir le nom,
     // donc sans risquer « Uno » / « UNO » / « uno » en trois entrées.
     (l.length ? '<div class="aj"><select id="seljs" aria-label="ajouter une partie à un jeu déjà joué">' +
@@ -1607,9 +1615,11 @@ function vueJeux(){
     '<div class="aj"><input id="njs" maxlength="40" placeholder="Nom d\'un nouveau jeu…"><button data-act="jsadd">+</button></div>' +
     (rep.length ? '<button class="pj-plus" data-act="jsimport">↻ Reprendre ' + rep.length + ' jeu' + (rep.length>1?"x":"") +
         ' déjà coché' + (rep.length>1?"s":"") + ' (' + rep.map(function(j){ return esc(j.n); }).join(", ") + ')</button>' : "") +
-    '<div class="note" style="margin-top:10px">Même jeu rejoué ? Prends-le dans la liste ci-dessus (ou touche son <b>+</b>) — ' +
-      'une partie de plus, pas un jeu de plus, et pas de « Uno » écrit trois façons. ' +
-      '<b>−</b> corrige une partie en trop, ✕ retire le jeu, et le nom se modifie directement.</div></section>';
+    '<div class="note" style="margin-top:10px">Même jeu rejoué ? Prends-le dans la liste ci-dessus — une partie de plus, ' +
+      'pas un jeu de plus, et pas de « Uno » écrit trois façons. La partie est posée sur la <b>date choisie</b> : ' +
+      'elle apparaît au planning de ce jour-là et dans le 🏆 Bilan.<br>' +
+      'Les <b>−</b> et <b>+</b> de chaque ligne ne corrigent que le compteur, sans toucher au planning. ' +
+      '✕ retire le jeu, et le nom se modifie directement.</div></section>';
 }
 function vueMissions(){
   const cm = val("cm",[]);
@@ -1676,7 +1686,7 @@ function rendre(){
   // La synchro périodique re-rend la vue : sans ça, elle effaçait le champ
   // d'ajout (mission / membre) en pleine frappe et fermait le clavier.
   const actif = document.activeElement;
-  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id === "selm" || actif.id === "njs" || actif.id === "njp" || actif.id === "seljs" || actif.id.indexOf("dt-") === 0 || actif.id.indexOf("jsn-") === 0))
+  const saisie = (actif && (actif.tagName === "INPUT" || actif.tagName === "SELECT") && actif.id && (actif.id === "nm" || actif.id === "nmb" || actif.id === "npj" || actif.id === "selpj" || actif.id === "selm" || actif.id === "njs" || actif.id === "njp" || actif.id === "seljs" || actif.id === "djs" || actif.id.indexOf("dt-") === 0 || actif.id.indexOf("jsn-") === 0))
     ? { id: actif.id, v: actif.value, s: (actif.type === "date" ? null : actif.selectionStart), e: (actif.type === "date" ? null : actif.selectionEnd) } : null;
   const valeurs = {};
   ["nm","nmb","npj","selpj","selm","njs","njp","seljs"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
@@ -1753,15 +1763,39 @@ function majJeux(l){
   ST.state["js"] = {v:l, t:Date.now()};
   rendre(); planifSync();   // le seuil est évalué dans rendre(), y compris sur l'état reçu
 }
+/* Date de la partie qu'on enregistre depuis l'onglet Missions. Locale à la page
+   (comme le prénom du votant) : c'est un choix de saisie, pas un état de la famille. */
+let dateJeu = "";
+function dateJeuDef(){
+  if(dateJeu) return dateJeu;
+  const a = dateDe();
+  return DAYS.indexOf(a) > -1 ? a : jourSel;
+}
+/* Pose le jeu sur la journée choisie et le marque réalisé : c'est ce qui le fait
+   apparaître dans le planning du jour et dans le Bilan, à la bonne date.
+   Rejouer le même jeu le même jour n'ajoute pas une 2e ligne — juste une partie de plus. */
+function poseJeuSurJour(idJeu, d){
+  if(DAYS.indexOf(d) < 0) return;
+  const liste = val("pj:" + d, []);
+  if(!liste.some(function(it){ return it.j === idJeu; })){
+    ST.state["pj:" + d] = {v: liste.concat([{j:idJeu}]), t:Date.now()};
+  }
+  const cle = cleCA(d, "p", ["--", idJeu]);
+  if(!val(cle, false)){
+    ST.state[cle] = {v:true, t:Date.now()};
+    ST.state["dt:" + cle] = {v:d, t:Date.now()};
+  }
+}
 function ajouterJeu(){
   const inp = document.getElementById("njs"); if(!inp) return;
   const t = (inp.value||"").trim(); if(!t) return;
   inp.value = "";
   const l = jeux().map(function(j){ return {id:j.id, n:j.n, p:j.p}; });
   // même nom = même jeu : une partie de plus, pas un jeu de plus
-  const ex = l.filter(function(j){ return j.n.toLowerCase() === t.toLowerCase(); })[0];
+  let ex = l.filter(function(j){ return j.n.toLowerCase() === t.toLowerCase(); })[0];
   if(ex) ex.p = (ex.p || 0) + 1;
-  else l.push({id:"j" + Date.now(), n:t, p:1});
+  else { ex = {id:"j" + Date.now(), n:t, p:1}; l.push(ex); }
+  poseJeuSurJour(ex.id, dateJeuDef());
   majJeux(l);
 }
 function importerJeux(){
@@ -1877,7 +1911,8 @@ function ajouterMembre(){
 document.addEventListener("change", function(ev){
   const el = ev.target;
   if(!el || !el.dataset) return;
-  if(el.dataset.act === "jsnom") renommerJeu(el.dataset.v, el.value);
+  if(el.dataset.act === "jsdate"){ dateJeu = el.value || ""; rendre(); }
+  else if(el.dataset.act === "jsnom") renommerJeu(el.dataset.v, el.value);
   else if(el.dataset.act === "dt") put("dt:" + el.dataset.v, el.value || "");
   else if(el.dataset.act === "dtcm"){
     const cm = val("cm",[]).map(function(m){ return m.id===el.dataset.v ? Object.assign({}, m, {dt:el.value||""}) : m; });
@@ -1982,7 +2017,12 @@ document.addEventListener("click", function(ev){
   else if(a==="jsplus"){ partieDePlus(v, 1); }
   else if(a==="jspart"){
     const sel = document.getElementById("seljs");
-    if(sel && sel.value){ const id = sel.value; sel.value = ""; partieDePlus(id, 1); }
+    if(sel && sel.value){
+      const id = sel.value; sel.value = "";
+      const l = jeux().map(function(j){ return j.id === id ? {id:j.id, n:j.n, p:(j.p||0) + 1} : j; });
+      poseJeuSurJour(id, dateJeuDef());
+      majJeux(l);
+    }
   }
   else if(a==="jsmoins"){ partieDePlus(v, -1); }
   else if(a==="jsdel"){ retirerJeu(v); }
