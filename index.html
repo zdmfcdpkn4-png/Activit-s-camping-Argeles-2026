@@ -230,6 +230,29 @@ body.defile .h-t{font-size:16px}
 @keyframes swapIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .rev{opacity:0;transform:translateY(16px)}
 .rev.vu{opacity:1;transform:none;transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.3,1)}
+/* Cascade d'ouverture : en-tête → score → barre des jours → cartes → onglets.
+   Le minutage est en CSS et non en JS : la première synchro re-rend #app dans
+   la foulée, ce qui effacerait des classes posées à la main. Le `opacity:0` de
+   départ n'existe QUE si les animations tournent — sinon (animations réduites)
+   le contenu resterait invisible. `body.ouverture` est retirée après coup. */
+@media (prefers-reduced-motion:no-preference){
+  body.ouverture header .h-in,
+  body.ouverture header .score,
+  body.ouverture nav,
+  body.ouverture #app > *:nth-child(-n+6){
+    opacity:0;animation:monteFade .5s cubic-bezier(.2,.7,.3,1) both;
+  }
+  body.ouverture header .h-in{animation-delay:0ms}
+  body.ouverture header .score{animation-delay:80ms}
+  body.ouverture #app > *:nth-child(1){animation-delay:160ms}
+  body.ouverture #app > *:nth-child(2){animation-delay:230ms}
+  body.ouverture #app > *:nth-child(3){animation-delay:300ms}
+  body.ouverture #app > *:nth-child(4){animation-delay:370ms}
+  body.ouverture #app > *:nth-child(5){animation-delay:440ms}
+  body.ouverture #app > *:nth-child(6){animation-delay:510ms}
+  body.ouverture nav{animation-delay:580ms}
+}
+@keyframes monteFade{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 nav button .ic{transition:transform .25s cubic-bezier(.3,1.5,.5,1)}
 nav button.actif .ic{transform:translateY(-3px) scale(1.12)}
 nav button.actif::after{animation:onglet .3s cubic-bezier(.2,.7,.3,1)}
@@ -1635,10 +1658,22 @@ function rendre(){
   majScore();
 }
 let derniereVue = null;
+let ouvertureFaite = false;
+/* Cascade d'ouverture : au tout premier affichage, l'en-tête, la barre des jours,
+   les cartes puis les onglets montent et se révèlent par paliers de 70 ms.
+   Une seule fois — ensuite, changer d'onglet garde son animation plus courte,
+   et un rafraîchissement de synchro n'anime rien du tout. */
+function cascadeOuverture(){
+  document.body.classList.add("ouverture");
+  // Dernier palier à 580 ms + 500 ms d'animation : à 1,4 s tout est posé.
+  // Retirer la classe est aussi le filet de sécurité — plus rien ne peut rester masqué.
+  setTimeout(function(){ document.body.classList.remove("ouverture"); }, 1400);
+}
 /* Animation d'entrée : uniquement au changement d'onglet, jamais sur un
    simple rafraîchissement de synchro (sinon la page clignoterait). */
 function animerEntree(change){
   const app = document.getElementById("app");
+  if(!ouvertureFaite){ ouvertureFaite = true; cascadeOuverture(); return; }
   if(!change || vue === "carte") return;
   app.classList.remove("swap");
   void app.offsetWidth;
