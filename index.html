@@ -7,8 +7,9 @@
 <link rel="icon" type="image/svg+xml" href="/icone.svg">
 <link rel="icon" type="image/png" sizes="180x180" href="/icone-180.png">
 <link rel="apple-touch-icon" href="/icone-180.png">
-<meta name="theme-color" content="#23324A" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0E141D" media="(prefers-color-scheme: dark)">
+<!-- Une seule balise, tenue à jour par majTheme() : une media query ne saurait pas
+     suivre le choix manuel du bouton jour/nuit. -->
+<meta name="theme-color" id="tc" content="#23324A">
 <meta name="apple-mobile-web-app-title" content="Le QG">
 <meta name="description" content="Le QG des vacances de la famille à Argelès-Gazost : planning du camping, sorties, randos, missions et bilan du séjour.">
 <meta name="robots" content="noindex, nofollow">
@@ -100,7 +101,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 header{position:sticky;top:0;z-index:50;background:var(--sombre);color:var(--sur-sombre);padding:10px 14px;box-shadow:var(--om-entete);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 44'%3E%3Ccircle cx='118' cy='13' r='8' fill='%23FFB800' opacity='.20'/%3E%3Cpath d='M0 44 L30 14 L46 30 L68 6 L96 44Z' fill='%23FBF3E2' opacity='.07'/%3E%3Cpath d='M62 44 L92 18 L112 34 L128 22 L150 44Z' fill='%23FBF3E2' opacity='.05'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right -8px bottom;background-size:auto 100%}
-.h-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:10px;justify-content:space-between}
+.h-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:8px;justify-content:space-between}
+/* Le bloc de droite ne se rétrécit pas : c'est le titre qui cède la place à 390 px. */
+.h-out{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.h-b{position:relative;flex:0 0 auto;width:36px;height:36px;border-radius:var(--r1);font-size:17px;line-height:1;
+  background:var(--encre-2);color:var(--sur-sombre);transition:background-color .2s ease}
+.h-b::after{content:"";position:absolute;inset:-4px}   /* zone de contact portée à 44 px */
+.h-b[aria-pressed="true"]{background:var(--soleil);color:var(--sur-soleil)}
 .h-t{font-weight:800;font-size:var(--t1);line-height:1.25;letter-spacing:.2px}
 .h-s{font-size:12px;opacity:.85}
 .badge-sync{font-size:11px;font-family:var(--mono);padding:4px 8px;border-radius:var(--rp);background:var(--encre-2);white-space:nowrap}
@@ -496,7 +503,7 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
   html,body{background:#FFFFFF;color:#000000;font-size:11pt;line-height:1.35}
   body{padding:0}
   body::before,#prog,#haut,nav,#toasts,#reveil,.filtres,.meteo,.aj,.pj-plus,.danger,
-  .s-act,.lg-x,.js-p,.mbr-x,#carte,.score .bar,.tri,.cfx{display:none!important}
+  .s-act,.lg-x,.js-p,.mbr-x,#carte,.score .bar,.tri,.cfx,.h-b{display:none!important}
   .dt-in::-webkit-calendar-picker-indicator{display:none}
   header{position:static;box-shadow:none;background:#FFFFFF;color:#000000;background-image:none;
     border-bottom:2px solid #000000;padding:0 0 6px}
@@ -518,64 +525,66 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
 }
 
 /* ---- mode nuit ----
-   Automatique : il suit le réglage du téléphone. Pas de bouton — l'invariant « aucun
-   stockage navigateur » interdit de mémoriser un choix, et le ranger dans l'état
-   partagé imposerait le thème d'un appareil à toute la famille.
-   L'essentiel tient dans l'inversion de --craie (surface) et --encre (encre) : les
-   règles qui les emploient par paire s'inversent correctement d'elles-mêmes. */
-@media (prefers-color-scheme:dark){
-  :root{
-    --papier:#131A25;
-    --encre:#E9EFF7;
-    --craie:#1C2534;
-    --soleil:#FFB800;
-    --gave:#3FB3BC;            /* remontés d'un cran : le turquoise et le sapin */
-    --sapin:#4FBF80;           /* d'origine tombent sous le seuil lisible sur fond sombre */
-    --braise:#FF7A52;
-    --scotch:rgba(222,196,138,.34);
-    --surface-2:#243044;
-    --surface-fait:#1B2B25;
-    --surface-svg:#1A2A22;
-    --eau:#22303F;
-    --trait:#3A4A63;
-    --texte-2:#BAC7DB;
-    --texte-3:#A5B4CC;
-    --texte-4:#8796AE;
-    --miel:#2E2716;
-    --encre-2:#3A4C68;
-    --encre-nuit:#2A1F38;
-    --or-fonce:#E5BE55;
-    --alerte:#3A1E17;
-    --gave-t:var(--gave);        /* sur fond sombre, ce sont les variantes claires */
-    --braise-t:var(--braise);    /* qui portent le texte */
-    --cat-G:#4FBF80;
-    --cat-E:#FF7A52;
-    --cat-S:#3FB3BC;
-    --cat-R:#D9A02A;
-    --cat-O:#6D8CB8;
-    --cat-V:#A98BE0;
-    --cat-H:#4FBF80;
-    --sombre:#0E141D;
-    --sur-sombre:#EDF2F8;
-    --sur-soleil:#1A2230;
-  }
-  /* Les dégradés de catégorie sont des pastels : tels quels, ils éblouiraient.
-     Mêmes teintes, luminosité de nuit. */
-  .bn-G{background:linear-gradient(160deg,#24485C 55%,#1F4433 55%)}
-  .bn-E{background:linear-gradient(160deg,#4A3D18 55%,#2A4326 55%)}
-  .bn-S{background:linear-gradient(160deg,#1E4744 55%,#4A3A1C 55%)}
-  .bn-O{background:linear-gradient(160deg,#22455A 55%,#1E4046 55%)}
-  .bn-V{background:linear-gradient(160deg,#443A22 55%,#362B48 55%)}
-  .bn-R{background:linear-gradient(160deg,#2A3E27 55%,#48401C 55%)}
-  /* Les tuiles OpenStreetMap restent claires : leur appliquer un filtre fausserait
-     les couleurs de la carte. On garde donc des repères clairs par-dessus, et on
-     assombrit le cadre autour. */
-  .mk{background:#FFFFFF}
-  .mkstep{border-color:#FFFFFF}
-  #map{border-color:var(--trait)}
-  /* Le grain de papier n'a pas de sens sur fond sombre : il y lit comme du bruit. */
-  body::before{display:none}
+   Piloté par JS et non par une media query : une @media ne se surcharge pas depuis
+   un bouton. `majTheme()` combine le réglage du téléphone et le choix éventuel de
+   cette page, puis pose ou retire `html.nuit`. Un seul jeu de valeurs, donc — pas de
+   duplication — et la spécificité y gagne : `html.nuit .bn-G` passe devant `.bn-G`
+   quelle que soit sa position dans la feuille.
+   Le choix manuel n'est pas mémorisé : l'invariant « aucun stockage navigateur »
+   couvre aussi les cookies. Au rechargement, on repart sur le réglage du téléphone. */
+html{color-scheme:light}
+html.nuit{color-scheme:dark}   /* sans ça, les sélecteurs de date natifs restent blancs */
+html.nuit{
+  --papier:#131A25;
+  --encre:#E9EFF7;
+  --craie:#1C2534;
+  --soleil:#FFB800;
+  --gave:#3FB3BC;            /* remontés d'un cran : le turquoise et le sapin */
+  --sapin:#4FBF80;           /* d'origine tombent sous le seuil lisible sur fond sombre */
+  --braise:#FF7A52;
+  --scotch:rgba(222,196,138,.34);
+  --surface-2:#243044;
+  --surface-fait:#1B2B25;
+  --surface-svg:#1A2A22;
+  --eau:#22303F;
+  --trait:#3A4A63;
+  --texte-2:#BAC7DB;
+  --texte-3:#A5B4CC;
+  --texte-4:#8796AE;
+  --miel:#2E2716;
+  --encre-2:#3A4C68;
+  --encre-nuit:#2A1F38;
+  --or-fonce:#E5BE55;
+  --alerte:#3A1E17;
+  --gave-t:var(--gave);        /* sur fond sombre, ce sont les variantes claires */
+  --braise-t:var(--braise);    /* qui portent le texte */
+  --cat-G:#4FBF80;
+  --cat-E:#FF7A52;
+  --cat-S:#3FB3BC;
+  --cat-R:#D9A02A;
+  --cat-O:#6D8CB8;
+  --cat-V:#A98BE0;
+  --cat-H:#4FBF80;
+  --sombre:#0E141D;
+  --sur-sombre:#EDF2F8;
+  --sur-soleil:#1A2230;
 }
+/* Les dégradés de catégorie sont des pastels : tels quels, ils éblouiraient.
+   Mêmes teintes, luminosité de nuit. */
+html.nuit .bn-G{background:linear-gradient(160deg,#24485C 55%,#1F4433 55%)}
+html.nuit .bn-E{background:linear-gradient(160deg,#4A3D18 55%,#2A4326 55%)}
+html.nuit .bn-S{background:linear-gradient(160deg,#1E4744 55%,#4A3A1C 55%)}
+html.nuit .bn-O{background:linear-gradient(160deg,#22455A 55%,#1E4046 55%)}
+html.nuit .bn-V{background:linear-gradient(160deg,#443A22 55%,#362B48 55%)}
+html.nuit .bn-R{background:linear-gradient(160deg,#2A3E27 55%,#48401C 55%)}
+/* Les tuiles OpenStreetMap restent claires : leur appliquer un filtre fausserait
+   les couleurs de la carte. On garde donc des repères clairs par-dessus, et on
+   assombrit le cadre autour. */
+html.nuit .mk{background:#FFFFFF}
+html.nuit .mkstep{border-color:#FFFFFF}
+html.nuit #map{border-color:var(--trait)}
+/* Le grain de papier n'a pas de sens sur fond sombre : il y lit comme du bruit. */
+html.nuit body::before{display:none}
 </style>
 </head>
 <body>
@@ -585,7 +594,10 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
       <div class="h-t">🏕️ Le QG des vacances</div>
       <div class="h-s">Argelès-Gazost · 25 juil → 8 août 2026</div>
     </div>
-    <span class="badge-sync" id="sync" role="status" aria-live="polite">sync…</span>
+    <div class="h-out">
+      <button class="h-b" id="btnuit" data-act="theme" aria-pressed="false">🌙</button>
+      <span class="badge-sync" id="sync" role="status" aria-live="polite">sync…</span>
+    </div>
   </div>
   <div id="prog"></div>
   <div class="score">
@@ -2329,6 +2341,39 @@ window.addEventListener("scroll", function(){
   const ht = document.getElementById("haut");
   if(ht) ht.hidden = y < 600;
 }, {passive:true});
+/* ================= THÈME =================
+   `themeManuel` vaut null tant qu'on suit le téléphone, puis true/false après un appui.
+   Il vit le temps de la page — l'invariant « aucun stockage navigateur » couvre aussi
+   les cookies, donc rien n'est mémorisé : au rechargement on repart sur le réglage du
+   téléphone. C'est le prix du zéro-stockage, et il est assumé. */
+let themeManuel = null;
+function prefereNuit(){
+  return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme:dark)").matches);
+}
+function nuitActive(){ return themeManuel === null ? prefereNuit() : themeManuel; }
+function majTheme(){
+  const n = nuitActive();
+  document.documentElement.classList.toggle("nuit", n);
+  const tc = document.getElementById("tc");
+  if(tc) tc.setAttribute("content", n ? "#0E141D" : "#23324A");
+  const b = document.getElementById("btnuit");
+  if(b){
+    // l'icône annonce ce qu'on obtient en appuyant, pas l'état courant
+    b.textContent = n ? "☀️" : "🌙";
+    b.setAttribute("aria-pressed", n ? "true" : "false");
+    b.setAttribute("aria-label", n ? "Passer en mode jour" : "Passer en mode nuit");
+    b.title = b.getAttribute("aria-label");
+  }
+}
+/* Le téléphone peut basculer tout seul au coucher du soleil : on suit, tant que
+   personne n'a fait de choix sur cette page. */
+if(window.matchMedia){
+  const mq = window.matchMedia("(prefers-color-scheme:dark)");
+  const suivre = function(){ if(themeManuel === null) majTheme(); };
+  if(mq.addEventListener) mq.addEventListener("change", suivre);
+  else if(mq.addListener) mq.addListener(suivre);
+}
+
 /* La barre de filtres est collante sous l'en-tête, qui se compacte au défilement :
    sa hauteur est publiée en variable CSS plutôt que figée, sinon on aurait tantôt un
    trou tantôt un recouvrement. */
@@ -2551,7 +2596,8 @@ document.addEventListener("click", function(ev){
   const el = ev.target.closest("[data-act]");
   if(!el) return;
   const a = el.dataset.act, v = el.dataset.v;
-  if(a==="haut"){ window.scrollTo({top:0, behavior:"smooth"}); return; }
+  if(a==="theme"){ themeManuel = !nuitActive(); majTheme(); return; }
+  else if(a==="haut"){ window.scrollTo({top:0, behavior:"smooth"}); return; }
   else if(a==="jour"){ jourSel = v; rendre(); }
   else if(a==="met"){ put("met:"+jourSel, val("met:"+jourSel,"")===v ? "" : v); }
   else if(a==="acc"){ put("acc:"+v, !val("acc:"+v, v==="e" || v==="s")); }
@@ -2705,6 +2751,7 @@ function feteMission(ev, texte, auto){
 
 /* ================= DÉMARRAGE ================= */
 poseLegende();
+majTheme();
 majNav();
 majHauteurEntete();
 majReveil();      // arme le bandeau de réveil : il ne s'affichera qu'au bout de 4 s
