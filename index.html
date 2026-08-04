@@ -41,6 +41,8 @@
      et la braise d'origine plafonnent à 4,3:1, sous le seuil AA. */
   --gave-t:#186B71;
   --braise-t:#B8441F;
+  --bois:#A9743B;              /* anneau du meeple */
+  --froid:#2E86AB;             /* bas du thermomètre */
   --encre-2:#39506F;           /* aplats sur l'en-tête sombre */
   --encre-nuit:#3B2A4A;        /* dégradé du bandeau de palier */
   --alerte:#FDE7E0;            /* fond d'un bandeau d'alerte */
@@ -295,6 +297,47 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
 .mi button.cb{position:relative;width:34px;height:34px;border:2px solid var(--encre);border-radius:var(--r1);flex-shrink:0;font-size:16px;font-weight:800}
 .mi.done{opacity:.55;text-decoration:line-through}
 .mi-lie{display:block;font-size:11px;color:var(--sapin);font-weight:700;text-decoration:none}
+/* ---- jauges de jeux : quatre paliers, quatre formes ----
+   Deux par ligne sur téléphone : quatre formes différentes empilées feraient désordre. */
+.jauges{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 12px}
+.jg{border:2px solid var(--trait);border-radius:var(--r2);background:var(--surface-2);
+  padding:9px 8px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.jg-ok{border-color:var(--sapin)}
+.jg-t{font-size:12px;font-weight:800;line-height:1.2}
+.jg-d{display:flex;align-items:center;justify-content:center;width:100%;height:84px}
+.jg-n{font-size:12px;font-variant-numeric:tabular-nums;line-height:1.2}
+.jg-a{font-size:10px;color:var(--texte-3);line-height:1.2}
+/* Passeport : dix cases de tampons */
+.jg-pass{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;width:100%;max-width:132px;
+  background:var(--miel);border:1px dashed var(--soleil);border-radius:var(--r0);padding:4px}
+.jg-pass i{aspect-ratio:1;border:1px solid var(--trait);border-radius:2px;background:var(--craie);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;font-style:normal;
+  color:var(--braise-t);transition:background-color .3s ease}
+.jg-pass i.on{background:var(--miel);border-color:var(--braise-t);transform:rotate(-7deg)}
+/* Kallax : le rayonnage, une case par jeu */
+.jg-kal{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;width:100%;max-width:100px;
+  border:2px solid var(--encre);border-radius:var(--r0);padding:3px;background:var(--craie)}
+.jg-kal i{aspect-ratio:1;border:1px solid var(--trait);border-radius:1px;background:transparent;
+  transition:background-color .3s ease}
+.jg-kal i.on{background:var(--boite);border-color:var(--boite)}
+/* Meeple : l'anneau de bois */
+.jg-ring{width:68px;height:68px}
+.jg-piste{fill:none;stroke:var(--trait);stroke-width:7}
+.jg-arc{fill:none;stroke:var(--bois);stroke-width:7;stroke-linecap:round;
+  transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .6s ease}
+.jg-ok .jg-arc{stroke:var(--sapin)}
+.jg-meeple{fill:var(--encre)}
+/* Thermomètre : le mercure dévoile un dégradé pleine hauteur */
+.jg-th{position:relative;display:flex;flex-direction:column;align-items:center}
+.jg-tube{width:16px;height:52px;border:2px solid var(--encre);border-radius:var(--rp) var(--rp) 0 0;
+  background:var(--craie);overflow:hidden;display:flex;align-items:flex-end}
+.jg-merc{position:relative;display:block;width:100%;overflow:hidden;transition:height .6s ease}
+.jg-merc i{position:absolute;left:0;bottom:0;display:block;width:100%;height:52px;
+  background:linear-gradient(to top,var(--froid),var(--soleil) 55%,var(--braise))}
+.jg-bulbe{width:24px;height:24px;margin-top:-6px;border:2px solid var(--encre);border-radius:50%;
+  background:var(--froid)}
+.jg-ok .jg-bulbe{background:var(--braise)}
+.jg-a-ok{font-family:var(--mono);font-weight:700;color:var(--braise-t);letter-spacing:-.3px}
 .jsc{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px}
 .js-dt{align-items:center;gap:10px}
 .js-dt label{font-size:13px;font-weight:700;white-space:nowrap}
@@ -503,7 +546,9 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
   html,body{background:#FFFFFF;color:#000000;font-size:11pt;line-height:1.35}
   body{padding:0}
   body::before,#prog,#haut,nav,#toasts,#reveil,.filtres,.meteo,.aj,.pj-plus,.danger,
-  .s-act,.lg-x,.js-p,.mbr-x,#carte,.score .bar,.tri,.cfx,.h-b{display:none!important}
+  .s-act,.lg-x,.js-p,.mbr-x,#carte,.score .bar,.tri,.cfx,.h-b,.jg-d{display:none!important}
+  .jg{border:1px solid #999999;background:none}
+  .jauges{grid-template-columns:repeat(4,1fr)}
   .dt-in::-webkit-calendar-picker-indicator{display:none}
   header{position:static;box-shadow:none;background:#FFFFFF;color:#000000;background-image:none;
     border-bottom:2px solid #000000;padding:0 0 6px}
@@ -558,6 +603,8 @@ html.nuit{
   --alerte:#3A1E17;
   --gave-t:var(--gave);        /* sur fond sombre, ce sont les variantes claires */
   --braise-t:var(--braise);    /* qui portent le texte */
+  --bois:#C9975A;
+  --froid:#5AA9CE;
   --cat-G:#4FBF80;
   --cat-E:#FF7A52;
   --cat-S:#3FB3BC;
@@ -953,11 +1000,14 @@ function jeuxDiff(){ return jeux().length; }
 function jeuxParties(){ return jeux().reduce(function(t,j){ return t + (j.p || 0); }, 0); }
 /* Deux compteurs, deux paliers chacun. Le bloc n'affiche que le palier en cours,
    sinon quatre jauges pour deux chiffres. */
+/* `forme`, `nom` et `accroche` ne servent qu'à l'affichage de la jauge : les quatre
+   missions gardent leur intitulé dans la liste, au Bilan et dans les bandeaux — c'est lui
+   qui dit ce qu'il faut faire. Les clés restent les index de mission. */
 const JSEUILS = {
-  11:{f:jeuxDiff, n:10, lb:"jeux différents", c:"d"},
-  12:{f:jeuxParties, n:20, lb:"parties jouées", c:"p"},
-  13:{f:jeuxDiff, n:20, lb:"jeux différents", c:"d"},
-  14:{f:jeuxParties, n:30, lb:"parties jouées", c:"p"},
+  11:{f:jeuxDiff, n:10, lb:"jeux différents", c:"d", forme:"passeport", nom:"🛂 Passeport Ludique", accroche:"un tampon par jeu découvert", ok:"passeport complet"},
+  12:{f:jeuxParties, n:20, lb:"parties jouées", c:"p", forme:"meeple", nom:"🧩 Meeple Bois", accroche:"l’anneau se remplit", ok:"anneau bouclé"},
+  13:{f:jeuxDiff, n:20, lb:"jeux différents", c:"d", forme:"kallax", nom:"🗄️ Kallax", accroche:"une case par jeu", ok:"étagère pleine"},
+  14:{f:jeuxParties, n:30, lb:"parties jouées", c:"p", forme:"thermo", nom:"🌡️ Tableflip Risk", accroche:"ça chauffe", ok:"(╯°□°)╯︵ ┻━┻"},
 };
 /* Reprise des jeux déjà cochés avant l'arrivée du compteur. Motif volontairement étroit :
    mieux vaut en oublier deux (l'ajout manuel reste là) que compter une partie de piscine.
@@ -2136,21 +2186,66 @@ function optionsMission(){
     return '<optgroup label="' + esc(g) + '">' + groupes[g].join("") + '</optgroup>';
   }).join("");
 }
+/* ================= JAUGES DE JEUX =================
+   Quatre paliers, quatre formes : on doit savoir de quel palier on parle sans lire les
+   chiffres. Le remplissage plafonne à 100 % — le compteur, lui, peut dépasser la cible
+   (21/20 s'affiche tel quel depuis la v1.16) et la ligne chiffrée garde la vraie valeur.
+   `data-forme` / `data-pc` / `data-atteint` sur la racine : un point d'accroche
+   indépendant de la forme, la largeur d'un <i> ne voulant plus rien dire sur un anneau. */
+function jauge(i){
+  const s = JSEUILS[i], v = s.f(), atteint = v >= s.n;
+  const pc = Math.min(100, Math.round(v * 100 / s.n));
+  const dessins = {passeport:jgPasseport, kallax:jgKallax, meeple:jgMeeple, thermo:jgThermo};
+  return '<div class="jg' + (atteint ? " jg-ok" : "") + '" data-forme="' + s.forme +
+      '" data-pc="' + pc + '" data-atteint="' + (atteint ? "1" : "0") + '" role="img" aria-label="' +
+      escA(s.nom.replace(/^\S+\s/, "") + " : " + v + " sur " + s.n + " " + s.lb +
+        (atteint ? ", palier atteint" : "")) + '">' +
+    '<div class="jg-t">' + s.nom + '</div>' +
+    '<div class="jg-d" aria-hidden="true">' + dessins[s.forme](v, s.n, pc, atteint) + '</div>' +
+    '<div class="jg-n">' + (atteint ? "✅ " : "") + '<b>' + v + ' / ' + s.n + '</b> ' + s.lb + '</div>' +
+    '<div class="jg-a' + (atteint ? " jg-a-ok" : "") + '">' + esc(atteint ? s.ok : s.accroche) + '</div></div>';
+}
+/* Passeport : une case de tampon par jeu découvert. */
+function jgPasseport(v, n){
+  let c = "";
+  for(let k = 0; k < n; k++) c += '<i class="' + (k < v ? "on" : "") + '">' + (k < v ? "✓" : "") + '</i>';
+  return '<div class="jg-pass">' + c + '</div>';
+}
+/* Kallax : le rayonnage fait justement 20 cases, une par jeu, en couleurs de boîtes. */
+function jgKallax(v, n){
+  let c = "";
+  const teintes = Object.keys(CATS);
+  for(let k = 0; k < n; k++){
+    c += '<i class="' + (k < v ? "on" : "") + '"' +
+      (k < v ? ' style="--boite:' + catCouleur(teintes[k % teintes.length]) + '"' : "") + '></i>';
+  }
+  return '<div class="jg-kal">' + c + '</div>';
+}
+/* Meeple : anneau piloté par stroke-dashoffset, silhouette de meeple au centre. */
+function jgMeeple(v, n, pc){
+  const R = 26, C = 2 * Math.PI * R;
+  return '<svg class="jg-ring" viewBox="0 0 68 68">' +
+    '<circle cx="34" cy="34" r="' + R + '" class="jg-piste"/>' +
+    '<circle cx="34" cy="34" r="' + R + '" class="jg-arc" stroke-dasharray="' + C.toFixed(1) +
+      '" stroke-dashoffset="' + (C * (1 - pc / 100)).toFixed(1) + '"/>' +
+    '<path class="jg-meeple" d="M34 16a5.2 5.2 0 0 1 5.2 5.2c0 1.5-.6 2.8-1.6 3.7 3 .9 5 2.6 6.4 4.6l6.6 1.6a2.4 2.4 0 0 1-.8 4.7l-5.2-.6c.4 2.6.4 5.4.2 8.6h-21.6c-.2-3.2-.2-6 .2-8.6l-5.2.6a2.4 2.4 0 0 1-.8-4.7l6.6-1.6c1.4-2 3.4-3.7 6.4-4.6a5.1 5.1 0 0 1-1.6-3.7A5.2 5.2 0 0 1 34 16z"/>' +
+    '</svg>';
+}
+/* Thermomètre : le mercure est un dégradé PLEINE hauteur qu'on dévoile par le bas —
+   à 30 % on ne voit que le bleu, la couleur chauffe donc vraiment avec la progression. */
+function jgThermo(v, n, pc){
+  return '<div class="jg-th"><div class="jg-tube"><span class="jg-merc" style="height:' + pc + '%">' +
+    '<i></i></span></div><div class="jg-bulbe"></div></div>';
+}
+
 /* Bloc de suivi des jeux de société, sous les missions : c'est lui qui alimente
    les compteurs de md:11 et md:12. */
 function vueJeux(){
   const l = jeux();
   const rep = jeuxDejaCoches();
-  // Une jauge par palier, groupées par compteur : chacun voit où il en est des quatre.
-  const jauge = function(i){
-    const s = JSEUILS[i], v = s.f(), atteint = v >= s.n, pc = Math.min(100, Math.round(v * 100 / s.n));
-    return '<div class="jsc' + (atteint ? " jsc-ok" : "") + '"><span>' + (atteint ? "✅ " : "") +
-      '<b>' + v + ' / ' + s.n + '</b> ' + s.lb + '</span>' +
-      '<span class="jsb"><i style="width:' + pc + '%"></i></span></div>';
-  };
-  const jauges = Object.keys(JSEUILS)
+  const jauges = '<div class="jauges">' + Object.keys(JSEUILS)
     .sort(function(a,b){ return JSEUILS[a].c.localeCompare(JSEUILS[b].c) || JSEUILS[a].n - JSEUILS[b].n; })
-    .map(jauge).join("");
+    .map(jauge).join("") + '</div>';
   const li = l.map(function(j){
     return '<div class="ligne js-l">' +
       '<div class="js-b"><input class="js-nom" id="jsn-' + j.id + '" data-act="jsnom" data-v="' + j.id + '" maxlength="40"' +
