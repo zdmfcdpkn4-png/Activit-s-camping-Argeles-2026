@@ -595,6 +595,8 @@ html.nuit body::before{display:none}
       <div class="h-s">Argelès-Gazost · 25 juil → 8 août 2026</div>
     </div>
     <div class="h-out">
+      <button class="h-b" id="btsynth" data-act="synth" aria-pressed="false"
+        aria-label="Vue de synthèse" title="Vue de synthèse">🧭</button>
       <button class="h-b" id="btnuit" data-act="theme" aria-pressed="false">🌙</button>
       <span class="badge-sync" id="sync" role="status" aria-live="polite">sync…</span>
     </div>
@@ -1153,6 +1155,7 @@ let moi = "";         // membre qui vote sur CET appareil — mémoire seulement
 let fvTri = "votes";  // tri du classement des favoris : "votes" | "type"
 let ouvertAjoutPJ = false;  // zone d'ajout du programme repliée par défaut (allège la vue)
 let filJour = false;        // lecture chronologique de la journée (local, comme fvTri)
+let vueAvant = "jour";      // onglet à retrouver en quittant la synthèse (local)
 let fBilan = {};            // types retenus au Bilan (local aussi)
 function chargePhoto(o){
   if(!o.w || wikiImg[o.id] !== undefined) return;
@@ -1388,8 +1391,9 @@ function ligneCA(a, pref, marque, titre){
   const fl = a[2]||"";
   let extra = "";
   if(fl.indexOf("*")>-1) extra += " ⭐";
-  if(fl.indexOf("F")>-1) extra += ' <b style="color:var(--braise)">EN FAMILLE</b>';
-  if(fl.indexOf("I")>-1) extra += ' <b style="color:var(--gave)">SUR INSCRIPTION</b>';
+  // variantes -t : la braise et le turquoise d'accent plafonnent à 3,7:1 sur le papier
+  if(fl.indexOf("F")>-1) extra += ' <b style="color:var(--braise-t)">EN FAMILLE</b>';
+  if(fl.indexOf("I")>-1) extra += ' <b style="color:var(--gave-t)">SUR INSCRIPTION</b>';
   const k = pref ? cleCA(pref.d, pref.g, a) : null;
   const fait = k ? val(k, false) : false;
   return '<div class="ligne' + (fait?" lg-fait":"") + '">' + chip(a[0]) +
@@ -2201,6 +2205,124 @@ function vueMissions(){
     '<div class="note" style="margin-top:10px">2 points par mission accomplie — cochée sur un téléphone, cochée pour tous.<br>Une mission choisie dans la liste se coche toute seule dès que l’activité est marquée réalisée.</div></section>' +
     vueJeux();
 }
+/* ================= SYNTHÈSE =================
+   L'écran qui répond d'un coup d'œil à « où on en est, et qu'est-ce qu'on fait
+   maintenant ». Il se réfère au JOUR RÉEL et non à `jourSel` : la question posée est
+   « maintenant », pas « le jour que je consultais ».
+   Toutes les lignes passent par ligneIdee() et ligneCA(), donc par les mêmes clés que
+   les onglets d'origine — cocher ici compte exactement pareil. Une lecture de plus,
+   pas un état de plus. */
+function bloqSynth(titre, corps, vers, libVers){
+  return '<section class="fiche"><h2>' + titre + '</h2>' + corps +
+    (vers ? '<button class="pj-plus" data-act="allervue" data-v="' + vers + '">' + libVers + '</button>' : "") +
+    '</section>';
+}
+function vueSynthese(){
+  const auj = dateDe();
+  const dansSejour = DAYS.indexOf(auj) > -1;
+  const s = score(), p = palier(s);
+  const R = realisations();
+  const restants = dansSejour ? DAYS.length - DAYS.indexOf(auj) - 1 : 0;
+
+  // — Où on en est —
+  let html = '<section class="fiche"><h2>🧭 Où on en est</h2>' +
+    '<div class="synth">' +
+      '<div><b>' + s + '</b><small>points</small></div>' +
+      '<div><b>' + R.length + '</b><small>activité' + (R.length>1?"s":"") + '</small></div>' +
+      '<div><b>' + (dansSejour ? restants : "—") + '</b><small>' +
+        (dansSejour ? "jour" + (restants>1?"s":"") + " restant" + (restants>1?"s":"") : "hors séjour") + '</small></div>' +
+      '<div class="synth-niv"><b>' + p.nom + '</b><small>' +
+        (p.suivant ? p.restant + " points avant " + p.suivant : "palier maximal atteint") + '</small></div>' +
+    '</div></section>';
+
+  // — Aujourd'hui — : ce qui reste à faire, pas ce qui est déjà coché
+  let auj_h = "";
+  if(dansSejour){
+    const M = METEO[val("met:"+auj,"")];
+    const dejaVus = {};
+    (progJour(auj)).forEach(function(it){
+      if(it.i){
+        const t = trouveIdee(it.i);
+        if(t && !val("done:"+it.i, false)){ dejaVus[it.i] = 1; auj_h += ligneIdee(t.o, t.rando); }
+      } else if(it.j){
+        const j = jeux().filter(function(x){ return x.id === it.j; })[0];
+        const cle = cleCA(auj, "p", ["--", it.j]);
+        if(j && !val(cle, false)) auj_h += ligneCA(["--", "🎲 " + j.n], {d:auj, g:"p"});
+      } else {
+        const cle = cleCA(auj, "p", ["--", it.x]);
+        if(!val(cle, false)) auj_h += ligneCA(["--", it.x], {d:auj, g:"p"});
+      }
+    });
+    if(M) M.ids.forEach(function(id){
+      if(dejaVus[id] || val("done:"+id, false)) return;
+      const t = trouveIdee(id);
+      if(t){ dejaVus[id] = 1; auj_h += ligneIdee(t.o, t.rando); }
+    });
+    // les animations « en famille » du jour, qui sont celles qu'on rate le plus
+    const camp = CAMP[auj];
+    if(camp) ["e","a","x"].forEach(function(g){
+      (camp[g]||[]).forEach(function(it){
+        if((it[2]||"").indexOf("F") < 0) return;
+        if(val(cleCA(auj, g, it), false)) return;
+        auj_h += ligneCA(it, {d:auj, g:g}, PUBLICS[g].m, PUBLICS[g].t);
+      });
+    });
+    soireesDe(auj).forEach(function(it){
+      if(val(cleCA(auj, "s", it), false)) return;
+      auj_h += ligneCA(it, {d:auj, g:"s"}, PUBLICS.s.m, PUBLICS.s.t);
+    });
+    if(!auj_h) auj_h = '<div class="note">🎉 Tout ce qui était prévu aujourd’hui est coché. Bien joué.</div>';
+    html += bloqSynth('📅 Aujourd’hui, ' + titreJour(auj), auj_h, "jour", "📅 Ouvrir la journée complète");
+  } else {
+    html += bloqSynth('📅 Aujourd’hui', '<div class="note">On est hors des dates du séjour — le QG garde tout, et le 🏆 Bilan raconte ce qui a été fait.</div>', "bilan", "🏆 Ouvrir le Bilan");
+  }
+
+  // — Compteurs —
+  const faitsS = SORTIES.filter(function(o){ return val("done:"+o.id,false); }).length;
+  const faitsR = RANDOS.filter(function(r){ return val("done:"+r.id,false); }).length;
+  const missTot = MISSIONS.filter(Boolean).length + val("cm",[]).length;
+  const missOK = MISSIONS.filter(function(m,i){ return m && val("md:"+i,false); }).length +
+    val("cm",[]).filter(function(m){ return m.done; }).length;
+  const cat = catalogueCA();
+  const animOK = Object.keys(cat).filter(function(k){ return val(k,false); }).length;
+  html += '<section class="fiche"><h2>📊 Les compteurs</h2><div class="synth">' +
+    '<div><b>' + faitsS + '/' + SORTIES.length + '</b><small>sorties</small></div>' +
+    '<div><b>' + faitsR + '/' + RANDOS.length + '</b><small>randos</small></div>' +
+    '<div><b>' + missOK + '/' + missTot + '</b><small>missions</small></div>' +
+    '<div><b>' + jeuxDiff() + ' · ' + jeuxParties() + '</b><small>jeux · parties</small></div>' +
+    '<div><b>' + animOK + '</b><small>animations cochées</small></div>' +
+    '</div></section>';
+
+  // — Prochaines missions —
+  const ouvertes = [];
+  MISSIONS.forEach(function(m,i){ if(m && !val("md:"+i,false)) ouvertes.push({k:"md", v:i, t:m}); });
+  val("cm",[]).forEach(function(m){ if(!m.done) ouvertes.push({k:"cm", v:m.id, t:libMission(m.txt)}); });
+  if(ouvertes.length){
+    const li = ouvertes.slice(0,3).map(function(m){
+      return '<div class="mi"><button class="cb" data-act="' + m.k + '" data-v="' + m.v + '"></button>' +
+        '<span>' + esc(m.t) + '</span></div>';
+    }).join("");
+    html += bloqSynth('✅ Prochaines missions <span class="badge">' + ouvertes.length + '</span>', li,
+      "missions", "✅ Voir les " + ouvertes.length + " missions ouvertes");
+  }
+
+  // — Dernières réalisations —
+  if(R.length){
+    const derns = R.filter(function(r){ return r.d; })
+      .sort(function(a,b){ return b.d.localeCompare(a.d) || a.n.localeCompare(b.n,"fr"); }).slice(0,5);
+    const li = derns.map(function(r){
+      return '<div class="bl"><span class="fv-e">' + r.e + '</span>' +
+        '<span class="fv-b"><span class="fv-nom">' + esc(String(r.n).replace(/^🎲\s*/, "")) + '</span>' +
+        '<span class="fv-sub">' + titreJour(r.d) + (r.pts ? " · +" + r.pts + " pt" : "") + '</span></span></div>';
+    }).join("");
+    html += bloqSynth('🏆 Dernières réalisations', li, "bilan", "🏆 Ouvrir le Bilan complet");
+  } else {
+    html += '<section class="fiche"><h2>🏆 Dernières réalisations</h2>' +
+      etatVide("sommet", 'Rien de coché pour l’instant. Dès qu’une activité est marquée réalisée, elle apparaît ici.') +
+      '</section>';
+  }
+  return html;
+}
 function vueInfos(){
   const L = [
     ["🚌","Navette estivale + bus LIO 965 → Gavarnie & Pont d'Espagne (horaires à l'accueil)",""],
@@ -2252,7 +2374,7 @@ function rendre(){
   ["nm","nmb","npj","selpj","selm","njs","njp","seljs"].forEach(function(id){ const el = document.getElementById(id); if(el && el.value) valeurs[id] = el.value; });
   const change = derniereVue !== vue;
   derniereVue = vue;
-  app.innerHTML = vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="randos" ? vueRandos() : vue==="bilan" ? vueBilan() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
+  app.innerHTML = vue==="synthese" ? vueSynthese() : vue==="jour" ? vueJour() : vue==="sorties" ? vueSorties() : vue==="randos" ? vueRandos() : vue==="bilan" ? vueBilan() : vue==="favoris" ? vueFavoris() : vue==="missions" ? vueMissions() : vueInfos();
   for(const id in valeurs){ const el = document.getElementById(id); if(el && !el.value) el.value = valeurs[id]; }
   if(saisie){
     const el = document.getElementById(saisie.id);
@@ -2330,7 +2452,15 @@ function animerEntree(change){
 }
 window.addEventListener("scroll", function(){
   const y = window.scrollY || window.pageYOffset || 0;
-  document.body.classList.toggle("defile", y > 28);
+  // Deux seuils, et surtout largement écartés. Compacter l'en-tête raccourcit la page :
+  // le navigateur décale alors le défilement d'autant (une soixantaine de pixels) pour
+  // garder le même point de lecture. Avec un seuil unique — ou deux seuils rapprochés —
+  // ce décalage repasse aussitôt de l'autre côté du seuil et l'en-tête se met à vibrer,
+  // la page avec lui. L'écart entre les deux seuils doit donc dépasser la différence de
+  // hauteur entre les deux états.
+  const compact = document.body.classList.contains("defile");
+  if(!compact && y > 96) document.body.classList.add("defile");
+  else if(compact && y < 8) document.body.classList.remove("defile");
   const h = document.documentElement.scrollHeight - window.innerHeight;
   const b = document.getElementById("prog");
   if(b) b.style.width = (h > 8 ? Math.min(100, (y / h) * 100) : 0) + "%";
@@ -2390,6 +2520,8 @@ function majHauteurEntete(){
 }
 window.addEventListener("resize", majHauteurEntete, {passive:true});
 function majNav(){
+  const bs = document.getElementById("btsynth");
+  if(bs) bs.setAttribute("aria-pressed", vue === "synthese" ? "true" : "false");
   document.querySelectorAll("nav button").forEach(function(b){
     const actif = b.dataset.vue === vue;
     b.classList.toggle("actif", actif);
@@ -2597,6 +2729,13 @@ document.addEventListener("click", function(ev){
   if(!el) return;
   const a = el.dataset.act, v = el.dataset.v;
   if(a==="theme"){ themeManuel = !nuitActive(); majTheme(); return; }
+  else if(a==="synth"){
+    // bascule aller-retour : on revient à l'onglet d'où l'on vient
+    if(vue === "synthese") vue = vueAvant; else { vueAvant = vue; vue = "synthese"; }
+    majNav(); avecTransition(rendre); window.scrollTo({top:0, behavior:"smooth"});
+    return;
+  }
+  else if(a==="allervue"){ vue = v; majNav(); rendre(); window.scrollTo({top:0, behavior:"smooth"}); return; }
   else if(a==="haut"){ window.scrollTo({top:0, behavior:"smooth"}); return; }
   else if(a==="jour"){ jourSel = v; rendre(); }
   else if(a==="met"){ put("met:"+jourSel, val("met:"+jourSel,"")===v ? "" : v); }
