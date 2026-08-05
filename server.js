@@ -89,14 +89,14 @@ const server = createServer(async (req, res) => {
   }
   // Icônes : servies en fichiers plutôt qu'en data URI — iOS ignore les data URI
   // pour apple-touch-icon, or c'est là que l'icône compte le plus (écran d'accueil).
-  // Le fond de page suit le même chemin. C'est le SEUL fichier lourd de l'appli (87 Ko) :
-  // il est chargé en différé par le CSS, jamais sur le chemin critique, et gardé un an en
-  // cache — il ne changera pas d'ici la fin du séjour.
+  // Les deux fonds d'écran suivent le même chemin. Ce sont les seuls fichiers lourds de
+  // l'appli (53 et 44 Ko), chargés en différé par le CSS et jamais sur le chemin critique,
+  // gardés un an en cache — ce sont les photos de la famille, elles ne changeront pas.
   const ICONES = {
     "/icone.svg": "image/svg+xml",
     "/icone-180.png": "image/png",
     "/icone-512.png": "image/png",
-    "/fond-gavarnie.jpg": "image/jpeg",
+    "/fond-jour.jpg": "image/jpeg",
     "/fond-nuit.jpg": "image/jpeg",
   };
   if (ICONES[u.pathname]) {

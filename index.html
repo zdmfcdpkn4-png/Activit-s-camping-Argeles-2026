@@ -129,26 +129,23 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 /* ---- en-tête héros ----
-   La photo du cirque de Gavarnie (Benh Lieu Song, CC BY-SA 3.0) tient lieu de fond, sous un
-   dégradé qui garantit la lisibilité du texte quelle que soit la zone de l'image. Elle est
-   posée en `background-image` et non en `<img>` : le navigateur la charge APRÈS le rendu,
-   jamais sur le chemin critique — la page s'affiche à l'identique le temps qu'elle arrive,
-   ce qui compte sur un serveur Render qui se réveille. 87 Ko, gardés un an en cache.
-   Le dégradé reste sous le texte même si la photo ne vient jamais. */
+   Une photo de la famille tient lieu de fond — le cirque de Gavarnie depuis le sentier —,
+   sous un dégradé qui garantit la lisibilité du texte quelle que soit la zone de l'image.
+   Elle est posée en `background-image` et non en `<img>` : le navigateur la charge APRÈS
+   le rendu, jamais sur le chemin critique — la page s'affiche à l'identique le temps
+   qu'elle arrive, ce qui compte sur un serveur Render qui se réveille. 53 Ko, gardés un an
+   en cache. Le dégradé reste sous le texte même si la photo ne vient jamais.
+   Aucun crédit à afficher : ce sont leurs photos. */
 header{position:sticky;top:0;z-index:50;color:var(--sur-sombre);padding:var(--e5) var(--e7);box-shadow:var(--om-entete);
   background-color:var(--sombre);
-  background-image:linear-gradient(180deg,rgba(6,18,15,.58) 0%,rgba(6,18,15,.82) 58%,rgba(6,18,15,.95) 100%),url("/fond-gavarnie.jpg");
-  background-repeat:no-repeat,no-repeat;background-position:center,center 34%;background-size:cover,cover}
+  background-image:linear-gradient(180deg,rgba(6,18,15,.58) 0%,rgba(6,18,15,.82) 58%,rgba(6,18,15,.95) 100%),url("/fond-jour.jpg");
+  background-repeat:no-repeat,no-repeat;background-position:center,center 48%;background-size:cover,cover}
 /* Le médaillon : sceau doré aux poussins, dessiné en SVG inline (~4 Ko, aucune requête).
    Il remplace l'emoji 🏕️ et devient le point d'ancrage visuel de l'en-tête. */
 .h-med{flex:0 0 auto;width:58px;height:58px;display:block;
   filter:drop-shadow(0 2px 6px rgba(0,0,0,.45));transition:width .25s ease,height .25s ease}
 .h-med svg{width:100%;height:100%;display:block}
 body.defile .h-med{width:30px;height:30px}
-/* Le crédit de la photo : obligation de la licence CC BY-SA, et c'est aussi honnête. */
-.h-cred{max-width:760px;margin:var(--e2) auto 0;font-size:8px;letter-spacing:.3px;opacity:.42;line-height:1.2}
-.h-cred a{color:inherit}
-body.defile .h-cred{display:none}
 .h-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:var(--e4);justify-content:space-between}
 .h-in>div{min-width:0}
 /* Le bloc de droite ne se rétrécit pas : c'est le titre qui cède la place à 390 px. */
@@ -526,12 +523,13 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
    est déjà en cache pour l'en-tête. z-index négatif : elle passe SOUS le contenu, alors que
    le grain de papier ci-dessous passe au-dessus. */
 body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:url("/fond-gavarnie.jpg") center/cover no-repeat;opacity:.13;filter:blur(3px) saturate(.85)}
+  background:url("/fond-jour.jpg") center/cover no-repeat;opacity:.13;filter:blur(3px) saturate(.85)}
 
-/* — mode nuit : l'AUTRE photo, en noir et blanc —
-   Le noir et blanc est cuit dans le fichier et non posé en filtre CSS : 46 Ko au lieu de
-   87, parce qu'une image en niveaux de gris se comprime bien mieux. Et comme la règle ne
-   s'applique qu'en nuit, un téléphone en mode jour ne télécharge jamais ce fichier. */
+/* — mode nuit : l'autre photo de la famille, le lac d'Estaing dans la brume —
+   Elle est en noir et blanc dans le fichier lui-même, pas via un filtre CSS : 44 Ko contre
+   53 pour la couleur, une image en niveaux de gris se comprimant bien mieux. Et comme la
+   règle ne s'applique qu'en nuit, un téléphone en mode jour ne télécharge JAMAIS ce
+   fichier — et réciproquement. Chacun charge une seule photo. */
 html.nuit header{background-image:linear-gradient(180deg,rgba(3,10,8,.66) 0%,rgba(3,10,8,.86) 58%,rgba(3,10,8,.96) 100%),url("/fond-nuit.jpg")}
 html.nuit body::after{background-image:url("/fond-nuit.jpg");opacity:.17}
 
@@ -663,7 +661,7 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
   @page{margin:14mm}
   html,body{background:#FFFFFF;color:#000000;font-size:11pt;line-height:1.35}
   body{padding:0}
-  body::before,body::after,.h-cred,#prog,#haut,nav,#toasts,#reveil,.filtres,.meteo,.aj,.pj-plus,.danger,
+  body::before,body::after,#prog,#haut,nav,#toasts,#reveil,.filtres,.meteo,.aj,.pj-plus,.danger,
   .s-act,.lg-x,.js-p,.mbr-x,#carte,.score .bar,.tri,.cfx,.h-b,.jg-d{display:none!important}
   .jg{border:1px solid #999999;background:none}
   .jauges{grid-template-columns:repeat(4,1fr)}
@@ -783,7 +781,6 @@ html.nuit body::before{display:none}
     <span id="scoretxt" style="font-family:var(--mono)">0 pt</span>
   </div>
   <div class="prochain" id="prochain"></div>
-  <div class="h-cred" id="hcred"></div>
 </header>
 
 <div id="toasts" aria-live="polite"></div>
@@ -819,7 +816,7 @@ const API  = "/api/sync";
    indiscutable au lieu d'être un aller-retour. Un contrôle de `test-server-qg-pg` exige
    qu'elle soit IDENTIQUE à celle de package.json : deux montées de version se sont déjà
    perdues, la vigilance ne suffit pas. */
-const VERSION = "1.49.0";
+const VERSION = "1.50.0";
 
 /* ================= DONNÉES ================= */
 /* Planning camping — relevé sur le panneau : semaine 1 (26/07 → 01/08) photos du 26/07,
@@ -2861,12 +2858,6 @@ function majTheme(){
   document.documentElement.classList.toggle("nuit", n);
   const tc = document.getElementById("tc");
   if(tc) tc.setAttribute("content", n ? "#081310" : "#1B3A31");
-  // Le crédit suit le fond : ce ne sont pas la même photo, ni le même auteur, ni la même
-  // licence. Les afficher tous les deux serait plus simple mais faux la moitié du temps.
-  const cr = document.getElementById("hcred");
-  if(cr) cr.innerHTML = n
-    ? 'Fond : lac de Gaube — Miguel303xm, <a href="https://creativecommons.org/licenses/by-sa/2.5/" target="_blank" rel="noopener">CC BY-SA 2.5</a>'
-    : 'Fond : cirque de Gavarnie — Benh Lieu Song, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>';
   const b = document.getElementById("btnuit");
   if(b){
     // l'icône annonce ce qu'on obtient en appuyant, pas l'état courant
