@@ -32,7 +32,8 @@
   --surface-fait:#F2F6F1;      /* carte d'une sortie déjà réalisée */
   --surface-svg:#EAF2EC;       /* fond des schémas de rando */
   --eau:#DDE7EE;               /* attente d'image, fond de carte */
-  --trait:#D8DCE5;             /* filets, séparateurs pointillés */
+  --trait:#D8DCE5;             /* filets, séparateurs pointillés — non interactifs */
+  --trait-fort:#8A93A8;        /* bordure d'un contrôle au repos : 3,08:1, seuil WCAG 1.4.11 */
   --texte-2:#4E5D77;           /* méta d'une fiche */
   --texte-3:#5A6A85;           /* intitulés, sous-titres */
   --texte-4:#626E85;           /* crédits, mentions */
@@ -145,10 +146,10 @@ main{max-width:760px;margin:0 auto;padding:14px}
 
 /* ---- pastilles jours ---- */
 .jours{display:flex;gap:8px;overflow-x:auto;padding:12px 2px;-webkit-overflow-scrolling:touch}
-.jour{min-width:64px;min-height:56px;border:2px solid var(--encre);border-radius:var(--r2);background:var(--craie);
+.jour{min-width:64px;min-height:56px;border:1px solid var(--trait-fort);border-radius:var(--r2);background:var(--craie);
   font-weight:700;font-size:13px;padding:6px 4px;text-align:center;flex-direction:column;display:flex;gap:2px;align-items:center;justify-content:center}
 .jour small{font-weight:600;font-size:10px;opacity:.7}
-.jour.actif{background:var(--soleil);color:var(--sur-soleil);box-shadow:var(--om-actif)}
+.jour.actif{background:var(--soleil);color:var(--sur-soleil);box-shadow:var(--om-actif);border-color:var(--encre)}
 .jour .pt{font-size:10px;line-height:1}
 /* Jour réel vs jour consulté : deux informations distinctes. Le jaune dit « c'est ce
    que tu regardes », le liseré braise dit « on est aujourd'hui ». Les jours passés
@@ -156,13 +157,13 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .jour{position:relative}
 .jour.passe{opacity:.55}
 .jour.passe.actif{opacity:1}
-.jour.auj{border-color:var(--braise-t)}
+.jour.auj{border-color:var(--braise-t);border-width:2px}
 .jour.auj small{color:var(--braise-t);opacity:1;font-weight:800}
 
 /* ---- chips horaires ---- */
 .ligne{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dotted var(--trait);font-size:14px}
 .lg-btn{display:flex;gap:8px;align-items:flex-start;flex:1;min-width:0;text-align:left;cursor:pointer;min-height:44px;background:none;border:0;padding:0}
-.aj select{flex:1;min-width:0;min-height:46px;border:2px solid var(--encre);border-radius:var(--r2);padding:0 10px;font-size:14px;font-family:inherit;background:var(--craie);color:var(--encre)}
+.aj select{flex:1;min-width:0;min-height:46px;border:1px solid var(--trait-fort);border-radius:var(--r2);padding:0 10px;font-size:14px;font-family:inherit;background:var(--craie);color:var(--encre)}
 .lg-x{position:relative;flex-shrink:0;min-width:36px;min-height:36px;align-self:center;font-size:13px;opacity:.45}
 .ligne:last-child{border-bottom:none}
 .chip{font-family:var(--mono);font-size:12px;font-weight:700;padding:3px 7px;border-radius:var(--r1);min-width:52px;text-align:center;transform:rotate(-1deg)}
@@ -176,8 +177,8 @@ main{max-width:760px;margin:0 auto;padding:14px}
 
 /* ---- météo ---- */
 .meteo{display:flex;gap:8px;flex-wrap:wrap}
-.meteo button{flex:1;min-width:72px;min-height:48px;border:2px solid var(--encre);border-radius:var(--r2);background:var(--craie);font-size:12px;font-weight:700;padding:6px}
-.meteo button.actif{background:var(--gave);color:var(--craie)}
+.meteo button{flex:1;min-width:72px;min-height:48px;border:1px solid var(--trait-fort);border-radius:var(--r2);background:var(--craie);font-size:12px;font-weight:700;padding:6px}
+.meteo button.actif{background:var(--gave);color:var(--craie);border-color:var(--encre)}
 
 /* ---- barre de recherche et filtres ----
    Collante sous l'en-tête : --h-entete est tenue à jour en JS parce que l'en-tête se
@@ -185,7 +186,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .filtres{position:sticky;top:var(--h-entete,84px);z-index:40;background:var(--papier);
   margin:0 -14px;padding:6px 14px 4px;border-bottom:2px solid var(--trait)}
 .f-rech{display:flex;gap:8px;align-items:center}
-.f-rech input{flex:1;min-width:0;min-height:44px;border:2px solid var(--encre);border-radius:var(--r2);
+.f-rech input{flex:1;min-width:0;min-height:44px;border:1px solid var(--trait-fort);border-radius:var(--r2);
   padding:0 12px;font-size:14px;font-family:inherit;background:var(--craie);color:inherit}
 .f-rech input::-webkit-search-cancel-button{display:none}
 .f-rech .f-x{min-height:44px;min-width:44px;border:2px solid var(--trait);border-radius:var(--r2);
@@ -200,6 +201,9 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .f-cpt{flex:0 0 auto;font-family:var(--mono);font-size:12px;font-weight:800;color:var(--texte-3);white-space:nowrap}
 .f-cpt b{color:var(--encre)}
 
+/* Un champ en cours de saisie prend l'encre : la bordure dit l'état, elle ne décore pas. */
+.aj input:focus,.aj select:focus,.f-rech input:focus,.js-dt input:focus{border-color:var(--encre)}
+
 /* ---- sorties ---- */
 /* Titre de catégorie collant sous la barre de filtres : on sait toujours dans quelle
    famille on défile. --h-collant est tenue à jour en JS (en-tête + barre de filtres). */
@@ -211,7 +215,7 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .cat-t.cat{border-left:5px solid var(--cat);padding-left:8px;color:var(--cat)}
 /* Vignette de la carte repliée : le dégradé de catégorie existant, en 46 px.
    Du rythme visuel sans une seule requête réseau. */
-.s-vig{flex:0 0 auto;width:46px;height:46px;border:2px solid var(--encre);border-radius:var(--r1);
+.s-vig{flex:0 0 auto;width:46px;height:46px;border-radius:var(--r1);
   display:flex;align-items:center;justify-content:center;font-size:22px}
 .s-corps{flex:1;min-width:0}
 .sortie{background:var(--craie);border:2px solid var(--encre);border-radius:var(--r3);box-shadow:var(--om1);padding:12px;margin:10px 0}
@@ -237,7 +241,7 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
 /* Visuel d'une fiche dépliée. La boîte a sa forme AVANT que la photo arrive : plus de
    saut de page quand elle se charge, et le dégradé de catégorie sert d'abord de fond
    d'attente, puis de repli définitif si la photo ne vient pas. */
-.s-vis{position:relative;aspect-ratio:16/10;border:2px solid var(--encre);border-radius:var(--r1);
+.s-vis{position:relative;aspect-ratio:16/10;border:1px solid var(--trait);border-radius:var(--r1);
   overflow:hidden;display:flex;align-items:center;justify-content:center;margin:0}
 /* Silhouette de sommet en filigrane : les six dégradés étaient de simples diagonales. */
 .s-vis::before{content:"";position:absolute;inset:0;background:var(--filigrane) no-repeat right -8px bottom / auto 62%}
@@ -341,12 +345,12 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
 .jsc{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px}
 .js-dt{align-items:center;gap:10px}
 .js-dt label{font-size:13px;font-weight:700;white-space:nowrap}
-.js-dt input{flex:1;min-height:44px;border:2px solid var(--encre);border-radius:var(--r2);padding:0 10px;
+.js-dt input{flex:1;min-height:44px;border:1px solid var(--trait-fort);border-radius:var(--r2);padding:0 10px;
   font-size:14px;font-family:inherit;background:var(--craie);color:inherit}
 .jsc-ok{opacity:.75}
 .jsc-ok .jsb i{background:var(--soleil)}
 .jsc>span:first-child{flex:0 0 auto;white-space:nowrap}
-.jsb{flex:1;height:9px;border:2px solid var(--encre);border-radius:var(--r1);overflow:hidden;background:var(--craie)}
+.jsb{flex:1;height:9px;border:1px solid var(--trait);border-radius:var(--r1);overflow:hidden;background:var(--craie)}
 .jsb i{display:block;height:100%;background:var(--sapin);transition:width .5s ease}
 .js-n{display:block;font-size:11px;opacity:.65;padding-left:2px}
 .js-l{gap:6px}
@@ -355,17 +359,17 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
   font-family:inherit;font-weight:600;color:inherit;background:transparent}
 .js-nom:focus{border-color:var(--encre);background:var(--craie);outline:none}
 .bl-nom{font-weight:700;font-size:14px;min-height:44px;padding:0 4px}
-.js-p{width:44px;min-height:44px;border:2px solid var(--encre);border-radius:var(--r1);font-weight:800;font-size:17px;flex-shrink:0;line-height:1}
+.js-p{width:44px;min-height:44px;border:1px solid var(--trait-fort);border-radius:var(--r1);font-weight:800;font-size:17px;flex-shrink:0;line-height:1}
 .js-p[disabled]{opacity:.3}
 .mi.done button.cb{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
 .aj{display:flex;gap:8px;margin-top:10px}
-.aj input{flex:1;min-height:46px;border:2px solid var(--encre);border-radius:var(--r2);padding:0 12px;font-size:14px;font-family:inherit;background:var(--craie)}
+.aj input{flex:1;min-height:46px;border:1px solid var(--trait-fort);border-radius:var(--r2);padding:0 12px;font-size:14px;font-family:inherit;background:var(--craie)}
 .aj button{min-height:46px;min-width:46px;padding:0 16px;border-radius:var(--r2);background:var(--soleil);color:var(--sur-soleil);font-weight:800}
 
 /* ---- favoris ---- */
 .mbrs{display:flex;flex-wrap:wrap;gap:8px}
-.mbr{display:inline-flex;align-items:center;border:2px solid var(--encre);border-radius:var(--rp);background:var(--craie);overflow:hidden}
-.mbr.actif{background:var(--soleil);color:var(--sur-soleil);box-shadow:var(--om-actif)}
+.mbr{display:inline-flex;align-items:center;border:1px solid var(--trait-fort);border-radius:var(--rp);background:var(--craie);overflow:hidden}
+.mbr.actif{background:var(--soleil);color:var(--sur-soleil);box-shadow:var(--om-actif);border-color:var(--encre)}
 .mbr-t{min-height:44px;padding:0 4px 0 12px;font-weight:800;font-size:13px}
 .mbr-x{min-height:44px;padding:0 10px;font-size:11px;opacity:.45}
 .tri{margin-bottom:4px}
@@ -408,7 +412,7 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
   border-radius:50%;background:var(--encre);color:var(--craie);font-weight:800;font-size:12px;
   display:flex;align-items:center;justify-content:center}
 .etp b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--texte-3)}
-.svgmap{width:100%;height:auto;border:2px solid var(--encre);border-radius:var(--r1);background:var(--surface-svg);display:block;margin:8px 0 2px}
+.svgmap{width:100%;height:auto;border:1px solid var(--trait);border-radius:var(--r1);background:var(--surface-svg);display:block;margin:8px 0 2px}
 .svg-cap{font-size:10px;color:var(--texte-4);margin-bottom:6px}
 .mkstep{width:22px;height:22px;border-radius:50%;background:var(--gave);color:var(--craie);font-size:11px;font-weight:800;
   display:flex;align-items:center;justify-content:center;border:2px solid var(--craie);box-shadow:var(--om-mk)}
@@ -600,6 +604,7 @@ html.nuit{
   --surface-svg:#1A2A22;
   --eau:#22303F;
   --trait:#3A4A63;
+  --trait-fort:#6E7C96;      /* 3,66:1 sur la surface de nuit */
   --texte-2:#BAC7DB;
   --texte-3:#A5B4CC;
   --texte-4:#8796AE;
