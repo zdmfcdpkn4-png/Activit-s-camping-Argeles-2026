@@ -424,6 +424,13 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
 .mb-force{min-height:44px;margin-top:var(--e4);padding:0 var(--e5);border-radius:var(--r2);
   border:1px solid var(--trait-fort);background:var(--craie);font-size:var(--tx-texte);
   font-weight:700;color:var(--texte-2)}
+.orph{margin-top:var(--e4);padding:var(--e5) var(--e6);border:1px dashed var(--soleil);
+  border-radius:var(--r2);background:var(--miel)}
+.orph-t{font-size:var(--tx-texte);font-weight:800}
+.orph-l{display:flex;flex-wrap:wrap;gap:var(--e4);align-items:center;justify-content:space-between;
+  font-size:var(--tx-texte);margin-top:var(--e3)}
+.orph-l button{min-height:44px;padding:0 var(--e5);border-radius:var(--r2);background:var(--encre);
+  color:var(--craie);font-weight:800;font-size:var(--tx-texte);white-space:nowrap}
 .code-g{margin-top:var(--e4);padding:var(--e5) var(--e6);border:2px solid var(--braise);
   border-radius:var(--r2);background:var(--alerte)}
 .code-t{font-size:var(--tx-corps);font-weight:800;line-height:1.25}
@@ -1932,6 +1939,29 @@ function votants(sid){
 function votesDe(mid){
   return FAVLIST().filter(function(s){ return val("fav:" + mid + ":" + s.id, false); }).length;
 }
+/* Votes dont le votant n'est plus dans la liste. `votants()` part de `membres()` : un vote
+   dont le prénom a disparu de `mb` devient invisible PARTOUT — classement, compteurs,
+   émojis. On voit ses votes s'évanouir sans aucun moyen de savoir qu'ils sont intacts.
+   C'est le vrai défaut du 05/08, plus que la fausse manœuvre elle-même : il a fallu que
+   quelqu'un explique le modèle de données. L'appli le dit désormais toute seule.
+   Premier endroit du code qui énumère l'état ; quelques centaines de clés, une fois par
+   rendu de la vue Favoris. */
+function votesOrphelins(){
+  const connus = {}; membres().forEach(function(m){ connus[m.id] = true; });
+  const compte = {};
+  Object.keys(ST.state).forEach(function(k){
+    const m = k.match(/^fav:([^:]+):/);
+    if(!m || connus[m[1]] || !val(k, false)) return;
+    compte[m[1]] = (compte[m[1]] || 0) + 1;
+  });
+  return Object.keys(compte).map(function(id){ return {id:id, n:compte[id]}; })
+    .sort(function(a,b){ return b.n - a.n; });
+}
+/* Le prénom affiché n'est pas récupérable : seul l'identifiant survit dans les clés. On le
+   reconstruit — fidèle pour un prénom simple, ce qui est le cas de tous ceux d'ici. */
+function joliNom(id){
+  return id.split("-").map(function(p){ return p.charAt(0).toUpperCase() + p.slice(1); }).join("-");
+}
 function slugMembre(n){
   const s = n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,20);
   return s || "m" + Date.now();
@@ -1983,6 +2013,18 @@ function vueFavoris(){
   } else if(protege.length){
     retrait = '<button class="mb-force" data-act="mbforce">⚙️ Retirer un votant qui a déjà voté</button>';
   }
+  // Des votes existent pour un prénom absent de la liste : on le dit, et on propose de le
+  // remettre en un geste. Le bouton repart de l'IDENTIFIANT trouvé dans les clés, pas d'une
+  // saisie re-slugifiée : c'est ce qui garantit que les votes se rebranchent, même si le
+  // prénom d'origine s'écrivait autrement.
+  const orph = votesOrphelins();
+  const orphelins = orph.length ? '<div class="orph">' +
+    '<div class="orph-t">❤️ Des votes sans votant</div>' +
+    orph.map(function(o){
+      return '<div class="orph-l"><span><b>' + o.n + ' vote' + (o.n>1?"s":"") + '</b> enregistré' +
+        (o.n>1?"s":"") + ' au nom de « ' + esc(joliNom(o.id)) + ' », qui n’est plus dans la liste.</span>' +
+        '<button data-act="mbrestore" data-v="' + esc(o.id) + '">Remettre ' + esc(joliNom(o.id)) + '</button></div>';
+    }).join("") + '</div>' : "";
   let intro;
   if(!mb.length) intro = '<div class="note">👋 Ajoutez une fois les prénoms de la famille (partagés sur tous les téléphones), puis chacun touche le sien pour voter.</div>';
   else if(!m0) intro = '<div class="note">👆 Touche ton prénom pour voter — à re-sélectionner après un rechargement, rien n’est stocké sur l’appareil.</div>';
@@ -2011,7 +2053,7 @@ function vueFavoris(){
     return t + FAVLIST().filter(function(s){ return val("fav:" + m.id + ":" + s.id, false); }).length;
   }, 0);
   return '<section class="fiche"><h2>👨‍👩‍👧‍👦 Qui vote ?</h2>' +
-    '<div class="mbrs">' + chips + '</div>' + retrait +
+    '<div class="mbrs">' + chips + '</div>' + retrait + orphelins +
     '<div class="aj"><input id="nmb" maxlength="16" placeholder="Prénom à ajouter…"><button data-act="mbadd">+</button></div>' +
     intro + '</section>' +
     '<section class="fiche"><h2>⭐ Le classement <span style="text-transform:none;font-weight:600;font-size:12px">(' + totalVotes + ' vote' + (totalVotes>1?"s":"") + ')</span></h2>' +
@@ -3026,6 +3068,14 @@ document.addEventListener("click", function(ev){
     if(votesDe(v) > 0){ codeAction = "mb:" + v; rendre(); return; }
     if(moi===v) moi = "";
     put("mb", membres().filter(function(m){ return m.id!==v; }));
+  }
+  else if(a==="mbrestore"){
+    const mb = membres();
+    if(!mb.some(function(m){ return m.id===v; })){
+      put("mb", mb.concat([{id:v, n:joliNom(v), e:MOJIS[mb.length % MOJIS.length]}]));
+      toast(joliNom(v) + " est de retour", "Ses " + votesDe(v) + " votes réapparaissent au classement.", "", 4200);
+      fete(ev, ["❤️","✨","⭐"], 12);
+    } else rendre();
   }
   else if(a==="mbforce"){ codeAction = "mbchoix"; rendre(); }
   else if(a==="mbpick"){ codeAction = "mb:" + v; rendre(); }
