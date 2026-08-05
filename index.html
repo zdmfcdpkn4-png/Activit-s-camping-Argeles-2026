@@ -1013,7 +1013,11 @@ null,   // retirée le 02/08 — souvenir fait main, doublon de la mission créa
 "🎲 Jeux : découvrir 10 jeux de société différents",
 "🎲 Jeux : jouer 20 parties de jeux de société",
 "🎲 Jeux : découvrir 20 jeux de société différents",
-"🎲 Jeux : jouer 30 parties de jeux de société"
+"🎲 Jeux : jouer 30 parties de jeux de société",
+// Ajoutée le 05/08 (demande utilisateur). En FIN de tableau, comme les quatre paliers de
+// jeux avant elle : l'index EST la clé partagée `md:<i>`, une insertion au milieu ferait
+// glisser sur d'autres missions les coches déjà faites par la famille.
+"🛶 Sport : descendre le gave de Pau en rafting"
 ];
 /* Missions ajoutées par la famille : elles sont saisies sans emoji. On en déduit une icône
    à l'affichage seulement — le libellé enregistré dans l'état partagé n'est jamais modifié
@@ -1321,7 +1325,8 @@ const MISSLIEN = [
   {i:5, ca:/créa|création|peinture|modelage|dessin|aquarellum|nail art|dot painting|marque-page|gratter/i},
   {i:8, ids:["gavarnie","pontespagne","picdumidi"]},
   {i:9, ids:["donjon","soulor","rd-soum"]},
-  {i:10, ids:["marche"]}
+  {i:10, ids:["marche"]},
+  {i:15, ids:["rafting"]}
 ];
 function autoMissions(cible, estLibelle){
   const nouvelles = [];
