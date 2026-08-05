@@ -358,8 +358,18 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
 .mi{display:flex;gap:var(--e5);align-items:center;min-height:48px;border-bottom:1px dotted var(--trait);font-size:var(--tx-corps)}
 .mi:last-child{border-bottom:none}
 .mi button.cb{position:relative;width:34px;height:34px;border:2px solid var(--encre);border-radius:var(--r1);flex-shrink:0;font-size:var(--tx-fort);font-weight:800}
-.mi.done{opacity:.55;text-decoration:line-through}
+/* Atténuation par la couleur et non par l'opacité : opacity s'applique à toute la ligne,
+   badge compris, et un enfant ne peut pas remonter au-dessus de l'opacité de son parent. */
+.mi.done{color:var(--texte-3);text-decoration:line-through}
 .mi-lie{display:block;font-size:var(--tx-mini);color:var(--sapin);font-weight:700;text-decoration:none}
+/* Badge d'une mission accomplie : le sceau de l'en-tête en médaille de 30 px. Il vit hors
+   du texte barré et de l'atténuation de `.mi.done` — une médaille gagnée ne se raye pas. */
+.bpo{flex-shrink:0;width:30px;height:30px;margin-left:auto;display:block;opacity:1;
+  text-decoration:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
+.bpo svg{width:100%;height:100%;display:block}
+.bl .bpo{width:26px;height:26px;margin-left:var(--e3)}
+/* Pas d'animation d'apparition : la ligne est reconstruite à chaque rendu, donc elle
+   rejouerait toutes les 15 s au rythme de la synchro. La fête a déjà lieu à la coche. */
 /* ---- jauges de jeux : quatre paliers, quatre formes ----
    Deux par ligne sur téléphone : quatre formes différentes empilées feraient désordre. */
 .jauges{display:grid;grid-template-columns:1fr 1fr;gap:var(--e5);margin:var(--e2) 0 var(--e6)}
@@ -737,6 +747,14 @@ html.nuit body::before{display:none}
 </style>
 </head>
 <body>
+<!-- Dégradé d'or partagé par tous les badges de mission : défini une seule fois, hors de
+     l'en-tête (qui disparaît à l'impression) et hors des badges eux-mêmes (un id ne se
+     répète pas). -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>
+<linearGradient id="bpo-or" x1=".1" y1="0" x2=".9" y2="1">
+<stop offset="0" stop-color="#F8DE95"/><stop offset=".34" stop-color="#C8A047"/>
+<stop offset=".58" stop-color="#F4D687"/><stop offset="1" stop-color="#9E7629"/></linearGradient>
+</defs></svg>
 <header>
   <div class="h-in">
     <span class="h-med" aria-hidden="true"><svg viewBox="0 0 120 120"><defs><linearGradient id="mor" x1=".1" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="#F8DE95"/><stop offset=".34" stop-color="#C8A047"/><stop offset=".58" stop-color="#F4D687"/><stop offset="1" stop-color="#9E7629"/></linearGradient><linearGradient id="mciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16332B"/><stop offset="1" stop-color="#0A1917"/></linearGradient><clipPath id="mrond"><circle cx="60" cy="60" r="41.5"/></clipPath><path id="mhaut" d="M14.4 44.5 A48 48 0 0 1 105.6 44.5" fill="none"/><path id="mbas" d="M15.6 78.5 A48 48 0 0 0 104.4 78.5" fill="none"/></defs><circle cx="60" cy="60" r="58.5" fill="url(#mor)"/><circle cx="60" cy="60" r="54" fill="none" stroke="#7A5A1C" stroke-width=".7" opacity=".5"/><circle cx="60" cy="60" r="41.5" fill="url(#mciel)"/><g clip-path="url(#mrond)"><circle cx="86" cy="36" r="6.5" fill="#FFC94A" opacity=".92"/><path d="M6 100 L32 54 L48 78 L62 48 L96 100Z" fill="#1E463C"/><path d="M54 100 L80 60 L94 78 L110 60 L118 100Z" fill="#173A33"/><path d="M32 54 L39 65 L25 65Z" fill="#E8F2EC" opacity=".9"/><path d="M62 48 L70 61 L54 61Z" fill="#E8F2EC" opacity=".9"/><rect x="0" y="90" width="120" height="20" fill="#122C27"/><path d="M15 90 L22 76 L29 90Z" fill="#C8A047"/><path d="M22 81 L26 90 L18 90Z" fill="#0A1917"/><g transform="translate(41 72) scale(.86)"><ellipse cx="0" cy="8" rx="9.6" ry="8.2" fill="#EFBE33"/><circle cx="0" cy="-2.4" r="7.6" fill="#F8D556"/><path d="M-7.7 -3.4 A7.7 7.7 0 0 1 7.7 -3.4 L7.7 -.8 A7.7 7.7 0 0 0 -7.7 -.8Z" fill="#3E8E62"/><path d="M-1.4 -10.8 L1.4 -13.6 L2.8 -9.9Z" fill="#3E8E62"/><circle cx="-2.8" cy="-1.9" r="1.3" fill="#1B2A18"/><circle cx="2.8" cy="-1.9" r="1.3" fill="#1B2A18"/><path d="M-1.8 1.5 L1.8 1.5 L0 3.8Z" fill="#DE8524"/></g><g transform="translate(77 74) scale(.9)"><ellipse cx="0" cy="8" rx="9.8" ry="8.4" fill="#EFBE33"/><circle cx="0" cy="-2.8" r="7.9" fill="#F8D556"/><path d="M-8 -5 A8 8 0 0 1 8 -5Z" fill="#EE8FA8"/><path d="M8 -5 L13.2 -3.7 L8 -3Z" fill="#EE8FA8"/><circle cx="-2.9" cy="-2.2" r="1.32" fill="#1B2A18"/><circle cx="2.9" cy="-2.2" r="1.32" fill="#1B2A18"/><path d="M-1.8 1.2 L1.8 1.2 L0 3.5Z" fill="#DE8524"/><path d="M-13.6 9.6 A7.4 7.4 0 0 1 -0.4 9.6Z" fill="#E2574C"/><path d="M-13.6 9.6 A7.4 7.4 0 0 1 -0.4 9.6" fill="none" stroke="#3E8E62" stroke-width="1.7"/></g><g transform="translate(59 84) scale(.94)"><ellipse cx="0" cy="7" rx="9.2" ry="7.6" fill="#F8D556"/><circle cx="0" cy="-2.6" r="7.4" fill="#FCE383"/><path d="M-7.8 -2.6 A7.8 7.8 0 0 1 7.8 -2.6" fill="none" stroke="#39506F" stroke-width="2"/><rect x="-9.7" y="-3.4" width="3.4" height="5.6" rx="1.7" fill="#39506F"/><rect x="6.3" y="-3.4" width="3.4" height="5.6" rx="1.7" fill="#39506F"/><circle cx="-2.6" cy="-1.9" r="1.2" fill="#1B2A18"/><circle cx="2.6" cy="-1.9" r="1.2" fill="#1B2A18"/><path d="M-1.7 1.3 L1.7 1.3 L0 3.4Z" fill="#DE8524"/></g></g><circle cx="60" cy="60" r="41.5" fill="none" stroke="#7A5A1C" stroke-width="1.5"/><g font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-weight="800" fill="#4A3410"><text font-size="8.2" letter-spacing=".9"><textPath href="#mhaut" startOffset="50%" text-anchor="middle">LE QG DES VACANCES</textPath></text><text font-size="7.4" letter-spacing=".8"><textPath href="#mbas" startOffset="50%" text-anchor="middle">ARGELÈS-GAZOST 2026</textPath></text></g><g fill="#4A3410"><path d="M8.6 60 L10.6 57.6 L12.6 60 L10.6 62.4Z"/><path d="M107.4 60 L109.4 57.6 L111.4 60 L109.4 62.4Z"/></g></svg></span>
@@ -2290,6 +2308,9 @@ function ligneBilan(r, idx){
   const trouve = r.k && r.k.indexOf("done:") === 0 ? trouveIdee(r.k.slice(5)) : null;
   const past = trouve ? '<i class="pastille" aria-hidden="true" style="--cat:' +
     catCouleur(trouve.rando ? "H" : trouve.o.c) + '"></i>' : "";
+  // Le badge accompagne la mission jusqu'au Bilan : on relit la médaille le jour où elle
+  // a été gagnée, comme le tampon FAIT le fait pour les sorties.
+  const bad = r.ty === "M" ? badgePoussin("mission accomplie") : "";
   return '<div class="bl">' + past +
     '<span class="fv-e"' + clic + '>' + r.e + '</span>' +
     '<span class="fv-b"' + clic + '>' + (r.jeu
@@ -2301,7 +2322,7 @@ function ligneBilan(r, idx){
       '<span class="fv-sub">' + r.sous + (r.pts ? " · +" + r.pts + " pt" : "") + '</span></span>' +
     '<input class="dt-in" id="' + id + '" type="date" value="' + (r.d||"") + '" min="' + DAYS[0] + '" max="' + DAYS[DAYS.length-1] + '"' +
       (r.cm ? ' data-act="dtcm" data-v="' + r.cm + '"' : ' data-act="dt" data-v="' + r.k + '"') + ' aria-label="corriger la date">' +
-    '</div>';
+    bad + '</div>';
 }
 /* Récapitulatif en texte brut, prêt à envoyer à la famille. */
 function recapTexte(){
@@ -2509,17 +2530,33 @@ function vueJeux(){
       'Les <b>−</b> et <b>+</b> de chaque ligne ne corrigent que le compteur, sans toucher au planning. ' +
       '✕ retire le jeu, et le nom se modifie directement.</div></section>';
 }
+/* Badge d'une mission accomplie : le sceau de l'en-tête, réduit à ce qui reste lisible à
+   30 px — l'anneau d'or, le fond vert et un poussin. Le texte du pourtour tourne à la
+   bouillie sous 100 px, il est donc retiré plutôt que rendu illisible. ~560 octets, posé
+   une fois par mission cochée. La médaille se collectionne : c'est le même sceau que le
+   grand, en petit, et non un pictogramme de plus. */
+function badgePoussin(titre){
+  return '<span class="bpo" role="img" aria-label="' + escA(titre || "mission accomplie") + '">' +
+    '<svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="29" fill="url(#bpo-or)"/>' +
+    '<circle cx="30" cy="30" r="22.5" fill="#12291F"/>' +
+    '<circle cx="30" cy="30" r="22.5" fill="none" stroke="#7A5A1C" stroke-width="1.6"/>' +
+    '<g transform="translate(30 27.2) scale(1.6)">' +
+    '<ellipse cx="0" cy="6" rx="8.4" ry="7.2" fill="#EFBE33"/>' +
+    '<circle cx="0" cy="-2.6" r="7" fill="#F8D556"/>' +
+    '<circle cx="-2.6" cy="-2.1" r="1.2" fill="#1B2A18"/><circle cx="2.6" cy="-2.1" r="1.2" fill="#1B2A18"/>' +
+    '<path d="M-1.7 1.2 L1.7 1.2 L0 3.4Z" fill="#DE8524"/></g></svg></span>';
+}
 function vueMissions(){
   const cm = val("cm",[]);
   let li = MISSIONS.map(function(m,i){
     if(!m) return "";                                  // mission retirée : index conservé, case masquée
     const done = val("md:"+i,false);
     const cpt = JSEUILS[i] ? ' <span class="badge' + (done?" ok":"") + '">' + JSEUILS[i].f() + '/' + JSEUILS[i].n + '</span>' : "";
-    return '<div class="mi' + (done?" done":"") + '"><button class="cb" data-act="md" data-v="' + i + '">' + (done?"✓":"") + '</button><span>' + esc(m) + cpt + '</span></div>';
+    return '<div class="mi' + (done?" done":"") + '"><button class="cb" data-act="md" data-v="' + i + '">' + (done?"✓":"") + '</button><span>' + esc(m) + cpt + '</span>' + (done ? badgePoussin("mission accomplie") : "") + '</div>';
   }).join("");
   li += cm.map(function(m){
     return '<div class="mi' + (m.done?" done":"") + '"><button class="cb" data-act="cm" data-v="' + m.id + '">' + (m.done?"✓":"") + '</button>' +
-      '<span>' + esc(libMission(m.txt)) + (m.lien ? '<small class="mi-lie">se coche toute seule</small>' : "") + '</span></div>';
+      '<span>' + esc(libMission(m.txt)) + (m.lien ? '<small class="mi-lie">se coche toute seule</small>' : "") + '</span>' + (m.done ? badgePoussin("mission accomplie") : "") + '</div>';
   }).join("");
   return '<section class="fiche"><h2>✅ Missions de la famille</h2>' + li +
     '<div class="aj"><select id="selm" aria-label="choisir une sortie, une rando ou une animation">' +
