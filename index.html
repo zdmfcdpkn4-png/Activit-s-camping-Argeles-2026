@@ -65,6 +65,20 @@
   --r2:12px;   /* boutons et champs de saisie */
   --r3:16px;   /* cartes */
   --rp:999px;  /* pastilles */
+  /* — échelle d'espacement : neuf échelons au lieu de dix-neuf valeurs —
+     Troisième pied du système, après les arrondis et les ombres (v1.26). Dix-neuf valeurs
+     de 1 à 34 px cohabitaient, avec des gap:6 / 7 / 8 / 9 / 10 dans une même vue : l'œil ne
+     sait pas nommer ce défaut, il le lit comme du bricolage.
+     Le lot supprime le BRUIT (1, 3, 5, 7, 9, 11, 13, 18, 20) et ne touche pas au SIGNAL :
+     les valeurs déjà employées de façon cohérente restent où elles sont. 14 px en
+     particulier est la gouttière de page et de carte, posée huit fois pour le même usage —
+     l'arrondir à 16 pour satisfaire une grille en puissances de 4 aurait élargi toutes les
+     marges d'un téléphone tenu à une main : principe respecté, page moins bonne.
+     Restent hors échelle les paddings de pastille, ajustés au texte qu'ils entourent, et
+     les calages tenus par un objet dessiné — le 34 px qui dégage un cercle numéroté, le
+     26 px qui EST la hauteur du voile dégradé sous le nom d'une fiche. */
+  --e1:2px;  --e2:4px;  --e3:6px;  --e4:8px;  --e5:10px;
+  --e6:12px; --e7:14px; --e8:16px; --e9:24px;
   /* — élévations : deux pour les cartes, trois fonctionnelles — */
   --om1:4px 4px 0 rgba(35,50,74,.12);   /* carte courante */
   --om2:5px 5px 0 rgba(35,50,74,.14);   /* carte de tête */
@@ -83,6 +97,22 @@
   --t1:clamp(17px,4.4vw,20px);   /* titre du QG */
   --t2:clamp(15px,3.8vw,17px);   /* titre de carte */
   --t3:clamp(14px,3.6vw,15px);   /* nom d'une fiche */
+  /* — rampe de texte : sept échelons, chacun avec son emploi —
+     Quatorze tailles en px traînaient dans la feuille. Le problème n'était pas leur nombre
+     mais qu'aucune ne disait à quoi elle servait : personne n'aurait su laquelle prendre
+     pour un élément neuf. 12 et 13 px ne font PAS double emploi — l'un porte les étiquettes,
+     l'autre la prose — c'est un rôle, pas un doublon. Deux fusions seulement : 9→10, 15→16.
+     Les 15, 17, 18, 20, 22 et 26 px restants ne rejoignent pas cette rampe : ce sont des
+     TAILLES DE GLYPHE — un emoji ou un signe dessiné pour être vu de loin au creux d'une
+     cible tactile (bouton d'en-tête, − et +, repère de carte, médaille, confetti), et non
+     du texte à lire. Les régler comme du texte n'aurait aucun sens. */
+  --tx-micro:10px;   /* tampons, crédits photo, légendes de schéma, libellés d'onglet */
+  --tx-mini:11px;    /* badges, sous-titres de ligne, mentions */
+  --tx-label:12px;   /* étiquettes, chips horaires, compteurs, en-têtes de public */
+  --tx-texte:13px;   /* prose courte, boutons, notes */
+  --tx-corps:14px;   /* corps de liste, champs de saisie */
+  --tx-fort:16px;    /* insistance */
+  --tx-chiffre:19px; /* le grand chiffre des tuiles de synthèse */
   /* Filigrane des visuels de fiche : la silhouette de l'icône du site, en SVG inline. */
   --filigrane:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40'%3E%3Cpath d='M0 40 L22 12 L36 26 L54 4 L82 40Z' fill='%23ffffff' opacity='.26'/%3E%3Cpath d='M46 40 L70 16 L84 30 L100 14 L100 40Z' fill='%23ffffff' opacity='.16'/%3E%3C/svg%3E");
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
@@ -101,35 +131,35 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 /* ---- entête fanion ---- */
 /* Silhouette de sommets en fond de bandeau : même vocabulaire graphique que l'icône
    du site, en SVG inline — aucune requête, quelques centaines d'octets. */
-header{position:sticky;top:0;z-index:50;background:var(--sombre);color:var(--sur-sombre);padding:10px 14px;box-shadow:var(--om-entete);
+header{position:sticky;top:0;z-index:50;background:var(--sombre);color:var(--sur-sombre);padding:var(--e5) var(--e7);box-shadow:var(--om-entete);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 44'%3E%3Ccircle cx='118' cy='13' r='8' fill='%23FFB800' opacity='.20'/%3E%3Cpath d='M0 44 L30 14 L46 30 L68 6 L96 44Z' fill='%23FBF3E2' opacity='.07'/%3E%3Cpath d='M62 44 L92 18 L112 34 L128 22 L150 44Z' fill='%23FBF3E2' opacity='.05'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right -8px bottom;background-size:auto 100%}
-.h-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.h-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:var(--e4);justify-content:space-between}
 /* Le bloc de droite ne se rétrécit pas : c'est le titre qui cède la place à 390 px. */
-.h-out{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.h-out{display:flex;align-items:center;gap:var(--e3);flex:0 0 auto}
 .h-b{position:relative;flex:0 0 auto;width:36px;height:36px;border-radius:var(--r1);font-size:17px;line-height:1;
   background:var(--encre-2);color:var(--sur-sombre);transition:background-color .2s ease}
 .h-b::after{content:"";position:absolute;inset:-4px}   /* zone de contact portée à 44 px */
 .h-b[aria-pressed="true"]{background:var(--soleil);color:var(--sur-soleil)}
 .h-t{font-weight:800;font-size:var(--t1);line-height:1.25;letter-spacing:.2px}
-.h-s{font-size:12px;opacity:.85}
-.badge-sync{font-size:11px;font-family:var(--mono);padding:4px 8px;border-radius:var(--rp);background:var(--encre-2);white-space:nowrap}
+.h-s{font-size:var(--tx-label);opacity:.85}
+.badge-sync{font-size:var(--tx-mini);font-family:var(--mono);padding:4px 8px;border-radius:var(--rp);background:var(--encre-2);white-space:nowrap}
 .badge-sync.ok,.badge-sync.off{color:var(--craie)}
 .badge-sync.ok{background:var(--sapin)}
 .badge-sync.off{background:var(--braise)}
-.score{max-width:760px;margin:6px auto 0;display:flex;align-items:center;gap:8px;font-size:12px}
+.score{max-width:760px;margin:var(--e3) auto 0;display:flex;align-items:center;gap:var(--e4);font-size:var(--tx-label)}
 .score .bar{flex:1;height:8px;background:var(--encre-2);border-radius:var(--rp);overflow:hidden}
 .score .fill{height:100%;background:var(--soleil);border-radius:var(--rp);transition:width .4s}
 /* Le palier suivant : l'échelle Marmotte → Ours existait, mais restait invisible tant
    qu'on n'en franchissait pas un. */
-.prochain{max-width:760px;margin:3px auto 0;font-size:11px;opacity:.82;transition:opacity .25s ease,max-height .3s ease,margin .25s ease}
+.prochain{max-width:760px;margin:var(--e2) auto 0;font-size:var(--tx-mini);opacity:.82;transition:opacity .25s ease,max-height .3s ease,margin .25s ease}
 body.defile .prochain{opacity:0;max-height:0;overflow:hidden;margin:0}
 
 /* ---- fiches façon panneau d'affichage ---- */
-main{max-width:760px;margin:0 auto;padding:14px}
+main{max-width:760px;margin:0 auto;padding:var(--e7)}
 .fiche{position:relative;background:var(--craie);border:2px solid var(--encre);border-radius:var(--r3);
-  box-shadow:var(--om1);padding:14px;margin:18px 0}
-.fiche>h2{font-size:var(--t2);font-weight:800;line-height:1.25;text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px}
+  box-shadow:var(--om1);padding:var(--e7);margin:var(--e8) 0}
+.fiche>h2{font-size:var(--t2);font-weight:800;line-height:1.25;text-transform:uppercase;letter-spacing:.7px;margin-bottom:var(--e5)}
 /* Le ruban adhésif et l'ombre portée appuyée sont réservés à la carte de tête de
    chaque vue : sur toutes les cartes, l'effet s'annulait — plus rien ne ressortait. */
 #app>section.fiche:first-of-type{box-shadow:var(--om2)}
@@ -139,18 +169,18 @@ main{max-width:760px;margin:0 auto;padding:14px}
    dans 760 px laissait beaucoup de vide. La vue Semaine reste en une colonne — c'est
    une lecture chronologique, pas un catalogue. */
 @media (min-width:680px){
-  .grille{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;margin:10px 0}
+  .grille{display:grid;grid-template-columns:1fr 1fr;gap:var(--e6);align-items:start;margin:var(--e5) 0}
   .grille>*{margin:0}
 }
-.note{font-size:13px;background:var(--miel);border:1px dashed var(--soleil);border-radius:var(--r1);padding:8px 10px;margin:8px 0}
+.note{font-size:var(--tx-texte);background:var(--miel);border:1px dashed var(--soleil);border-radius:var(--r1);padding:var(--e4) var(--e5);margin:var(--e4) 0}
 
 /* ---- pastilles jours ---- */
-.jours{display:flex;gap:8px;overflow-x:auto;padding:12px 2px;-webkit-overflow-scrolling:touch}
+.jours{display:flex;gap:var(--e4);overflow-x:auto;padding:var(--e6) var(--e1);-webkit-overflow-scrolling:touch}
 .jour{min-width:64px;min-height:56px;border:1px solid var(--trait-fort);border-radius:var(--r2);background:var(--craie);
-  font-weight:700;font-size:13px;padding:6px 4px;text-align:center;flex-direction:column;display:flex;gap:2px;align-items:center;justify-content:center}
-.jour small{font-weight:600;font-size:10px;opacity:.7}
+  font-weight:700;font-size:var(--tx-texte);padding:var(--e3) var(--e2);text-align:center;flex-direction:column;display:flex;gap:var(--e1);align-items:center;justify-content:center}
+.jour small{font-weight:600;font-size:var(--tx-micro);opacity:.7}
 .jour.actif{background:var(--soleil);color:var(--sur-soleil);box-shadow:var(--om-actif);border-color:var(--encre)}
-.jour .pt{font-size:10px;line-height:1}
+.jour .pt{font-size:var(--tx-micro);line-height:1}
 /* Jour réel vs jour consulté : deux informations distinctes. Le jaune dit « c'est ce
    que tu regardes », le liseré braise dit « on est aujourd'hui ». Les jours passés
    s'effacent — sauf celui qu'on a ouvert exprès. */
@@ -161,44 +191,44 @@ main{max-width:760px;margin:0 auto;padding:14px}
 .jour.auj small{color:var(--braise-t);opacity:1;font-weight:800}
 
 /* ---- chips horaires ---- */
-.ligne{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dotted var(--trait);font-size:14px}
-.lg-btn{display:flex;gap:8px;align-items:flex-start;flex:1;min-width:0;text-align:left;cursor:pointer;min-height:44px;background:none;border:0;padding:0}
-.aj select{flex:1;min-width:0;min-height:46px;border:1px solid var(--trait-fort);border-radius:var(--r2);padding:0 10px;font-size:14px;font-family:inherit;background:var(--craie);color:var(--encre)}
-.lg-x{position:relative;flex-shrink:0;min-width:36px;min-height:36px;align-self:center;font-size:13px;opacity:.45}
+.ligne{display:flex;gap:var(--e5);align-items:flex-start;padding:var(--e4) 0;border-bottom:1px dotted var(--trait);font-size:var(--tx-corps)}
+.lg-btn{display:flex;gap:var(--e4);align-items:flex-start;flex:1;min-width:0;text-align:left;cursor:pointer;min-height:44px;background:none;border:0;padding:0}
+.aj select{flex:1;min-width:0;min-height:46px;border:1px solid var(--trait-fort);border-radius:var(--r2);padding:0 var(--e5);font-size:var(--tx-corps);font-family:inherit;background:var(--craie);color:var(--encre)}
+.lg-x{position:relative;flex-shrink:0;min-width:36px;min-height:36px;align-self:center;font-size:var(--tx-texte);opacity:.45}
 .ligne:last-child{border-bottom:none}
-.chip{font-family:var(--mono);font-size:12px;font-weight:700;padding:3px 7px;border-radius:var(--r1);min-width:52px;text-align:center;transform:rotate(-1deg)}
+.chip{font-family:var(--mono);font-size:var(--tx-label);font-weight:700;padding:3px 7px;border-radius:var(--r1);min-width:52px;text-align:center;transform:rotate(-1deg)}
 .m-matin{background:var(--soleil);color:var(--sur-soleil)}
 .m-aprem{background:var(--gave);color:var(--craie);transform:rotate(1deg)}
 .m-soir{background:var(--encre);color:var(--craie)}
-.pub{display:flex;align-items:center;gap:8px;width:100%;padding:10px 4px;font-weight:800;font-size:14px;min-height:44px}
-.pub .n{margin-left:auto;font-size:12px;font-weight:600;opacity:.6}
-.extra{display:inline-block;background:var(--braise-t);color:var(--craie);font-size:10px;font-weight:800;
+.pub{display:flex;align-items:center;gap:var(--e4);width:100%;padding:var(--e5) var(--e2);font-weight:800;font-size:var(--tx-corps);min-height:44px}
+.pub .n{margin-left:auto;font-size:var(--tx-label);font-weight:600;opacity:.6}
+.extra{display:inline-block;background:var(--braise-t);color:var(--craie);font-size:var(--tx-micro);font-weight:800;
   letter-spacing:.7px;padding:3px 8px;border-radius:var(--rp);transform:rotate(-2deg)}
 
 /* ---- météo ---- */
-.meteo{display:flex;gap:8px;flex-wrap:wrap}
-.meteo button{flex:1;min-width:72px;min-height:48px;border:1px solid var(--trait-fort);border-radius:var(--r2);background:var(--craie);font-size:12px;font-weight:700;padding:6px}
+.meteo{display:flex;gap:var(--e4);flex-wrap:wrap}
+.meteo button{flex:1;min-width:72px;min-height:48px;border:1px solid var(--trait-fort);border-radius:var(--r2);background:var(--craie);font-size:var(--tx-label);font-weight:700;padding:var(--e3)}
 .meteo button.actif{background:var(--gave);color:var(--craie);border-color:var(--encre)}
 
 /* ---- barre de recherche et filtres ----
    Collante sous l'en-tête : --h-entete est tenue à jour en JS parce que l'en-tête se
    compacte au défilement — une valeur figée laisserait un trou ou un recouvrement. */
 .filtres{position:sticky;top:var(--h-entete,84px);z-index:40;background:var(--papier);
-  margin:0 -14px;padding:6px 14px 4px;border-bottom:2px solid var(--trait)}
-.f-rech{display:flex;gap:8px;align-items:center}
+  margin:0 -14px;padding:var(--e3) var(--e7) var(--e2);border-bottom:2px solid var(--trait)}
+.f-rech{display:flex;gap:var(--e4);align-items:center}
 .f-rech input{flex:1;min-width:0;min-height:44px;border:1px solid var(--trait-fort);border-radius:var(--r2);
-  padding:0 12px;font-size:14px;font-family:inherit;background:var(--craie);color:inherit}
+  padding:0 var(--e6);font-size:var(--tx-corps);font-family:inherit;background:var(--craie);color:inherit}
 .f-rech input::-webkit-search-cancel-button{display:none}
 .f-rech .f-x{min-height:44px;min-width:44px;border:2px solid var(--trait);border-radius:var(--r2);
   background:var(--craie);font-size:15px;font-weight:800;color:var(--texte-2)}
-.fchips{display:flex;gap:6px;overflow-x:auto;padding:6px 0 0;-webkit-overflow-scrolling:touch}
+.fchips{display:flex;gap:var(--e3);overflow-x:auto;padding:var(--e3) 0 0;-webkit-overflow-scrolling:touch}
 .fchip{flex:0 0 auto;min-height:44px;padding:0 13px;border:2px solid var(--trait);border-radius:var(--rp);
-  background:var(--craie);font-size:12px;font-weight:700;white-space:nowrap;color:var(--texte-2)}
+  background:var(--craie);font-size:var(--tx-label);font-weight:700;white-space:nowrap;color:var(--texte-2)}
 .fchip.on{background:var(--encre);border-color:var(--encre);color:var(--craie)}
-.fsep{flex:0 0 auto;width:2px;margin:8px 3px;background:var(--trait);border-radius:var(--rp)}
+.fsep{flex:0 0 auto;width:2px;margin:var(--e4) var(--e2);background:var(--trait);border-radius:var(--rp)}
 /* Le compteur vit dans la ligne de recherche et non sur une ligne à lui : la barre est
    collante, chaque pixel qu'elle occupe est pris à la lecture. */
-.f-cpt{flex:0 0 auto;font-family:var(--mono);font-size:12px;font-weight:800;color:var(--texte-3);white-space:nowrap}
+.f-cpt{flex:0 0 auto;font-family:var(--mono);font-size:var(--tx-label);font-weight:800;color:var(--texte-3);white-space:nowrap}
 .f-cpt b{color:var(--encre)}
 
 /* Un champ en cours de saisie prend l'encre : la bordure dit l'état, elle ne décore pas. */
@@ -208,36 +238,36 @@ main{max-width:760px;margin:0 auto;padding:14px}
 /* Titre de catégorie collant sous la barre de filtres : on sait toujours dans quelle
    famille on défile. --h-collant est tenue à jour en JS (en-tête + barre de filtres). */
 .cat-t{position:sticky;top:var(--h-collant,140px);z-index:30;background:var(--papier);
-  font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--texte-3);
-  margin:18px 4px 6px;padding:5px 0}
+  font-size:var(--tx-texte);font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--texte-3);
+  margin:var(--e8) var(--e2) var(--e3);padding:var(--e2) 0}
 /* Liseré de catégorie : la même couleur que le repère sur la carte et que la légende. */
 .sortie.cat{border-left:7px solid var(--cat)}
-.cat-t.cat{border-left:5px solid var(--cat);padding-left:8px;color:var(--cat)}
+.cat-t.cat{border-left:5px solid var(--cat);padding-left:var(--e4);color:var(--cat)}
 /* Vignette de la carte repliée : le dégradé de catégorie existant, en 46 px.
    Du rythme visuel sans une seule requête réseau. */
 .s-vig{flex:0 0 auto;width:46px;height:46px;border-radius:var(--r1);
   display:flex;align-items:center;justify-content:center;font-size:22px}
 .s-corps{flex:1;min-width:0}
-.sortie{background:var(--craie);border:2px solid var(--encre);border-radius:var(--r3);box-shadow:var(--om1);padding:12px;margin:10px 0}
+.sortie{background:var(--craie);border:2px solid var(--encre);border-radius:var(--r3);box-shadow:var(--om1);padding:var(--e6);margin:var(--e5) 0}
 /* `article.` en tête pour passer devant `.rev.vu{opacity:1}`, déclarée plus bas :
    à spécificité égale la dernière gagnait, et une sortie déjà faite reprenait son
    opacité pleine dès qu'on revenait sur l'onglet. */
 article.sortie.fait{opacity:.62;background:var(--surface-fait)}
-.s-top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.s-top{display:flex;gap:var(--e4);align-items:baseline;flex-wrap:wrap}
 .s-nom{font-weight:800;font-size:var(--t3);line-height:1.25;letter-spacing:-.1px}
-.s-meta{font-size:12px;font-family:var(--mono);color:var(--texte-2)}
-.s-pre{font-size:13px;margin:6px 0}
-.s-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.s-act a,.s-act button{min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0 14px;border-radius:var(--r2);font-weight:700;font-size:13px;text-decoration:none}
+.s-meta{font-size:var(--tx-label);font-family:var(--mono);color:var(--texte-2)}
+.s-pre{font-size:var(--tx-texte);margin:var(--e3) 0}
+.s-act{display:flex;gap:var(--e4);flex-wrap:wrap;margin-top:var(--e4)}
+.s-act a,.s-act button{min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0 var(--e7);border-radius:var(--r2);font-weight:700;font-size:var(--tx-texte);text-decoration:none}
 .b-resa{background:var(--encre);color:var(--craie)}
 .b-fait{border:2px solid var(--sapin);color:var(--sapin)}
 .b-fait.on{background:var(--sapin);color:var(--craie)}
 .b-want{border:2px solid var(--soleil);color:var(--or-fonce)}
 .b-want.on{background:var(--soleil);color:var(--sur-soleil)}
-.s-open{display:flex;gap:10px;align-items:center;width:100%;text-align:left;min-height:44px}
+.s-open{display:flex;gap:var(--e5);align-items:center;width:100%;text-align:left;min-height:44px}
 .s-meta{display:block}
-.s-hint{margin-left:auto;font-size:12px;font-weight:700;color:var(--texte-3);white-space:nowrap}
-.s-det{margin-top:10px;border-top:2px dashed var(--trait);padding-top:10px}
+.s-hint{margin-left:auto;font-size:var(--tx-label);font-weight:700;color:var(--texte-3);white-space:nowrap}
+.s-det{margin-top:var(--e5);border-top:2px dashed var(--trait);padding-top:var(--e5)}
 /* Visuel d'une fiche dépliée. La boîte a sa forme AVANT que la photo arrive : plus de
    saut de page quand elle se charge, et le dégradé de catégorie sert d'abord de fond
    d'attente, puis de repli définitif si la photo ne vient pas. */
@@ -253,20 +283,33 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
   color:#FFFFFF;font-weight:800;font-size:var(--t3);line-height:1.2;letter-spacing:-.1px;
   background:linear-gradient(to top,rgba(10,16,26,.88),rgba(10,16,26,.55) 58%,rgba(10,16,26,0));
   text-shadow:0 1px 3px rgba(0,0,0,.65)}
-.s-credit{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--texte-4);margin-top:5px}
+.s-credit{font-size:var(--tx-micro);font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--texte-4);margin-top:var(--e2)}
+/* ---- la couleur de famille jusque dans la fiche dépliée ----
+   Elle s'arrêtait au liseré de la carte et au titre de section : une fois la fiche ouverte,
+   plus rien ne disait de quelle famille on lisait le détail. `--cat` est déjà posée sur
+   l'article par carteSortie() et carteRando(), donc tout ceci est du CSS pur — aucun JS.
+   Les tokens --cat-* tiennent 4,5:1 sur le papier crème depuis la v1.30 : ils peuvent
+   porter du texte. */
+.cat .etp li::before{background:var(--cat)}
+.cat .s-bloc b{color:var(--cat)}
+.cat .pf span{border-color:var(--cat)}
+/* Pastille de famille des lignes de Favoris et de Bilan : 8 px, la couleur suffit à dire
+   l'appartenance sans voler de place à un nom déjà long. */
+.pastille{flex-shrink:0;width:8px;height:8px;border-radius:50%;background:var(--cat,var(--trait-fort));display:block}
+
 /* ---- états vides illustrés ---- */
-.vide{text-align:center;padding:20px 14px 8px}
-.vide svg{width:104px;height:auto;display:block;margin:0 auto 10px;color:var(--texte-3)}
-.vide p{font-size:14px;color:var(--texte-2);margin:0 auto 12px;max-width:34ch}
+.vide{text-align:center;padding:var(--e9) var(--e7) var(--e4)}
+.vide svg{width:104px;height:auto;display:block;margin:0 auto var(--e5);color:var(--texte-3)}
+.vide p{font-size:var(--tx-corps);color:var(--texte-2);margin:0 auto var(--e6);max-width:34ch}
 .bn-G{background:linear-gradient(160deg,#BFE3F0 55%,#8FBF9F 55%)}
 .bn-E{background:linear-gradient(160deg,#FFE9B3 55%,#CDE7C5 55%)}
 .bn-S{background:linear-gradient(160deg,#CDEDE8 55%,#F6D9A8 55%)}
 .bn-O{background:linear-gradient(160deg,#BFE0EE 55%,#DFF2F5 55%)}
 .bn-V{background:linear-gradient(160deg,#F3E3C8 55%,#E4D2EE 55%)}
-.s-bloc{font-size:13px;margin:8px 0}
-.s-bloc b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--texte-3);margin-bottom:2px}
-.pf{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.pf span{background:var(--miel);border:1px solid var(--soleil);border-radius:var(--rp);padding:4px 10px;font-size:12px;font-weight:600}
+.s-bloc{font-size:var(--tx-texte);margin:var(--e4) 0}
+.s-bloc b{display:block;font-size:var(--tx-mini);text-transform:uppercase;letter-spacing:.6px;color:var(--texte-3);margin-bottom:var(--e1)}
+.pf{display:flex;flex-wrap:wrap;gap:var(--e3);margin-top:var(--e2)}
+.pf span{background:var(--miel);border:1px solid var(--soleil);border-radius:var(--rp);padding:var(--e2) var(--e5);font-size:var(--tx-label);font-weight:600}
 .b-iti{border:2px solid var(--gave);color:var(--gave-t)}
 @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
 .pop{animation:pop .35s ease}
@@ -281,12 +324,12 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
   70%{opacity:1}
   100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--rot)) scale(1.15)}}
 #toasts{position:fixed;top:calc(10px + env(safe-area-inset-top));left:0;right:0;z-index:300;
-  display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 12px}
+  display:flex;flex-direction:column;align-items:center;gap:var(--e4);pointer-events:none;padding:0 var(--e6)}
 .toast{background:var(--sombre);color:var(--sur-sombre);border:2px solid var(--soleil);border-radius:var(--r3);
-  padding:9px 16px;max-width:96%;text-align:center;box-shadow:var(--om-flot);
+  padding:var(--e4) var(--e8);max-width:96%;text-align:center;box-shadow:var(--om-flot);
   animation:toastIn .3s ease}
-.toast b{display:block;font-size:14px;font-weight:800}
-.toast small{display:block;font-size:12px;opacity:.9;margin-top:1px}
+.toast b{display:block;font-size:var(--tx-corps);font-weight:800}
+.toast small{display:block;font-size:var(--tx-label);opacity:.9;margin-top:var(--e1)}
 .toast.niv{border-color:var(--braise);background:linear-gradient(135deg,var(--sombre),var(--encre-nuit))}
 .toast.out{animation:toastOut .3s ease forwards}
 @keyframes toastIn{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
@@ -296,31 +339,31 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
 .mi.vient{animation:pop .45s ease}
 
 /* ---- missions ---- */
-.mi{display:flex;gap:10px;align-items:center;min-height:48px;border-bottom:1px dotted var(--trait);font-size:14px}
+.mi{display:flex;gap:var(--e5);align-items:center;min-height:48px;border-bottom:1px dotted var(--trait);font-size:var(--tx-corps)}
 .mi:last-child{border-bottom:none}
-.mi button.cb{position:relative;width:34px;height:34px;border:2px solid var(--encre);border-radius:var(--r1);flex-shrink:0;font-size:16px;font-weight:800}
+.mi button.cb{position:relative;width:34px;height:34px;border:2px solid var(--encre);border-radius:var(--r1);flex-shrink:0;font-size:var(--tx-fort);font-weight:800}
 .mi.done{opacity:.55;text-decoration:line-through}
-.mi-lie{display:block;font-size:11px;color:var(--sapin);font-weight:700;text-decoration:none}
+.mi-lie{display:block;font-size:var(--tx-mini);color:var(--sapin);font-weight:700;text-decoration:none}
 /* ---- jauges de jeux : quatre paliers, quatre formes ----
    Deux par ligne sur téléphone : quatre formes différentes empilées feraient désordre. */
-.jauges{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 12px}
+.jauges{display:grid;grid-template-columns:1fr 1fr;gap:var(--e5);margin:var(--e2) 0 var(--e6)}
 .jg{border:2px solid var(--trait);border-radius:var(--r2);background:var(--surface-2);
-  padding:9px 8px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+  padding:var(--e4) var(--e4) var(--e4);display:flex;flex-direction:column;align-items:center;gap:var(--e3);text-align:center}
 .jg-ok{border-color:var(--sapin)}
-.jg-t{font-size:12px;font-weight:800;line-height:1.2}
+.jg-t{font-size:var(--tx-label);font-weight:800;line-height:1.2}
 .jg-d{display:flex;align-items:center;justify-content:center;width:100%;height:84px}
-.jg-n{font-size:12px;font-variant-numeric:tabular-nums;line-height:1.2}
-.jg-a{font-size:10px;color:var(--texte-3);line-height:1.2}
+.jg-n{font-size:var(--tx-label);font-variant-numeric:tabular-nums;line-height:1.2}
+.jg-a{font-size:var(--tx-micro);color:var(--texte-3);line-height:1.2}
 /* Passeport : dix cases de tampons */
-.jg-pass{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;width:100%;max-width:132px;
-  background:var(--miel);border:1px dashed var(--soleil);border-radius:var(--r0);padding:4px}
+.jg-pass{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--e2);width:100%;max-width:132px;
+  background:var(--miel);border:1px dashed var(--soleil);border-radius:var(--r0);padding:var(--e2)}
 .jg-pass i{aspect-ratio:1;border:1px solid var(--trait);border-radius:2px;background:var(--craie);
-  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;font-style:normal;
+  display:flex;align-items:center;justify-content:center;font-size:var(--tx-mini);font-weight:800;font-style:normal;
   color:var(--braise-t);transition:background-color .3s ease}
 .jg-pass i.on{background:var(--miel);border-color:var(--braise-t);transform:rotate(-7deg)}
 /* Kallax : le rayonnage, une case par jeu */
-.jg-kal{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;width:100%;max-width:100px;
-  border:2px solid var(--encre);border-radius:var(--r0);padding:3px;background:var(--craie)}
+.jg-kal{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--e1);width:100%;max-width:100px;
+  border:2px solid var(--encre);border-radius:var(--r0);padding:var(--e2);background:var(--craie)}
 .jg-kal i{aspect-ratio:1;border:1px solid var(--trait);border-radius:1px;background:transparent;
   transition:background-color .3s ease}
 .jg-kal i.on{background:var(--boite);border-color:var(--boite)}
@@ -342,90 +385,90 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
   background:var(--froid)}
 .jg-ok .jg-bulbe{background:var(--braise)}
 .jg-a-ok{font-family:var(--mono);font-weight:700;color:var(--braise-t);letter-spacing:-.3px}
-.jsc{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:13px}
-.js-dt{align-items:center;gap:10px}
-.js-dt label{font-size:13px;font-weight:700;white-space:nowrap}
-.js-dt input{flex:1;min-height:44px;border:1px solid var(--trait-fort);border-radius:var(--r2);padding:0 10px;
-  font-size:14px;font-family:inherit;background:var(--craie);color:inherit}
+.jsc{display:flex;align-items:center;gap:var(--e5);padding:var(--e2) 0;font-size:var(--tx-texte)}
+.js-dt{align-items:center;gap:var(--e5)}
+.js-dt label{font-size:var(--tx-texte);font-weight:700;white-space:nowrap}
+.js-dt input{flex:1;min-height:44px;border:1px solid var(--trait-fort);border-radius:var(--r2);padding:0 var(--e5);
+  font-size:var(--tx-corps);font-family:inherit;background:var(--craie);color:inherit}
 .jsc-ok{opacity:.75}
 .jsc-ok .jsb i{background:var(--soleil)}
 .jsc>span:first-child{flex:0 0 auto;white-space:nowrap}
 .jsb{flex:1;height:9px;border:1px solid var(--trait);border-radius:var(--r1);overflow:hidden;background:var(--craie)}
 .jsb i{display:block;height:100%;background:var(--sapin);transition:width .5s ease}
-.js-n{display:block;font-size:11px;opacity:.65;padding-left:2px}
-.js-l{gap:6px}
+.js-n{display:block;font-size:var(--tx-mini);opacity:.65;padding-left:var(--e1)}
+.js-l{gap:var(--e3)}
 .js-b{flex:1;min-width:0}
-.js-nom{width:100%;min-height:44px;border:2px solid transparent;border-radius:var(--r1);padding:0 6px;font-size:14px;
+.js-nom{width:100%;min-height:44px;border:2px solid transparent;border-radius:var(--r1);padding:0 var(--e3);font-size:var(--tx-corps);
   font-family:inherit;font-weight:600;color:inherit;background:transparent}
 .js-nom:focus{border-color:var(--encre);background:var(--craie);outline:none}
-.bl-nom{font-weight:700;font-size:14px;min-height:44px;padding:0 4px}
+.bl-nom{font-weight:700;font-size:var(--tx-corps);min-height:44px;padding:0 var(--e2)}
 .js-p{width:44px;min-height:44px;border:1px solid var(--trait-fort);border-radius:var(--r1);font-weight:800;font-size:17px;flex-shrink:0;line-height:1}
 .js-p[disabled]{opacity:.3}
 .mi.done button.cb{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
-.aj{display:flex;gap:8px;margin-top:10px}
-.aj input{flex:1;min-height:46px;border:1px solid var(--trait-fort);border-radius:var(--r2);padding:0 12px;font-size:14px;font-family:inherit;background:var(--craie)}
-.aj button{min-height:46px;min-width:46px;padding:0 16px;border-radius:var(--r2);background:var(--soleil);color:var(--sur-soleil);font-weight:800}
+.aj{display:flex;gap:var(--e4);margin-top:var(--e5)}
+.aj input{flex:1;min-height:46px;border:1px solid var(--trait-fort);border-radius:var(--r2);padding:0 var(--e6);font-size:var(--tx-corps);font-family:inherit;background:var(--craie)}
+.aj button{min-height:46px;min-width:46px;padding:0 var(--e8);border-radius:var(--r2);background:var(--soleil);color:var(--sur-soleil);font-weight:800}
 
 /* ---- favoris ---- */
-.mbrs{display:flex;flex-wrap:wrap;gap:8px}
+.mbrs{display:flex;flex-wrap:wrap;gap:var(--e4)}
 .mbr{display:inline-flex;align-items:center;border:1px solid var(--trait-fort);border-radius:var(--rp);background:var(--craie);overflow:hidden}
 .mbr.actif{background:var(--soleil);color:var(--sur-soleil);box-shadow:var(--om-actif);border-color:var(--encre)}
-.mbr-t{min-height:44px;padding:0 4px 0 12px;font-weight:800;font-size:13px}
-.mbr-x{min-height:44px;padding:0 10px;font-size:11px;opacity:.45}
-.tri{margin-bottom:4px}
-.fv{display:flex;gap:8px;align-items:center;width:100%;text-align:left;min-height:52px;border-bottom:1px dotted var(--trait);padding:6px 0}
+.mbr-t{min-height:44px;padding:0 var(--e2) 0 var(--e6);font-weight:800;font-size:var(--tx-texte)}
+.mbr-x{min-height:44px;padding:0 var(--e5);font-size:var(--tx-mini);opacity:.45}
+.tri{margin-bottom:var(--e2)}
+.fv{display:flex;gap:var(--e4);align-items:center;width:100%;text-align:left;min-height:52px;border-bottom:1px dotted var(--trait);padding:var(--e3) 0}
 .fv:last-child{border-bottom:none}
-.fv-med{width:20px;text-align:center;font-size:15px;flex-shrink:0}
+.fv-med{width:20px;text-align:center;font-size:15px/* emoji de podium : glyphe, hors rampe */;flex-shrink:0}
 .fv-e{font-size:20px;flex-shrink:0}
 .fv-b{min-width:0;flex:1}
-.fv-nom{display:block;font-weight:800;font-size:14px}
-.fv-sub{display:block;font-size:11px;color:var(--texte-3)}
-.fv-n{font-family:var(--mono);font-weight:800;font-size:13px;background:var(--craie);border:2px solid var(--trait);border-radius:var(--rp);padding:3px 9px;white-space:nowrap;flex-shrink:0}
+.fv-nom{display:block;font-weight:800;font-size:var(--tx-corps)}
+.fv-sub{display:block;font-size:var(--tx-mini);color:var(--texte-3)}
+.fv-n{font-family:var(--mono);font-weight:800;font-size:var(--tx-texte);background:var(--craie);border:2px solid var(--trait);border-radius:var(--rp);padding:var(--e2) var(--e4);white-space:nowrap;flex-shrink:0}
 .fv-n.z{color:var(--texte-4)}
 .fv.mien .fv-n{background:var(--braise);border-color:var(--braise);color:var(--craie)}
 /* Tampon « FAIT » — encre de tampon usée, légèrement de travers. */
-.tampon{flex-shrink:0;font-family:var(--mono);font-weight:800;font-size:10px;letter-spacing:.14em;
+.tampon{flex-shrink:0;font-family:var(--mono);font-weight:800;font-size:var(--tx-micro);letter-spacing:.14em;
   color:var(--sapin);border:2px solid var(--sapin);border-radius:var(--r0);padding:2px 5px;opacity:.72;
   transform:rotate(-8deg);white-space:nowrap;line-height:1.1}
 .fv-fait .fv-nom{opacity:.62}
-.bl .tampon{font-size:9px;padding:1px 4px;margin-left:2px}
+.bl .tampon{font-size:var(--tx-micro);padding:1px 4px;margin-left:var(--e1)}
 
 /* ---- carte ---- */
-#carte{max-width:760px;margin:0 auto;padding:14px}
+#carte{max-width:760px;margin:0 auto;padding:var(--e7)}
 #map{height:min(58vh,520px);border:2px solid var(--encre);border-radius:var(--r3);background:var(--eau);box-shadow:var(--om1)}
-.map-off{display:flex;align-items:center;justify-content:center;height:100%;padding:20px;text-align:center;color:var(--texte-2);font-size:14px}
-.mk{width:30px;height:30px;border-radius:50%;background:var(--craie);border:3px solid var(--encre);display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:var(--om-mk)}
+.map-off{display:flex;align-items:center;justify-content:center;height:100%;padding:var(--e9);text-align:center;color:var(--texte-2);font-size:var(--tx-corps)}
+.mk{width:30px;height:30px;border-radius:50%;background:var(--craie);border:3px solid var(--encre);display:flex;align-items:center;justify-content:center;font-size:15px/* emoji du repère : glyphe, hors rampe */;box-shadow:var(--om-mk)}
 .mk-done{opacity:.55;filter:grayscale(.4)}
 .mk-camp{width:36px;height:36px;font-size:18px;background:var(--soleil)}
-.legende{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.legende span{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;background:var(--craie);border:1px solid var(--trait);border-radius:var(--rp);padding:4px 9px}
+.legende{display:flex;flex-wrap:wrap;gap:var(--e3);margin-top:var(--e5)}
+.legende span{display:inline-flex;align-items:center;gap:var(--e2);font-size:var(--tx-mini);font-weight:700;background:var(--craie);border:1px solid var(--trait);border-radius:var(--rp);padding:4px 9px}
 .legende i{width:10px;height:10px;border-radius:50%;display:inline-block}
-.pop-fiche{display:inline-block;margin-top:6px;padding:7px 11px;border-radius:var(--r1);background:var(--encre);color:var(--craie);font-weight:700;font-size:12px}
+.pop-fiche{display:inline-block;margin-top:var(--e3);padding:7px 11px;border-radius:var(--r1);background:var(--encre);color:var(--craie);font-weight:700;font-size:var(--tx-label)}
 .sortie,article[id^="r-"]{scroll-margin-top:calc(var(--h-collant,140px) + 12px)}
 .bn-R{background:linear-gradient(160deg,#DCE9D5 55%,#F6E3B8 55%)}
 
 /* ---- randos ---- */
-.etp{margin:8px 0 2px;padding:0;list-style:none;counter-reset:et}
-.etp li{position:relative;padding:6px 0 6px 34px;font-size:13px;border-bottom:1px dotted var(--trait)}
+.etp{margin:var(--e4) 0 var(--e1);padding:0;list-style:none;counter-reset:et}
+.etp li{position:relative;padding:6px 0 6px 34px;font-size:var(--tx-texte);border-bottom:1px dotted var(--trait)}
 .etp li:last-child{border-bottom:none}
 .etp li::before{counter-increment:et;content:counter(et);position:absolute;left:0;top:7px;width:24px;height:24px;
-  border-radius:50%;background:var(--encre);color:var(--craie);font-weight:800;font-size:12px;
+  border-radius:50%;background:var(--encre);color:var(--craie);font-weight:800;font-size:var(--tx-label);
   display:flex;align-items:center;justify-content:center}
-.etp b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--texte-3)}
-.svgmap{width:100%;height:auto;border:1px solid var(--trait);border-radius:var(--r1);background:var(--surface-svg);display:block;margin:8px 0 2px}
-.svg-cap{font-size:10px;color:var(--texte-4);margin-bottom:6px}
-.mkstep{width:22px;height:22px;border-radius:50%;background:var(--gave);color:var(--craie);font-size:11px;font-weight:800;
+.etp b{display:block;font-size:var(--tx-label);text-transform:uppercase;letter-spacing:.4px;color:var(--texte-3)}
+.svgmap{width:100%;height:auto;border:1px solid var(--trait);border-radius:var(--r1);background:var(--surface-svg);display:block;margin:var(--e4) 0 var(--e1)}
+.svg-cap{font-size:var(--tx-micro);color:var(--texte-4);margin-bottom:var(--e3)}
+.mkstep{width:22px;height:22px;border-radius:50%;background:var(--gave);color:var(--craie);font-size:var(--tx-mini);font-weight:800;
   display:flex;align-items:center;justify-content:center;border:2px solid var(--craie);box-shadow:var(--om-mk)}
 
 /* ---- sigle de classement favoris ---- */
-.rk{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:var(--rp);font-size:11px;font-weight:800;
+.rk{display:inline-block;margin-left:var(--e3);padding:1px 7px;border-radius:var(--rp);font-size:var(--tx-mini);font-weight:800;
   background:var(--surface-2);color:var(--texte-2);border:1px solid var(--trait);vertical-align:middle;white-space:nowrap}
-.rk-pod{background:var(--soleil);border-color:var(--soleil);color:var(--sur-soleil);font-size:12px;padding:1px 6px}
+.rk-pod{background:var(--soleil);border-color:var(--soleil);color:var(--sur-soleil);font-size:var(--tx-label);padding:1px 6px}
 .rk-fiche{margin-left:0;align-self:center;flex-shrink:0}
 
 /* ---- bouton d'ouverture de l'ajout au programme ---- */
-.pj-plus{width:100%;min-height:46px;margin-top:10px;border:2px dashed var(--encre);border-radius:var(--r2);
-  font-weight:800;font-size:13px;background:var(--craie);transition:background .2s,border-color .2s}
+.pj-plus{width:100%;min-height:46px;margin-top:var(--e5);border:2px dashed var(--encre);border-radius:var(--r2);
+  font-weight:800;font-size:var(--tx-texte);background:var(--craie);transition:background .2s,border-color .2s}
 .pj-plus.on{background:var(--encre);color:var(--craie);border-style:solid}
 
 /* ---- matière ----
@@ -452,9 +495,9 @@ html{scroll-behavior:smooth}
   border-radius:0 var(--r0) var(--r0) 0;transition:width .12s linear;box-shadow:0 0 8px rgba(255,184,0,.7)}
 header{transition:padding .25s ease, box-shadow .25s ease}
 .h-s,.score{transition:opacity .25s ease, max-height .3s ease, margin .25s ease}
-body.defile header{padding-top:6px;padding-bottom:6px;box-shadow:var(--om-flot)}
+body.defile header{padding-top:var(--e3);padding-bottom:var(--e3);box-shadow:var(--om-flot)}
 body.defile .h-s{opacity:0;max-height:0;overflow:hidden}
-body.defile .h-t{font-size:16px}
+body.defile .h-t{font-size:var(--tx-fort)}
 #app.swap{animation:swapIn .3s cubic-bezier(.2,.7,.3,1)}
 @keyframes swapIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .rev{opacity:0;transform:translateY(16px)}
@@ -492,7 +535,7 @@ nav button.actif::after{animation:onglet .3s cubic-bezier(.2,.7,.3,1)}
 }
 
 /* ---- planning cochable & bilan ---- */
-.ca-cb{position:relative;width:36px;height:36px;border:2px solid var(--encre);border-radius:var(--r1);flex-shrink:0;margin-left:auto;align-self:center;font-size:14px;font-weight:800;background:var(--craie)}
+.ca-cb{position:relative;width:36px;height:36px;border:2px solid var(--encre);border-radius:var(--r1);flex-shrink:0;margin-left:auto;align-self:center;font-size:var(--tx-corps);font-weight:800;background:var(--craie)}
 .ca-cb.on{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
 /* La zone de contact s'étend au-delà de la boîte visible : 44 px sous le doigt sans
    grossir le dessin ni décaler la mise en page. */
@@ -500,29 +543,29 @@ nav button.actif::after{animation:onglet .3s cubic-bezier(.2,.7,.3,1)}
 .mi button.cb::after{content:"";position:absolute;inset:-5px}
 .lg-fait > div{opacity:.55;text-decoration:line-through}
 .badge{display:inline-block;background:var(--surface-2);color:var(--texte-2);border:1px solid var(--trait);border-radius:var(--rp);
-  padding:2px 10px;font-size:11px;font-weight:800;text-transform:none;letter-spacing:0;vertical-align:middle}
+  padding:2px 10px;font-size:var(--tx-mini);font-weight:800;text-transform:none;letter-spacing:0;vertical-align:middle}
 .badge.ok{background:var(--sapin);border-color:var(--sapin);color:var(--craie)}
 /* Synthèse du Bilan : ce que le séjour raconte, avant le détail jour par jour. */
-.synth{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+.synth{display:flex;flex-wrap:wrap;gap:var(--e4);margin-bottom:var(--e4)}
 .synth>div{flex:1 1 auto;min-width:70px;background:var(--surface-2);border:2px solid var(--trait);
-  border-radius:var(--r2);padding:8px 10px;text-align:center}
-.synth b{display:block;font-size:19px;font-weight:800;line-height:1.1}
-.synth small{display:block;font-size:11px;color:var(--texte-3);margin-top:2px}
+  border-radius:var(--r2);padding:var(--e4) var(--e5);text-align:center}
+.synth b{display:block;font-size:var(--tx-chiffre);font-weight:800;line-height:1.1}
+.synth small{display:block;font-size:var(--tx-mini);color:var(--texte-3);margin-top:var(--e1)}
 .synth-niv{flex:1 1 100%;background:var(--miel);border-color:var(--soleil)}
-.synth-niv b{font-size:15px}
-.fil-q{font-size:13px}
-.bl{display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px dotted var(--trait)}
+.synth-niv b{font-size:var(--tx-fort)}
+.fil-q{font-size:var(--tx-texte)}
+.bl{display:flex;gap:var(--e4);align-items:center;padding:var(--e4) 0;border-bottom:1px dotted var(--trait)}
 .bl:last-child{border-bottom:none}
 .bl .fv-b{cursor:pointer}
-.dt-in{flex-shrink:0;min-height:44px;border:2px solid var(--trait);border-radius:var(--r1);padding:0 8px;font-family:var(--mono);font-size:11px;background:var(--craie);color:var(--encre)}
+.dt-in{flex-shrink:0;min-height:44px;border:2px solid var(--trait);border-radius:var(--r1);padding:0 var(--e4);font-family:var(--mono);font-size:var(--tx-mini);background:var(--craie);color:var(--encre)}
 
 /* ---- infos ---- */
-.lien{display:flex;min-height:46px;align-items:center;font-size:14px;border-bottom:1px dotted var(--trait);color:var(--encre);text-decoration:none;font-weight:600;gap:8px}
+.lien{display:flex;min-height:46px;align-items:center;font-size:var(--tx-corps);border-bottom:1px dotted var(--trait);color:var(--encre);text-decoration:none;font-weight:600;gap:var(--e4)}
 .lien:last-child{border-bottom:none}
-.danger{margin-top:12px;width:100%;min-height:48px;border:2px solid var(--braise);color:var(--braise-t);border-radius:var(--r2);font-weight:800}
+.danger{margin-top:var(--e6);width:100%;min-height:48px;border:2px solid var(--braise);color:var(--braise-t);border-radius:var(--r2);font-weight:800}
 
 /* ---- bandeau de réveil du serveur ---- */
-#reveil{max-width:760px;margin:10px auto 0;padding:9px 12px;font-size:13px;
+#reveil{max-width:760px;margin:var(--e5) auto 0;padding:var(--e4) var(--e6);font-size:var(--tx-texte);
   background:var(--miel);border:1px dashed var(--soleil);border-radius:var(--r2)}
 #reveil.off{background:var(--alerte);border-color:var(--braise);border-style:solid}
 
@@ -536,7 +579,7 @@ nav{position:fixed;bottom:0;left:0;right:0;background:var(--craie);border-top:2p
 .n-in{max-width:760px;margin:0 auto;display:flex}
 /* Huit onglets sur 390 px : 10 px de libellé tient si on interdit le retour à la ligne
    et qu'on resserre l'interlettrage. 9 px passait sous le seuil lisible. */
-nav button{flex:1;min-width:0;min-height:64px;font-size:10px;font-weight:700;display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;color:var(--texte-3);white-space:nowrap;letter-spacing:-.2px;padding:0 1px}
+nav button{flex:1;min-width:0;min-height:64px;font-size:var(--tx-micro);font-weight:700;display:flex;flex-direction:column;gap:var(--e1);align-items:center;justify-content:center;color:var(--texte-3);white-space:nowrap;letter-spacing:-.2px;padding:0 var(--e1)}
 /* Icônes d'onglets : huit tracés inline, dans le trait d'icone.svg (sommets, soleil).
    Un emoji ne prend pas la couleur du texte — ceux-ci, si : `currentColor` les fait
    suivre --texte-3 puis --encre à l'activation, et le mode nuit, sans une règle de plus.
@@ -562,7 +605,7 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
   .jauges{grid-template-columns:repeat(4,1fr)}
   .dt-in::-webkit-calendar-picker-indicator{display:none}
   header{position:static;box-shadow:none;background:#FFFFFF;color:#000000;background-image:none;
-    border-bottom:2px solid #000000;padding:0 0 6px}
+    border-bottom:2px solid #000000;padding:0 0 var(--e3)}
   .badge-sync,.prochain{display:none}
   main{max-width:none;padding:0}
   .fiche{break-inside:avoid;page-break-inside:avoid;border:1px solid #999999;box-shadow:none;
@@ -1824,8 +1867,12 @@ function ligneFav(s, med){
   const mien = moi ? val("fav:" + moi + ":" + s.id, false) : false;
   const fait = val("done:" + s.id, false);
   const sub = (fvTri==="votes" ? FAVCATS[s.c] + (n ? " · " : "") : "") + vs.map(function(x){ return x.e; }).join(" ");
-  return '<button class="fv' + (mien?" mien":"") + (fait?" fv-fait":"") + '" data-act="vote" data-v="' + s.id + '">' +
+  // La pastille de famille suit l'activité partout : le classement mélange les catégories,
+  // et jusqu'ici seul le tri « par type » disait de laquelle on parlait.
+  return '<button class="fv' + (mien?" mien":"") + (fait?" fv-fait":"") + '" data-act="vote" data-v="' + s.id +
+    '" style="--cat:' + catCouleur(s.c) + '">' +
     '<span class="fv-med">' + med + '</span>' +
+    '<i class="pastille" aria-hidden="true"></i>' +
     '<span class="fv-e">' + s.e + '</span>' +
     '<span class="fv-b"><span class="fv-nom">' + esc(s.n) + '</span>' +
     (sub ? '<span class="fv-sub">' + sub + '</span>' : "") + '</span>' +
@@ -2003,7 +2050,10 @@ function carteRando(r){
       '<div class="s-bloc"><b>👣 Itinéraire étape par étape</b><ol class="etp">' + etapes + '</ol></div>' +
       svgMini(r) + '</div>';
   }
-  return '<article id="r-' + r.id + '" class="sortie' + (done?" fait":"") + '">' +
+  // Les randos étaient la seule famille de cartes sans liseré : la classe `cat` et le
+  // groupe H (celui des Favoris) leur donnent la même couleur d'appartenance qu'aux sorties.
+  return '<article id="r-' + r.id + '" class="sortie cat' + (done?" fait":"") +
+    '" style="--cat:' + catCouleur("H") + '">' +
     '<button class="s-open" data-act="rdet" data-v="' + r.id + '">' +
       '<div class="s-top"><span>' + r.e + '</span><span class="s-nom">' + esc(r.n) + '</span>' +
       '<span class="s-hint">' + (open?"replier ▴":"détails ▾") + '</span></div>' +
@@ -2073,7 +2123,13 @@ function realisations(){
 function ligneBilan(r, idx){
   const id = "dt-" + (r.k ? slugMembre(r.k) : "cm" + r.cm) + "-" + idx;
   const clic = r.aller ? ' data-act="' + r.aller.a + '" data-v="' + r.aller.v + '"' : "";
-  return '<div class="bl">' +
+  // Pastille de famille sur les seules lignes qui en ont une : sorties et randos. Les
+  // animations du planning, les jeux et les missions n'appartiennent à aucune catégorie
+  // de sortie — leur en inventer une serait faux.
+  const trouve = r.k && r.k.indexOf("done:") === 0 ? trouveIdee(r.k.slice(5)) : null;
+  const past = trouve ? '<i class="pastille" aria-hidden="true" style="--cat:' +
+    catCouleur(trouve.rando ? "H" : trouve.o.c) + '"></i>' : "";
+  return '<div class="bl">' + past +
     '<span class="fv-e"' + clic + '>' + r.e + '</span>' +
     '<span class="fv-b"' + clic + '>' + (r.jeu
       ? '<input class="js-nom bl-nom" id="jsn-bl-' + r.jeu + '-' + idx + '" data-act="jsnom" data-v="' + r.jeu +
