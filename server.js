@@ -89,17 +89,22 @@ const server = createServer(async (req, res) => {
   }
   // Icônes : servies en fichiers plutôt qu'en data URI — iOS ignore les data URI
   // pour apple-touch-icon, or c'est là que l'icône compte le plus (écran d'accueil).
+  // Le fond de page suit le même chemin. C'est le SEUL fichier lourd de l'appli (87 Ko) :
+  // il est chargé en différé par le CSS, jamais sur le chemin critique, et gardé un an en
+  // cache — il ne changera pas d'ici la fin du séjour.
   const ICONES = {
     "/icone.svg": "image/svg+xml",
     "/icone-180.png": "image/png",
     "/icone-512.png": "image/png",
+    "/fond-gavarnie.jpg": "image/jpeg",
   };
   if (ICONES[u.pathname]) {
     try {
       const bin = await readFile(new URL("." + u.pathname, import.meta.url));
-      res.writeHead(200, { "Content-Type": ICONES[u.pathname], "Cache-Control": "public, max-age=86400" });
+      const age = u.pathname.endsWith(".jpg") ? 31536000 : 86400;
+      res.writeHead(200, { "Content-Type": ICONES[u.pathname], "Cache-Control": "public, max-age=" + age });
       return res.end(bin);
-    } catch (e) { return json(res, 404, { error: "icône introuvable" }); }
+    } catch (e) { return json(res, 404, { error: "fichier introuvable" }); }
   }
   if (u.pathname === "/" || u.pathname === "/index.html") {
     try {

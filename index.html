@@ -9,34 +9,34 @@
 <link rel="apple-touch-icon" href="/icone-180.png">
 <!-- Une seule balise, tenue à jour par majTheme() : une media query ne saurait pas
      suivre le choix manuel du bouton jour/nuit. -->
-<meta name="theme-color" id="tc" content="#23324A">
+<meta name="theme-color" id="tc" content="#1B3A31">
 <meta name="apple-mobile-web-app-title" content="Le QG">
 <meta name="description" content="Le QG des vacances de la famille à Argelès-Gazost : planning du camping, sorties, randos, missions et bilan du séjour.">
 <meta name="robots" content="noindex, nofollow">
 <style>
 :root{
   /* — encres du séjour — */
-  --papier:#FBF3E2;   /* crème solaire */
-  --encre:#23324A;    /* bleu nuit pyrénéen */
-  --soleil:#FFB800;   /* jaune Yelloh */
+  --papier:#F7F1E1;   /* crème solaire, à peine plus verte */
+  --encre:#1B3A31;    /* vert sapin profond — la couleur du médaillon */
+  --soleil:#E8B02A;   /* or du médaillon */
   --gave:#1E7F86;     /* turquoise torrent */
   --sapin:#2E7D4F;
   --braise:#E4572E;
   --craie:#FFFFFF;
-  --scotch:rgba(222,196,138,.75);
+  --scotch:rgba(214,190,136,.78);
   /* — neutres : une seule échelle, du texte le plus lisible au plus discret —
      Ces valeurs traînaient en dur dans une trentaine de règles ; les nommer ici est
      ce qui rend possible le mode nuit (un seul endroit à basculer). */
   --surface:var(--craie);      /* fond des cartes */
-  --surface-2:#EEF2F5;         /* pastilles et badges au repos */
+  --surface-2:#EDF2EC;         /* pastilles et badges au repos */
   --surface-fait:#F2F6F1;      /* carte d'une sortie déjà réalisée */
   --surface-svg:#EAF2EC;       /* fond des schémas de rando */
   --eau:#DDE7EE;               /* attente d'image, fond de carte */
-  --trait:#D8DCE5;             /* filets, séparateurs pointillés — non interactifs */
-  --trait-fort:#8A93A8;        /* bordure d'un contrôle au repos : 3,08:1, seuil WCAG 1.4.11 */
-  --texte-2:#4E5D77;           /* méta d'une fiche */
-  --texte-3:#5A6A85;           /* intitulés, sous-titres */
-  --texte-4:#626E85;           /* crédits, mentions */
+  --trait:#D6DDD4;             /* filets, séparateurs pointillés — non interactifs */
+  --trait-fort:#7E9186;        /* bordure d'un contrôle au repos : 3,08:1, seuil WCAG 1.4.11 */
+  --texte-2:#405C51;           /* méta d'une fiche */
+  --texte-3:#4B6A5D;           /* intitulés, sous-titres */
+  --texte-4:#556F63;           /* crédits, mentions */
   --miel:#FFF4D6;              /* fond des encadrés d'aide */
   /* Variantes assez foncées pour porter du texte sur le papier crème : le turquoise
      et la braise d'origine plafonnent à 4,3:1, sous le seuil AA. */
@@ -44,10 +44,10 @@
   --braise-t:#B8441F;
   --bois:#A9743B;              /* anneau du meeple */
   --froid:#2E86AB;             /* bas du thermomètre */
-  --encre-2:#39506F;           /* aplats sur l'en-tête sombre */
+  --encre-2:#2C5A4C;           /* aplats sur l'en-tête sombre */
   --encre-nuit:#3B2A4A;        /* dégradé du bandeau de palier */
   --alerte:#FDE7E0;            /* fond d'un bandeau d'alerte */
-  --or-fonce:#8a6a00;          /* texte sur fond soleil clair */
+  --or-fonce:#7A5C10;          /* texte sur fond soleil clair */
   /* — couleurs de catégorie : source unique, lue aussi par la carte Leaflet —
      Valeurs propres et non des alias des couleurs d'accent : elles servent aussi de
      couleur de texte pour les titres de section, ce qui impose de tenir 4,5:1 sur le
@@ -80,11 +80,11 @@
   --e1:2px;  --e2:4px;  --e3:6px;  --e4:8px;  --e5:10px;
   --e6:12px; --e7:14px; --e8:16px; --e9:24px;
   /* — élévations : deux pour les cartes, trois fonctionnelles — */
-  --om1:4px 4px 0 rgba(35,50,74,.12);   /* carte courante */
-  --om2:5px 5px 0 rgba(35,50,74,.14);   /* carte de tête */
-  --om-actif:3px 3px 0 rgba(35,50,74,.25);
-  --om-entete:0 2px 10px rgba(35,50,74,.35);
-  --om-flot:0 6px 22px rgba(35,50,74,.42);
+  --om1:4px 4px 0 rgba(20,50,42,.13);   /* carte courante */
+  --om2:5px 5px 0 rgba(20,50,42,.15);   /* carte de tête */
+  --om-actif:3px 3px 0 rgba(20,50,42,.26);
+  --om-entete:0 2px 10px rgba(8,24,20,.42);
+  --om-flot:0 6px 22px rgba(8,24,20,.48);
   --om-mk:0 1px 4px rgba(0,0,0,.35);
   /* Surfaces qui restent sombres dans les deux thèmes : le bandeau de titre et les
      bandeaux de félicitations. Les inverser donnerait une barre claire en pleine nuit. */
@@ -128,13 +128,29 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 :focus-visible{outline:3px solid var(--braise);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-/* ---- entête fanion ---- */
-/* Silhouette de sommets en fond de bandeau : même vocabulaire graphique que l'icône
-   du site, en SVG inline — aucune requête, quelques centaines d'octets. */
-header{position:sticky;top:0;z-index:50;background:var(--sombre);color:var(--sur-sombre);padding:var(--e5) var(--e7);box-shadow:var(--om-entete);
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 150 44'%3E%3Ccircle cx='118' cy='13' r='8' fill='%23FFB800' opacity='.20'/%3E%3Cpath d='M0 44 L30 14 L46 30 L68 6 L96 44Z' fill='%23FBF3E2' opacity='.07'/%3E%3Cpath d='M62 44 L92 18 L112 34 L128 22 L150 44Z' fill='%23FBF3E2' opacity='.05'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right -8px bottom;background-size:auto 100%}
+/* ---- en-tête héros ----
+   La photo du cirque de Gavarnie (Benh Lieu Song, CC BY-SA 3.0) tient lieu de fond, sous un
+   dégradé qui garantit la lisibilité du texte quelle que soit la zone de l'image. Elle est
+   posée en `background-image` et non en `<img>` : le navigateur la charge APRÈS le rendu,
+   jamais sur le chemin critique — la page s'affiche à l'identique le temps qu'elle arrive,
+   ce qui compte sur un serveur Render qui se réveille. 87 Ko, gardés un an en cache.
+   Le dégradé reste sous le texte même si la photo ne vient jamais. */
+header{position:sticky;top:0;z-index:50;color:var(--sur-sombre);padding:var(--e5) var(--e7);box-shadow:var(--om-entete);
+  background-color:var(--sombre);
+  background-image:linear-gradient(180deg,rgba(6,18,15,.34) 0%,rgba(6,18,15,.72) 58%,rgba(6,18,15,.93) 100%),url("/fond-gavarnie.jpg");
+  background-repeat:no-repeat,no-repeat;background-position:center,center 34%;background-size:cover,cover}
+/* Le médaillon : sceau doré aux poussins, dessiné en SVG inline (~4 Ko, aucune requête).
+   Il remplace l'emoji 🏕️ et devient le point d'ancrage visuel de l'en-tête. */
+.h-med{flex:0 0 auto;width:58px;height:58px;display:block;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.45));transition:width .25s ease,height .25s ease}
+.h-med svg{width:100%;height:100%;display:block}
+body.defile .h-med{width:30px;height:30px}
+/* Le crédit de la photo : obligation de la licence CC BY-SA, et c'est aussi honnête. */
+.h-cred{max-width:760px;margin:var(--e2) auto 0;font-size:8px;letter-spacing:.3px;opacity:.42;line-height:1.2}
+.h-cred a{color:inherit}
+body.defile .h-cred{display:none}
 .h-in{max-width:760px;margin:0 auto;display:flex;align-items:center;gap:var(--e4);justify-content:space-between}
+.h-in>div{min-width:0}
 /* Le bloc de droite ne se rétrécit pas : c'est le titre qui cède la place à 390 px. */
 .h-out{display:flex;align-items:center;gap:var(--e3);flex:0 0 auto}
 .h-b{position:relative;flex:0 0 auto;width:36px;height:36px;border-radius:var(--r1);font-size:17px;line-height:1;
@@ -496,6 +512,12 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
   font-weight:800;font-size:var(--tx-texte);background:var(--craie);transition:background .2s,border-color .2s}
 .pj-plus.on{background:var(--encre);color:var(--craie);border-style:solid}
 
+/* Fond de page : la même photo, très voilée et floutée — aucun octet de plus, le fichier
+   est déjà en cache pour l'en-tête. z-index négatif : elle passe SOUS le contenu, alors que
+   le grain de papier ci-dessous passe au-dessus. */
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:url("/fond-gavarnie.jpg") center/cover no-repeat;opacity:.13;filter:blur(3px) saturate(.85)}
+
 /* ---- matière ----
    Grain de papier : un bruit fractal en SVG inline (aucune requête, ~300 octets) posé
    en voile fixe. C'est lui qui donne au « papier crème » sa matière — jusqu'ici, un
@@ -624,7 +646,7 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
   @page{margin:14mm}
   html,body{background:#FFFFFF;color:#000000;font-size:11pt;line-height:1.35}
   body{padding:0}
-  body::before,#prog,#haut,nav,#toasts,#reveil,.filtres,.meteo,.aj,.pj-plus,.danger,
+  body::before,body::after,.h-cred,#prog,#haut,nav,#toasts,#reveil,.filtres,.meteo,.aj,.pj-plus,.danger,
   .s-act,.lg-x,.js-p,.mbr-x,#carte,.score .bar,.tri,.cfx,.h-b,.jg-d{display:none!important}
   .jg{border:1px solid #999999;background:none}
   .jauges{grid-template-columns:repeat(4,1fr)}
@@ -659,28 +681,28 @@ nav button.actif::after{content:"";width:26px;height:4px;border-radius:var(--r0)
 html{color-scheme:light}
 html.nuit{color-scheme:dark}   /* sans ça, les sélecteurs de date natifs restent blancs */
 html.nuit{
-  --papier:#131A25;
-  --encre:#E9EFF7;
-  --craie:#1C2534;
-  --soleil:#FFB800;
+  --papier:#0C1714;
+  --encre:#E7F1EA;
+  --craie:#15241F;
+  --soleil:#E8C24E;
   --gave:#3FB3BC;            /* remontés d'un cran : le turquoise et le sapin */
   --sapin:#4FBF80;           /* d'origine tombent sous le seuil lisible sur fond sombre */
   --braise:#FF7A52;
-  --scotch:rgba(222,196,138,.34);
-  --surface-2:#243044;
-  --surface-fait:#1B2B25;
-  --surface-svg:#1A2A22;
-  --eau:#22303F;
-  --trait:#3A4A63;
-  --trait-fort:#6E7C96;      /* 3,66:1 sur la surface de nuit */
-  --texte-2:#BAC7DB;
-  --texte-3:#A5B4CC;
-  --texte-4:#8796AE;
-  --miel:#2E2716;
-  --encre-2:#3A4C68;
+  --scotch:rgba(214,190,136,.30);
+  --surface-2:#1D3029;
+  --surface-fait:#183026;
+  --surface-svg:#162C23;
+  --eau:#1B3029;
+  --trait:#2F4439;
+  --trait-fort:#688473;      /* 3,66:1 sur la surface de nuit */
+  --texte-2:#BBD0C2;
+  --texte-3:#A3BCAD;
+  --texte-4:#8AA394;
+  --miel:#2C2A14;
+  --encre-2:#2E4C40;
   --encre-nuit:#2A1F38;
   --or-fonce:#E5BE55;
-  --alerte:#3A1E17;
+  --alerte:#3A2117;
   --gave-t:var(--gave);        /* sur fond sombre, ce sont les variantes claires */
   --braise-t:var(--braise);    /* qui portent le texte */
   --bois:#C9975A;
@@ -692,9 +714,9 @@ html.nuit{
   --cat-O:#6D8CB8;
   --cat-V:#A98BE0;
   --cat-H:#4FBF80;
-  --sombre:#0E141D;
+  --sombre:#081310;
   --sur-sombre:#EDF2F8;
-  --sur-soleil:#1A2230;
+  --sur-soleil:#141F1A;
 }
 /* Les dégradés de catégorie sont des pastels : tels quels, ils éblouiraient.
    Mêmes teintes, luminosité de nuit. */
@@ -717,9 +739,10 @@ html.nuit body::before{display:none}
 <body>
 <header>
   <div class="h-in">
+    <span class="h-med" aria-hidden="true"><svg viewBox="0 0 120 120"><defs><linearGradient id="mor" x1=".1" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="#F8DE95"/><stop offset=".34" stop-color="#C8A047"/><stop offset=".58" stop-color="#F4D687"/><stop offset="1" stop-color="#9E7629"/></linearGradient><linearGradient id="mciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16332B"/><stop offset="1" stop-color="#0A1917"/></linearGradient><clipPath id="mrond"><circle cx="60" cy="60" r="41.5"/></clipPath><path id="mhaut" d="M14.4 44.5 A48 48 0 0 1 105.6 44.5" fill="none"/><path id="mbas" d="M15.6 78.5 A48 48 0 0 0 104.4 78.5" fill="none"/></defs><circle cx="60" cy="60" r="58.5" fill="url(#mor)"/><circle cx="60" cy="60" r="54" fill="none" stroke="#7A5A1C" stroke-width=".7" opacity=".5"/><circle cx="60" cy="60" r="41.5" fill="url(#mciel)"/><g clip-path="url(#mrond)"><circle cx="86" cy="36" r="6.5" fill="#FFC94A" opacity=".92"/><path d="M6 100 L32 54 L48 78 L62 48 L96 100Z" fill="#1E463C"/><path d="M54 100 L80 60 L94 78 L110 60 L118 100Z" fill="#173A33"/><path d="M32 54 L39 65 L25 65Z" fill="#E8F2EC" opacity=".9"/><path d="M62 48 L70 61 L54 61Z" fill="#E8F2EC" opacity=".9"/><rect x="0" y="90" width="120" height="20" fill="#122C27"/><path d="M15 90 L22 76 L29 90Z" fill="#C8A047"/><path d="M22 81 L26 90 L18 90Z" fill="#0A1917"/><g transform="translate(41 72) scale(.86)"><ellipse cx="0" cy="8" rx="9.6" ry="8.2" fill="#EFBE33"/><circle cx="0" cy="-2.4" r="7.6" fill="#F8D556"/><path d="M-7.7 -3.4 A7.7 7.7 0 0 1 7.7 -3.4 L7.7 -.8 A7.7 7.7 0 0 0 -7.7 -.8Z" fill="#3E8E62"/><path d="M-1.4 -10.8 L1.4 -13.6 L2.8 -9.9Z" fill="#3E8E62"/><circle cx="-2.8" cy="-1.9" r="1.3" fill="#1B2A18"/><circle cx="2.8" cy="-1.9" r="1.3" fill="#1B2A18"/><path d="M-1.8 1.5 L1.8 1.5 L0 3.8Z" fill="#DE8524"/></g><g transform="translate(77 74) scale(.9)"><ellipse cx="0" cy="8" rx="9.8" ry="8.4" fill="#EFBE33"/><circle cx="0" cy="-2.8" r="7.9" fill="#F8D556"/><path d="M-8 -5 A8 8 0 0 1 8 -5Z" fill="#EE8FA8"/><path d="M8 -5 L13.2 -3.7 L8 -3Z" fill="#EE8FA8"/><circle cx="-2.9" cy="-2.2" r="1.32" fill="#1B2A18"/><circle cx="2.9" cy="-2.2" r="1.32" fill="#1B2A18"/><path d="M-1.8 1.2 L1.8 1.2 L0 3.5Z" fill="#DE8524"/><path d="M-13.6 9.6 A7.4 7.4 0 0 1 -0.4 9.6Z" fill="#E2574C"/><path d="M-13.6 9.6 A7.4 7.4 0 0 1 -0.4 9.6" fill="none" stroke="#3E8E62" stroke-width="1.7"/></g><g transform="translate(59 84) scale(.94)"><ellipse cx="0" cy="7" rx="9.2" ry="7.6" fill="#F8D556"/><circle cx="0" cy="-2.6" r="7.4" fill="#FCE383"/><path d="M-7.8 -2.6 A7.8 7.8 0 0 1 7.8 -2.6" fill="none" stroke="#39506F" stroke-width="2"/><rect x="-9.7" y="-3.4" width="3.4" height="5.6" rx="1.7" fill="#39506F"/><rect x="6.3" y="-3.4" width="3.4" height="5.6" rx="1.7" fill="#39506F"/><circle cx="-2.6" cy="-1.9" r="1.2" fill="#1B2A18"/><circle cx="2.6" cy="-1.9" r="1.2" fill="#1B2A18"/><path d="M-1.7 1.3 L1.7 1.3 L0 3.4Z" fill="#DE8524"/></g></g><circle cx="60" cy="60" r="41.5" fill="none" stroke="#7A5A1C" stroke-width="1.5"/><g font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-weight="800" fill="#4A3410"><text font-size="8.2" letter-spacing=".9"><textPath href="#mhaut" startOffset="50%" text-anchor="middle">LE QG DES VACANCES</textPath></text><text font-size="7.4" letter-spacing=".8"><textPath href="#mbas" startOffset="50%" text-anchor="middle">ARGELÈS-GAZOST 2026</textPath></text></g><g fill="#4A3410"><path d="M8.6 60 L10.6 57.6 L12.6 60 L10.6 62.4Z"/><path d="M107.4 60 L109.4 57.6 L111.4 60 L109.4 62.4Z"/></g></svg></span>
     <div>
-      <div class="h-t">🏕️ Le QG des vacances</div>
-      <div class="h-s">Argelès-Gazost · 25 juil → 8 août 2026</div>
+      <div class="h-t">Le QG des vacances</div>
+      <div class="h-s">Argelès-Gazost · 25 juil → 8 août</div>
     </div>
     <div class="h-out">
       <button class="h-b" id="btsynth" data-act="synth" aria-pressed="false"
@@ -735,6 +758,7 @@ html.nuit body::before{display:none}
     <span id="scoretxt" style="font-family:var(--mono)">0 pt</span>
   </div>
   <div class="prochain" id="prochain"></div>
+  <div class="h-cred">Fond : cirque de Gavarnie — Benh Lieu Song, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a></div>
 </header>
 
 <div id="toasts" aria-live="polite"></div>
@@ -2786,7 +2810,7 @@ function majTheme(){
   const n = nuitActive();
   document.documentElement.classList.toggle("nuit", n);
   const tc = document.getElementById("tc");
-  if(tc) tc.setAttribute("content", n ? "#0E141D" : "#23324A");
+  if(tc) tc.setAttribute("content", n ? "#081310" : "#1B3A31");
   const b = document.getElementById("btnuit");
   if(b){
     // l'icône annonce ce qu'on obtient en appuyant, pas l'état courant
