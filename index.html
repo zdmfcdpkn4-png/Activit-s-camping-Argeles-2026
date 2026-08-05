@@ -137,7 +137,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
    Le dégradé reste sous le texte même si la photo ne vient jamais. */
 header{position:sticky;top:0;z-index:50;color:var(--sur-sombre);padding:var(--e5) var(--e7);box-shadow:var(--om-entete);
   background-color:var(--sombre);
-  background-image:linear-gradient(180deg,rgba(6,18,15,.34) 0%,rgba(6,18,15,.72) 58%,rgba(6,18,15,.93) 100%),url("/fond-gavarnie.jpg");
+  background-image:linear-gradient(180deg,rgba(6,18,15,.58) 0%,rgba(6,18,15,.82) 58%,rgba(6,18,15,.95) 100%),url("/fond-gavarnie.jpg");
   background-repeat:no-repeat,no-repeat;background-position:center,center 34%;background-size:cover,cover}
 /* Le médaillon : sceau doré aux poussins, dessiné en SVG inline (~4 Ko, aucune requête).
    Il remplace l'emoji 🏕️ et devient le point d'ancrage visuel de l'en-tête. */
@@ -158,7 +158,7 @@ body.defile .h-cred{display:none}
 .h-b::after{content:"";position:absolute;inset:-4px}   /* zone de contact portée à 44 px */
 .h-b[aria-pressed="true"]{background:var(--soleil);color:var(--sur-soleil)}
 .h-t{font-weight:800;font-size:var(--t1);line-height:1.25;letter-spacing:.2px}
-.h-s{font-size:var(--tx-label);opacity:.85}
+.h-s{font-size:var(--tx-label);opacity:.95}
 .badge-sync{font-size:var(--tx-mini);font-family:var(--mono);padding:4px 8px;border-radius:var(--rp);background:var(--encre-2);white-space:nowrap}
 .badge-sync.ok,.badge-sync.off{color:var(--craie)}
 .badge-sync.ok{background:var(--sapin)}
@@ -528,6 +528,13 @@ article.sortie.fait{opacity:.62;background:var(--surface-fait)}
 body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background:url("/fond-gavarnie.jpg") center/cover no-repeat;opacity:.13;filter:blur(3px) saturate(.85)}
 
+/* — mode nuit : l'AUTRE photo, en noir et blanc —
+   Le noir et blanc est cuit dans le fichier et non posé en filtre CSS : 46 Ko au lieu de
+   87, parce qu'une image en niveaux de gris se comprime bien mieux. Et comme la règle ne
+   s'applique qu'en nuit, un téléphone en mode jour ne télécharge jamais ce fichier. */
+html.nuit header{background-image:linear-gradient(180deg,rgba(3,10,8,.66) 0%,rgba(3,10,8,.86) 58%,rgba(3,10,8,.96) 100%),url("/fond-nuit.jpg")}
+html.nuit body::after{background-image:url("/fond-nuit.jpg");opacity:.17}
+
 /* ---- matière ----
    Grain de papier : un bruit fractal en SVG inline (aucune requête, ~300 octets) posé
    en voile fixe. C'est lui qui donne au « papier crème » sa matière — jusqu'ici, un
@@ -776,7 +783,7 @@ html.nuit body::before{display:none}
     <span id="scoretxt" style="font-family:var(--mono)">0 pt</span>
   </div>
   <div class="prochain" id="prochain"></div>
-  <div class="h-cred">Fond : cirque de Gavarnie — Benh Lieu Song, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a></div>
+  <div class="h-cred" id="hcred"></div>
 </header>
 
 <div id="toasts" aria-live="polite"></div>
@@ -2848,6 +2855,12 @@ function majTheme(){
   document.documentElement.classList.toggle("nuit", n);
   const tc = document.getElementById("tc");
   if(tc) tc.setAttribute("content", n ? "#081310" : "#1B3A31");
+  // Le crédit suit le fond : ce ne sont pas la même photo, ni le même auteur, ni la même
+  // licence. Les afficher tous les deux serait plus simple mais faux la moitié du temps.
+  const cr = document.getElementById("hcred");
+  if(cr) cr.innerHTML = n
+    ? 'Fond : lac de Gaube — Miguel303xm, <a href="https://creativecommons.org/licenses/by-sa/2.5/" target="_blank" rel="noopener">CC BY-SA 2.5</a>'
+    : 'Fond : cirque de Gavarnie — Benh Lieu Song, <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a>';
   const b = document.getElementById("btnuit");
   if(b){
     // l'icône annonce ce qu'on obtient en appuyant, pas l'état courant

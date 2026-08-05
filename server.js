@@ -97,6 +97,7 @@ const server = createServer(async (req, res) => {
     "/icone-180.png": "image/png",
     "/icone-512.png": "image/png",
     "/fond-gavarnie.jpg": "image/jpeg",
+    "/fond-nuit.jpg": "image/jpeg",
   };
   if (ICONES[u.pathname]) {
     try {
