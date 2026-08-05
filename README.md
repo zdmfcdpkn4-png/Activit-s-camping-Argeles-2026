@@ -20,6 +20,7 @@ Appli familiale partagée : planning des animations du camping (toujours **en ex
 - Pas d'authentification : URL + `TRIP` font office de clé. Rien de sensible dedans. **Ne jamais committer `DATABASE_URL`** (elle contient le mot de passe de la base) : elle ne vit que dans les variables d'environnement Render.
 - Les deux gestes irréversibles sont derrière le **code 1234** : retirer un votant qui a déjà voté, et la remise à zéro. Ce code est écrit en clair dans la page — ce n'est pas une protection mais un **garde-fou contre le geste involontaire**, le vrai risque ici. Et si un prénom disparaît quand même, **l'appli le rattrape toute seule** : les votes ne sont jamais effacés avec le votant, et l'onglet Favoris affiche alors « ❤️ Des votes sans votant — Remettre Flore ». Un geste, tout revient. Seule la remise à zéro efface vraiment.
 - Sans backend joignable, l'appli fonctionne en local d'appareil (bandeau « hors ligne »).
+- **Quelle version tourne sur mon téléphone ?** L'onglet Infos l'affiche en bas. Après une mise à jour, Render reconstruit avant de servir : si le numéro n'a pas bougé, recharger dans une minute. Un test vérifie que ce numéro est bien celui de `package.json`.
 
 ## Données embarquées
 - Planning camping 26/07 → 07/08 transcrit des photos du panneau (semaine 1 le 26/07, semaine 2 le 01/08) — 219 activités pour les 3 publics, plus les soirées. Le vendredi 07/08 n'avait pas d'affiche de soirée sur le panneau : marqué **[à vérifier]** plutôt que deviné.

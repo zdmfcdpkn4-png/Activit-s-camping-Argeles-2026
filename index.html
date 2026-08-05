@@ -814,6 +814,12 @@ html.nuit body::before{display:none}
 /* ================= CONFIG SYNC (modèle roadbook) ================= */
 const TRIP = "sejour-0ec605493225600cc47dd828ee8281fc";   // même convention que le roadbook : mettez une chaîne aléatoire longue
 const API  = "/api/sync";
+/* Affichée dans l'onglet Infos. Sans elle, personne — ni la famille, ni moi — ne peut dire
+   quelle build tourne sur un téléphone donné : « je vois encore l'ancienne image » devient
+   indiscutable au lieu d'être un aller-retour. Un contrôle de `test-server-qg-pg` exige
+   qu'elle soit IDENTIQUE à celle de package.json : deux montées de version se sont déjà
+   perdues, la vigilance ne suffit pas. */
+const VERSION = "1.49.0";
 
 /* ================= DONNÉES ================= */
 /* Planning camping — relevé sur le panneau : semaine 1 (26/07 → 01/08) photos du 26/07,
@@ -2717,7 +2723,7 @@ function vueInfos(){
     (codeAction === "raz"
       ? champCode("Tout remettre à zéro ?", "Coches, votes, missions et jeux de toute la famille seront effacés — c'est sans retour.")
       : '<button class="danger" data-act="raz">Tout remettre à zéro (code demandé)</button>') +
-    '<div class="note" style="margin-top:10px">Données du 26/07/2026, consolidées avec le panneau « Explore & Discover » du camping · prix susceptibles d’évoluer · [à vérifier] = non confirmé en ligne.</div></section>';
+    '<div class="note" style="margin-top:10px"><b>Version ' + VERSION + '</b> — si l’écran ne correspond pas à ce qui vient d’être annoncé, c’est que le serveur sert encore l’ancienne page : recharger.<br>Données du 26/07/2026, consolidées avec le panneau « Explore & Discover » du camping · prix susceptibles d’évoluer · [à vérifier] = non confirmé en ligne.</div></section>';
 }
 function rendre(){
   // Les missions à seuil dépendent d'un total, pas d'une coche : on les évalue à chaque
