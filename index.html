@@ -10,6 +10,18 @@
 <!-- Une seule balise, tenue à jour par majTheme() : une media query ne saurait pas
      suivre le choix manuel du bouton jour/nuit. -->
 <meta name="theme-color" id="tc" content="#1B3A31">
+<script>
+/* Anti-éclair (v1.51) : le thème mémorisé sur cet appareil — ou le réglage du téléphone —
+   est posé AVANT le premier rendu ; sinon la page flasherait claire le temps que le script
+   principal, en fin de body, prenne la main. majTheme() refait ensuite le même calcul. */
+try{
+  var qgt = localStorage.getItem("qg-theme");
+  if(qgt === "nuit" || (qgt !== "jour" && matchMedia("(prefers-color-scheme:dark)").matches)){
+    document.documentElement.classList.add("nuit");
+    document.getElementById("tc").setAttribute("content", "#081310");
+  }
+}catch(e){}
+</script>
 <meta name="apple-mobile-web-app-title" content="Le QG">
 <meta name="description" content="Le QG des vacances de la famille à Argelès-Gazost : planning du camping, sorties, randos, missions et bilan du séjour.">
 <meta name="robots" content="noindex, nofollow">
@@ -159,7 +171,9 @@ body.defile .h-med{width:30px;height:30px}
 .badge-sync{font-size:var(--tx-mini);font-family:var(--mono);padding:4px 8px;border-radius:var(--rp);background:var(--encre-2);white-space:nowrap}
 .badge-sync.ok,.badge-sync.off{color:var(--craie)}
 .badge-sync.ok{background:var(--sapin)}
-.badge-sync.off{background:var(--braise)}
+/* braise-t et non braise : blanc sur la braise claire faisait 3,68:1 — sous le seuil AA,
+   et sur l'état qu'on lit précisément quand ça va mal. En nuit, braise-t EST braise. */
+.badge-sync.off{background:var(--braise-t)}
 .score{max-width:760px;margin:var(--e3) auto 0;display:flex;align-items:center;gap:var(--e4);font-size:var(--tx-label)}
 .score .bar{flex:1;height:8px;background:var(--encre-2);border-radius:var(--rp);overflow:hidden}
 .score .fill{height:100%;background:var(--soleil);border-radius:var(--rp);transition:width .4s}
@@ -625,6 +639,11 @@ nav button.actif::after{animation:onglet .3s cubic-bezier(.2,.7,.3,1)}
 .lien{display:flex;min-height:46px;align-items:center;font-size:var(--tx-corps);border-bottom:1px dotted var(--trait);color:var(--encre);text-decoration:none;font-weight:600;gap:var(--e4)}
 .lien:last-child{border-bottom:none}
 .danger{margin-top:var(--e6);width:100%;min-height:48px;border:2px solid var(--braise);color:var(--braise-t);border-radius:var(--r2);font-weight:800}
+/* Rappel du thème figé (Infos) — visible seulement quand un choix est mémorisé */
+.theme-memo{margin-top:var(--e5);font-size:var(--tx-texte);color:var(--texte-2)}
+.theme-tel{display:block;min-height:44px;margin-top:var(--e3);padding:0 var(--e5);border-radius:var(--r2);
+  border:1px solid var(--trait-fort);background:var(--craie);font-size:var(--tx-texte);
+  font-weight:700;color:var(--texte-2)}
 
 /* ---- bandeau de réveil du serveur ---- */
 #reveil{max-width:760px;margin:var(--e5) auto 0;padding:var(--e4) var(--e6);font-size:var(--tx-texte);
@@ -754,15 +773,89 @@ html.nuit body::before{display:none}
 <body>
 <!-- Dégradé d'or partagé par tous les badges de mission : défini une seule fois, hors de
      l'en-tête (qui disparaît à l'impression) et hors des badges eux-mêmes (un id ne se
-     répète pas). -->
+     répète pas). Les six poussins (v1.51) vivent ici pour la même raison : dessinés une
+     fois, référencés par <use> depuis le médaillon ET les sceaux de mission. Redessinés à
+     la main d'après la planche envoyée par la famille — l'esprit, pas la copie. Chacun
+     tient dans une boîte locale ~22×22 centrée sur le corps. -->
 <svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs>
 <linearGradient id="bpo-or" x1=".1" y1="0" x2=".9" y2="1">
 <stop offset="0" stop-color="#F8DE95"/><stop offset=".34" stop-color="#C8A047"/>
 <stop offset=".58" stop-color="#F4D687"/><stop offset="1" stop-color="#9E7629"/></linearGradient>
+<g id="pp-cartes">
+  <ellipse cx="-3" cy="9.8" rx="1.5" ry=".9" fill="#F09A2E"/><ellipse cx="3" cy="9.8" rx="1.5" ry=".9" fill="#F09A2E"/>
+  <ellipse cx="0" cy="1.5" rx="9" ry="8.8" fill="#FFDF54" stroke="#5A431A" stroke-width="1.1"/>
+  <ellipse cx="0" cy="5" rx="5.4" ry="3.6" fill="#FFEA8C"/>
+  <circle cx="-3.1" cy="-2.4" r="1.15" fill="#221A08"/><circle cx="3.1" cy="-2.4" r="1.15" fill="#221A08"/>
+  <path d="M-1.5 0 L1.5 0 L0 2Z" fill="#F09A2E"/>
+  <g transform="translate(5.4 2.4)" stroke="#5A431A" stroke-width=".8">
+    <rect x="-1.6" y="-5.6" width="3.2" height="5.8" rx=".7" fill="#D8453E" transform="rotate(-26)"/>
+    <rect x="-1.6" y="-5.8" width="3.2" height="5.8" rx=".7" fill="#D8453E"/>
+    <rect x="-1.6" y="-5.6" width="3.2" height="5.8" rx=".7" fill="#D8453E" transform="rotate(26)"/>
+    <circle cx="0" cy="-2.9" r=".8" fill="#FFF3EE" stroke="none"/>
+  </g>
+</g>
+<g id="pp-ordi">
+  <ellipse cx="-3" cy="9.8" rx="1.5" ry=".9" fill="#F09A2E"/><ellipse cx="3" cy="9.8" rx="1.5" ry=".9" fill="#F09A2E"/>
+  <ellipse cx="0" cy="1.5" rx="9" ry="8.8" fill="#FFDF54" stroke="#5A431A" stroke-width="1.1"/>
+  <circle cx="-3.1" cy="-2.4" r="1.15" fill="#221A08"/><circle cx="3.1" cy="-2.4" r="1.15" fill="#221A08"/>
+  <path d="M-1.5 0 L1.5 0 L0 2Z" fill="#F09A2E"/>
+  <rect x="-5.8" y="2.6" width="11.6" height="7" rx="1.1" fill="#C4CAD1" stroke="#5A431A" stroke-width="1"/>
+  <path d="M0 7.9 C-2.1 6.4 -1.5 4.6 0 5.5 C1.5 4.6 2.1 6.4 0 7.9Z" fill="#FFF"/>
+</g>
+<g id="pp-ecrit">
+  <ellipse cx="-3" cy="9.8" rx="1.5" ry=".9" fill="#F09A2E"/><ellipse cx="3" cy="9.8" rx="1.5" ry=".9" fill="#F09A2E"/>
+  <ellipse cx="0" cy="1.5" rx="9" ry="8.8" fill="#FFDF54" stroke="#5A431A" stroke-width="1.1"/>
+  <ellipse cx="-1.4" cy="5" rx="4.8" ry="3.4" fill="#FFEA8C"/>
+  <circle cx="-3.1" cy="-2.4" r="1.15" fill="#221A08"/><circle cx="3.1" cy="-2.4" r="1.15" fill="#221A08"/>
+  <path d="M-1.5 0 L1.5 0 L0 2Z" fill="#F09A2E"/>
+  <path d="M-7.7 -3.4 A7.9 7.9 0 0 1 7.7 -3.4" fill="none" stroke="#B0483F" stroke-width="1.9"/>
+  <rect x="-9.4" y="-4.2" width="3" height="5.4" rx="1.5" fill="#B0483F" stroke="#5A431A" stroke-width=".6"/>
+  <rect x="6.4" y="-4.2" width="3" height="5.4" rx="1.5" fill="#B0483F" stroke="#5A431A" stroke-width=".6"/>
+  <g transform="rotate(9 5.2 8.6)"><rect x="2" y="6.4" width="6.4" height="4.4" rx=".6" fill="#FFF" stroke="#5A431A" stroke-width=".8"/>
+  <path d="M3.4 8.2 h3.6 M3.4 9.4 h2.4" stroke="#8A93A8" stroke-width=".7"/></g>
+</g>
+<g id="pp-pasteque">
+  <ellipse cx="-3" cy="9.8" rx="1.5" ry=".9" fill="#F09A2E"/><ellipse cx="3" cy="9.8" rx="1.5" ry=".9" fill="#F09A2E"/>
+  <ellipse cx="0" cy="1.5" rx="9" ry="8.8" fill="#FFDF54" stroke="#5A431A" stroke-width="1.1"/>
+  <circle cx="-3.1" cy="-2.4" r="1.15" fill="#221A08"/><circle cx="3.1" cy="-2.4" r="1.15" fill="#221A08"/>
+  <path d="M-1.5 0 L1.5 0 L0 2Z" fill="#F09A2E"/>
+  <path d="M-6.9 -4.6 A7 7 0 0 1 6.9 -4.6 Z" fill="#EE8FA8" stroke="#5A431A" stroke-width="1"/>
+  <path d="M0 -11.6 V-4.6" stroke="#D9718F" stroke-width=".8"/>
+  <path d="M4.4 -6.2 Q9.8 -6.6 10.4 -4.2 L5.6 -4.8Z" fill="#EE8FA8" stroke="#5A431A" stroke-width=".9"/>
+  <g transform="translate(0 5.4)">
+    <path d="M-5.2 0 A5.2 5.2 0 0 0 5.2 0Z" fill="#E2574C" stroke="#5A431A" stroke-width=".9"/>
+    <path d="M-5.2 0 A5.2 5.2 0 0 0 5.2 0" fill="none" stroke="#3E8E62" stroke-width="1.6"/>
+    <circle cx="-1.8" cy="1.6" r=".5" fill="#221A08"/><circle cx="1" cy="2.4" r=".5" fill="#221A08"/><circle cx="2.4" cy=".9" r=".5" fill="#221A08"/>
+  </g>
+</g>
+<g id="pp-arrosoir">
+  <ellipse cx="-3" cy="9.8" rx="1.5" ry=".9" fill="#F09A2E"/><ellipse cx="3" cy="9.8" rx="1.5" ry=".9" fill="#F09A2E"/>
+  <ellipse cx="0" cy="1.5" rx="9" ry="8.8" fill="#FFDF54" stroke="#5A431A" stroke-width="1.1"/>
+  <ellipse cx="-1" cy="5" rx="5" ry="3.5" fill="#FFEA8C"/>
+  <circle cx="-3.1" cy="-2.4" r="1.15" fill="#221A08"/><circle cx="3.1" cy="-2.4" r="1.15" fill="#221A08"/>
+  <path d="M-1.5 0 L1.5 0 L0 2Z" fill="#F09A2E"/>
+  <path d="M0 -10 V-11.8" stroke="#3E8E62" stroke-width="1"/>
+  <path d="M0 -11.8 Q-3.4 -14.4 -4.6 -11.6 Q-1.8 -10.4 0 -11.8 Q3.4 -14.4 4.6 -11.6 Q1.8 -10.4 0 -11.8Z" fill="#6FBF73" stroke="#3E8E62" stroke-width=".6"/>
+  <g transform="translate(7 4)">
+    <rect x="-2.6" y="-2" width="5.2" height="4.4" rx="1" fill="#9CC069" stroke="#5A431A" stroke-width=".8"/>
+    <path d="M-2.6 -.6 L-5.4 -2.8 M-2.4 -2 Q0 -4.4 2.4 -2" fill="none" stroke="#5A431A" stroke-width=".9"/>
+    <circle cx="-6" cy="-4" r=".55" fill="#6FA8D8"/><circle cx="-7.2" cy="-2.6" r=".55" fill="#6FA8D8"/>
+  </g>
+</g>
+<g id="pp-dragon">
+  <ellipse cx="-3" cy="10" rx="1.5" ry=".9" fill="#F09A2E"/><ellipse cx="3" cy="10" rx="1.5" ry=".9" fill="#F09A2E"/>
+  <path d="M-2.6 -10.2 L-4.4 -14 L-2.4 -12.6 L-1.4 -13.4Z" fill="#D89A3E" stroke="#5A431A" stroke-width=".6"/>
+  <path d="M2.6 -10.2 L4.4 -14 L2.4 -12.6 L1.4 -13.4Z" fill="#D89A3E" stroke="#5A431A" stroke-width=".6"/>
+  <ellipse cx="0" cy="1.5" rx="9.4" ry="9.2" fill="#58A25F" stroke="#33591E" stroke-width="1.1"/>
+  <ellipse cx="0" cy="5.6" rx="5.2" ry="4" fill="#FFDF54"/>
+  <circle cx="0" cy="-2.6" r="5.4" fill="#FFDF54" stroke="#33591E" stroke-width=".9"/>
+  <circle cx="-2.3" cy="-3" r="1.05" fill="#221A08"/><circle cx="2.3" cy="-3" r="1.05" fill="#221A08"/>
+  <path d="M-1.3 -.9 L1.3 -.9 L0 .9Z" fill="#F09A2E"/>
+</g>
 </defs></svg>
 <header>
   <div class="h-in">
-    <span class="h-med" aria-hidden="true"><svg viewBox="0 0 120 120"><defs><linearGradient id="mor" x1=".1" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="#F8DE95"/><stop offset=".34" stop-color="#C8A047"/><stop offset=".58" stop-color="#F4D687"/><stop offset="1" stop-color="#9E7629"/></linearGradient><linearGradient id="mciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16332B"/><stop offset="1" stop-color="#0A1917"/></linearGradient><clipPath id="mrond"><circle cx="60" cy="60" r="41.5"/></clipPath><path id="mhaut" d="M14.4 44.5 A48 48 0 0 1 105.6 44.5" fill="none"/><path id="mbas" d="M15.6 78.5 A48 48 0 0 0 104.4 78.5" fill="none"/></defs><circle cx="60" cy="60" r="58.5" fill="url(#mor)"/><circle cx="60" cy="60" r="54" fill="none" stroke="#7A5A1C" stroke-width=".7" opacity=".5"/><circle cx="60" cy="60" r="41.5" fill="url(#mciel)"/><g clip-path="url(#mrond)"><circle cx="86" cy="36" r="6.5" fill="#FFC94A" opacity=".92"/><path d="M6 100 L32 54 L48 78 L62 48 L96 100Z" fill="#1E463C"/><path d="M54 100 L80 60 L94 78 L110 60 L118 100Z" fill="#173A33"/><path d="M32 54 L39 65 L25 65Z" fill="#E8F2EC" opacity=".9"/><path d="M62 48 L70 61 L54 61Z" fill="#E8F2EC" opacity=".9"/><rect x="0" y="90" width="120" height="20" fill="#122C27"/><path d="M15 90 L22 76 L29 90Z" fill="#C8A047"/><path d="M22 81 L26 90 L18 90Z" fill="#0A1917"/><g transform="translate(41 72) scale(.86)"><ellipse cx="0" cy="8" rx="9.6" ry="8.2" fill="#EFBE33"/><circle cx="0" cy="-2.4" r="7.6" fill="#F8D556"/><path d="M-7.7 -3.4 A7.7 7.7 0 0 1 7.7 -3.4 L7.7 -.8 A7.7 7.7 0 0 0 -7.7 -.8Z" fill="#3E8E62"/><path d="M-1.4 -10.8 L1.4 -13.6 L2.8 -9.9Z" fill="#3E8E62"/><circle cx="-2.8" cy="-1.9" r="1.3" fill="#1B2A18"/><circle cx="2.8" cy="-1.9" r="1.3" fill="#1B2A18"/><path d="M-1.8 1.5 L1.8 1.5 L0 3.8Z" fill="#DE8524"/></g><g transform="translate(77 74) scale(.9)"><ellipse cx="0" cy="8" rx="9.8" ry="8.4" fill="#EFBE33"/><circle cx="0" cy="-2.8" r="7.9" fill="#F8D556"/><path d="M-8 -5 A8 8 0 0 1 8 -5Z" fill="#EE8FA8"/><path d="M8 -5 L13.2 -3.7 L8 -3Z" fill="#EE8FA8"/><circle cx="-2.9" cy="-2.2" r="1.32" fill="#1B2A18"/><circle cx="2.9" cy="-2.2" r="1.32" fill="#1B2A18"/><path d="M-1.8 1.2 L1.8 1.2 L0 3.5Z" fill="#DE8524"/><path d="M-13.6 9.6 A7.4 7.4 0 0 1 -0.4 9.6Z" fill="#E2574C"/><path d="M-13.6 9.6 A7.4 7.4 0 0 1 -0.4 9.6" fill="none" stroke="#3E8E62" stroke-width="1.7"/></g><g transform="translate(59 84) scale(.94)"><ellipse cx="0" cy="7" rx="9.2" ry="7.6" fill="#F8D556"/><circle cx="0" cy="-2.6" r="7.4" fill="#FCE383"/><path d="M-7.8 -2.6 A7.8 7.8 0 0 1 7.8 -2.6" fill="none" stroke="#39506F" stroke-width="2"/><rect x="-9.7" y="-3.4" width="3.4" height="5.6" rx="1.7" fill="#39506F"/><rect x="6.3" y="-3.4" width="3.4" height="5.6" rx="1.7" fill="#39506F"/><circle cx="-2.6" cy="-1.9" r="1.2" fill="#1B2A18"/><circle cx="2.6" cy="-1.9" r="1.2" fill="#1B2A18"/><path d="M-1.7 1.3 L1.7 1.3 L0 3.4Z" fill="#DE8524"/></g></g><circle cx="60" cy="60" r="41.5" fill="none" stroke="#7A5A1C" stroke-width="1.5"/><g font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-weight="800" fill="#4A3410"><text font-size="8.2" letter-spacing=".9"><textPath href="#mhaut" startOffset="50%" text-anchor="middle">LE QG DES VACANCES</textPath></text><text font-size="7.4" letter-spacing=".8"><textPath href="#mbas" startOffset="50%" text-anchor="middle">ARGELÈS-GAZOST 2026</textPath></text></g><g fill="#4A3410"><path d="M8.6 60 L10.6 57.6 L12.6 60 L10.6 62.4Z"/><path d="M107.4 60 L109.4 57.6 L111.4 60 L109.4 62.4Z"/></g></svg></span>
+    <span class="h-med" aria-hidden="true"><svg viewBox="0 0 120 120"><defs><linearGradient id="mor" x1=".1" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="#F8DE95"/><stop offset=".34" stop-color="#C8A047"/><stop offset=".58" stop-color="#F4D687"/><stop offset="1" stop-color="#9E7629"/></linearGradient><linearGradient id="mciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16332B"/><stop offset="1" stop-color="#0A1917"/></linearGradient><clipPath id="mrond"><circle cx="60" cy="60" r="41.5"/></clipPath><path id="mhaut" d="M14.4 44.5 A48 48 0 0 1 105.6 44.5" fill="none"/><path id="mbas" d="M15.6 78.5 A48 48 0 0 0 104.4 78.5" fill="none"/></defs><circle cx="60" cy="60" r="58.5" fill="url(#mor)"/><circle cx="60" cy="60" r="54" fill="none" stroke="#7A5A1C" stroke-width=".7" opacity=".5"/><circle cx="60" cy="60" r="41.5" fill="url(#mciel)"/><g clip-path="url(#mrond)"><circle cx="86" cy="36" r="6.5" fill="#FFC94A" opacity=".92"/><path d="M6 100 L32 54 L48 78 L62 48 L96 100Z" fill="#1E463C"/><path d="M54 100 L80 60 L94 78 L110 60 L118 100Z" fill="#173A33"/><path d="M32 54 L39 65 L25 65Z" fill="#E8F2EC" opacity=".9"/><path d="M62 48 L70 61 L54 61Z" fill="#E8F2EC" opacity=".9"/><rect x="0" y="90" width="120" height="20" fill="#122C27"/><path d="M15 90 L22 76 L29 90Z" fill="#C8A047"/><path d="M22 81 L26 90 L18 90Z" fill="#0A1917"/><use href="#pp-pasteque" transform="translate(41 75) scale(.84)"/><use href="#pp-dragon" transform="translate(78 77) scale(.86)"/><use href="#pp-cartes" transform="translate(59 88) scale(.92)"/></g><circle cx="60" cy="60" r="41.5" fill="none" stroke="#7A5A1C" stroke-width="1.5"/><g font-family="system-ui,-apple-system,Segoe UI,Roboto,sans-serif" font-weight="800" fill="#4A3410"><text font-size="8.2" letter-spacing=".9"><textPath href="#mhaut" startOffset="50%" text-anchor="middle">LE QG DES VACANCES</textPath></text><text font-size="7.4" letter-spacing=".8"><textPath href="#mbas" startOffset="50%" text-anchor="middle">ARGELÈS-GAZOST 2026</textPath></text></g><g fill="#4A3410"><path d="M8.6 60 L10.6 57.6 L12.6 60 L10.6 62.4Z"/><path d="M107.4 60 L109.4 57.6 L111.4 60 L109.4 62.4Z"/></g></svg></span>
     <div>
       <div class="h-t">Le QG des vacances</div>
       <div class="h-s">Argelès-Gazost · 25 juil → 8 août</div>
@@ -816,7 +909,7 @@ const API  = "/api/sync";
    indiscutable au lieu d'être un aller-retour. Un contrôle de `test-server-qg-pg` exige
    qu'elle soit IDENTIQUE à celle de package.json : deux montées de version se sont déjà
    perdues, la vigilance ne suffit pas. */
-const VERSION = "1.50.0";
+const VERSION = "1.51.0";
 
 /* ================= DONNÉES ================= */
 /* Planning camping — relevé sur le panneau : semaine 1 (26/07 → 01/08) photos du 26/07,
@@ -2320,7 +2413,7 @@ function ligneBilan(r, idx){
     catCouleur(trouve.rando ? "H" : trouve.o.c) + '"></i>' : "";
   // Le badge accompagne la mission jusqu'au Bilan : on relit la médaille le jour où elle
   // a été gagnée, comme le tampon FAIT le fait pour les sorties.
-  const bad = r.ty === "M" ? badgePoussin("mission accomplie") : "";
+  const bad = r.ty === "M" ? badgePoussin("mission accomplie", r.n) : "";
   return '<div class="bl">' + past +
     '<span class="fv-e"' + clic + '>' + r.e + '</span>' +
     '<span class="fv-b"' + clic + '>' + (r.jeu
@@ -2545,16 +2638,35 @@ function vueJeux(){
    bouillie sous 100 px, il est donc retiré plutôt que rendu illisible. ~560 octets, posé
    une fois par mission cochée. La médaille se collectionne : c'est le même sceau que le
    grand, en petit, et non un pictogramme de plus. */
-function badgePoussin(titre){
-  return '<span class="bpo" role="img" aria-label="' + escA(titre || "mission accomplie") + '">' +
+/* À chaque mission son poussin (v1.51) : motifs à la manière d'ICOMISS, puis repli
+   déterministe par empreinte du libellé — les six variantes servent toutes, et une mission
+   garde son poussin pour toujours. La clé est LE LIBELLÉ AFFICHÉ, le même dans la liste
+   des missions et au Bilan (realisations() transporte r.n) : les deux zones tombent
+   d'accord sans canal de données supplémentaire. */
+const POUSSINS = ["cartes", "pasteque", "dragon", "ecrit", "arrosoir", "ordi"];
+const POUSSMOTIF = [
+  [/jeux|partie|passeport|kallax|meeple|carte/i, "cartes"],
+  [/cr[ée]a|photo|souvenir|dessin|marque-page|atelier|écri|gratter/i, "ecrit"],
+  [/march[ée]|go[ûu]ter|miel|glace|gourmand|past[èe]que|d[ée]gust/i, "pasteque"],
+  // nature AVANT sortie : « Sortie : voir voler les rapaces » doit tomber sur l'arrosoir,
+  // le motif le plus spécifique — sinon le dragon rafle toutes les sorties.
+  [/nature|berger|rapace|jardin|fleur|animalier|balade|lutin/i, "arrosoir"],
+  [/sortie|rando|sommet|parapente|rafting|luge|site|hautacam|boucle/i, "dragon"],
+];
+function poussinDe(lb){
+  const s = String(lb || "");
+  for(let i = 0; i < POUSSMOTIF.length; i++){ if(POUSSMOTIF[i][0].test(s)) return POUSSMOTIF[i][1]; }
+  let h = 0;
+  for(let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return POUSSINS[h % POUSSINS.length];
+}
+function badgePoussin(titre, lb){
+  const p = poussinDe(lb);
+  return '<span class="bpo" data-p="' + p + '" role="img" aria-label="' + escA(titre || "mission accomplie") + '">' +
     '<svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="29" fill="url(#bpo-or)"/>' +
     '<circle cx="30" cy="30" r="22.5" fill="#12291F"/>' +
     '<circle cx="30" cy="30" r="22.5" fill="none" stroke="#7A5A1C" stroke-width="1.6"/>' +
-    '<g transform="translate(30 27.2) scale(1.6)">' +
-    '<ellipse cx="0" cy="6" rx="8.4" ry="7.2" fill="#EFBE33"/>' +
-    '<circle cx="0" cy="-2.6" r="7" fill="#F8D556"/>' +
-    '<circle cx="-2.6" cy="-2.1" r="1.2" fill="#1B2A18"/><circle cx="2.6" cy="-2.1" r="1.2" fill="#1B2A18"/>' +
-    '<path d="M-1.7 1.2 L1.7 1.2 L0 3.4Z" fill="#DE8524"/></g></svg></span>';
+    '<use href="#pp-' + p + '" transform="translate(30 28.5) scale(1.45)"/></svg></span>';
 }
 function vueMissions(){
   const cm = val("cm",[]);
@@ -2562,11 +2674,11 @@ function vueMissions(){
     if(!m) return "";                                  // mission retirée : index conservé, case masquée
     const done = val("md:"+i,false);
     const cpt = JSEUILS[i] ? ' <span class="badge' + (done?" ok":"") + '">' + JSEUILS[i].f() + '/' + JSEUILS[i].n + '</span>' : "";
-    return '<div class="mi' + (done?" done":"") + '"><button class="cb" data-act="md" data-v="' + i + '">' + (done?"✓":"") + '</button><span>' + esc(m) + cpt + '</span>' + (done ? badgePoussin("mission accomplie") : "") + '</div>';
+    return '<div class="mi' + (done?" done":"") + '"><button class="cb" data-act="md" data-v="' + i + '">' + (done?"✓":"") + '</button><span>' + esc(m) + cpt + '</span>' + (done ? badgePoussin("mission accomplie", m) : "") + '</div>';
   }).join("");
   li += cm.map(function(m){
     return '<div class="mi' + (m.done?" done":"") + '"><button class="cb" data-act="cm" data-v="' + m.id + '">' + (m.done?"✓":"") + '</button>' +
-      '<span>' + esc(libMission(m.txt)) + (m.lien ? '<small class="mi-lie">se coche toute seule</small>' : "") + '</span>' + (m.done ? badgePoussin("mission accomplie") : "") + '</div>';
+      '<span>' + esc(libMission(m.txt)) + (m.lien ? '<small class="mi-lie">se coche toute seule</small>' : "") + '</span>' + (m.done ? badgePoussin("mission accomplie", libMission(m.txt)) : "") + '</div>';
   }).join("");
   return '<section class="fiche"><h2>✅ Missions de la famille</h2>' + li +
     '<div class="aj"><select id="selm" aria-label="choisir une sortie, une rando ou une animation">' +
@@ -2717,6 +2829,10 @@ function vueInfos(){
     '<div class="ligne">🎭 Retour 17h30-18h les jours d’excursion → activités famille + soirée.</div>' +
     '<div class="ligne">🧥 Une polaire chacun, même par 30 °C en vallée.</div>' +
     '<div class="ligne">💶 À 5 ans, le petit paie tarif enfant presque partout (gratuités < 4-5 ans).</div>' +
+    (lireTheme() !== null
+      ? '<div class="theme-memo">🌗 Le bouton 🌙/☀️ a figé le thème ' + (lireTheme() ? "nuit" : "jour") + ' sur cet appareil.' +
+        '<button class="theme-tel" data-act="suivretel">Suivre le réglage du téléphone</button></div>'
+      : '') +
     (codeAction === "raz"
       ? champCode("Tout remettre à zéro ?", "Coches, votes, missions et jeux de toute la famille seront effacés — c'est sans retour.")
       : '<button class="danger" data-act="raz">Tout remettre à zéro (code demandé)</button>') +
@@ -2845,10 +2961,27 @@ window.addEventListener("scroll", function(){
 }, {passive:true});
 /* ================= THÈME =================
    `themeManuel` vaut null tant qu'on suit le téléphone, puis true/false après un appui.
-   Il vit le temps de la page — l'invariant « aucun stockage navigateur » couvre aussi
-   les cookies, donc rien n'est mémorisé : au rechargement on repart sur le réglage du
-   téléphone. C'est le prix du zéro-stockage, et il est assumé. */
-let themeManuel = null;
+   Depuis la v1.51 (décision utilisateur du 06/08), le choix est mémorisé sur CET appareil
+   dans localStorage — seule exception à « aucun stockage navigateur », qui reste entier
+   pour l'état partagé : le thème est justement la préférence qu'il ne faut PAS partager,
+   sinon un téléphone imposerait sa nuit à toute la famille. Clé absente = suivre le
+   téléphone ; la porte de retour vit dans l'onglet Infos. try/catch partout : Safari en
+   navigation privée peut refuser localStorage, on retombe alors sur le comportement
+   d'avant (aucune mémoire), sans erreur. */
+const CLE_THEME = "qg-theme";
+function lireTheme(){
+  try{
+    const v = localStorage.getItem(CLE_THEME);
+    return v === "nuit" ? true : v === "jour" ? false : null;
+  }catch(e){ return null; }
+}
+function ecrireTheme(v){
+  try{
+    if(v === null) localStorage.removeItem(CLE_THEME);
+    else localStorage.setItem(CLE_THEME, v ? "nuit" : "jour");
+  }catch(e){}
+}
+let themeManuel = lireTheme();
 function prefereNuit(){
   return !!(window.matchMedia && window.matchMedia("(prefers-color-scheme:dark)").matches);
 }
@@ -3100,7 +3233,10 @@ document.addEventListener("click", function(ev){
   const el = ev.target.closest("[data-act]");
   if(!el) return;
   const a = el.dataset.act, v = el.dataset.v;
-  if(a==="theme"){ themeManuel = !nuitActive(); majTheme(); return; }
+  if(a==="theme"){ themeManuel = !nuitActive(); ecrireTheme(themeManuel); majTheme(); return; }
+  // Retour au réglage du téléphone (onglet Infos) : on oublie le choix mémorisé.
+  // rendre() en plus de majTheme() : la ligne doit disparaître de la vue.
+  if(a==="suivretel"){ themeManuel = null; ecrireTheme(null); majTheme(); rendre(); return; }
   else if(a==="synth"){
     // bascule aller-retour : on revient à l'onglet d'où l'on vient
     if(vue === "synthese") vue = vueAvant; else { vueAvant = vue; vue = "synthese"; }
